@@ -1342,12 +1342,16 @@ h2 {
   }
 
   .hero h1 {
-    width: calc(100vw - 8px);
+    width: calc(100vw - 4px);
     max-width: none;
     margin-top: 17px;
-    font-size: clamp(1.75rem, 8.9vw, 2.6rem);
-    letter-spacing: -0.06em;
-    line-height: 0.94;
+    font-size: clamp(2rem, 10.2vw, 2.9rem);
+    letter-spacing: -0.1em;
+    line-height: 0.9;
+  }
+
+  .hero h1 > span:last-child {
+    font-size: 0.94em;
   }
 
   .hero__platform-line {
