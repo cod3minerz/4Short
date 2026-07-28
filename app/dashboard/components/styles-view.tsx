@@ -7,6 +7,7 @@ import { trackApp } from "../lib/track-app";
 import {
   createStyle,
   duplicateStyle,
+  saveStyle,
   setDefaultStyle,
   updateStyle,
   useDashboardStore,
@@ -15,7 +16,7 @@ import { DashboardSwitch } from "./dashboard-switch";
 import { PageHeading } from "./page-heading";
 
 export function StylesView() {
-  const { styles, defaultStyleId } = useDashboardStore();
+  const { styles, defaultStyleId, connection, error, savingStyleId } = useDashboardStore();
   const [activeOverride, setActiveOverride] = useState<string | null>(null);
   const activeId = activeOverride ?? defaultStyleId;
   const [saved, setSaved] = useState(false);
@@ -44,6 +45,17 @@ export function StylesView() {
           </Button>
         }
       />
+
+      {connection !== "connected" ? (
+        <div className={`dashboard-connection-notice is-${connection}`} role="status">
+          <strong>{connection === "preview" ? "Локальный preview" : connection === "loading" ? "Подключаем кабинет" : "API недоступен"}</strong>
+          <span>
+            {connection === "preview"
+              ? "Изменения сохраняются только в этом браузере. Подключите NEXT_PUBLIC_CONTROL_API_URL для серверных версий пресетов."
+              : error ?? "Загружаем сохранённые стили."}
+          </span>
+        </div>
+      ) : null}
 
       <div className="styles-layout">
         <section className="styles-library" aria-label="Сохранённые стили">
@@ -176,15 +188,21 @@ export function StylesView() {
 
           <div className="style-editor__footer">
             {active.id !== defaultStyleId ? (
-              <Button variant="outline" onPress={() => setDefaultStyle(active.id)}>Использовать по умолчанию</Button>
+              <Button variant="outline" onPress={() => void setDefaultStyle(active.id)}>Использовать по умолчанию</Button>
             ) : <span className="style-saved-state"><Check size={15} /> Стиль по умолчанию</span>}
             <Button
-              onPress={() => {
-                setSaved(true);
-                trackApp("style_apply", { style: active.id });
+              isPending={savingStyleId === active.id}
+              onPress={async () => {
+                try {
+                  await saveStyle(active.id);
+                  setSaved(true);
+                  trackApp("style_apply", { style: active.id });
+                } catch {
+                  setSaved(false);
+                }
               }}
             >
-              {saved ? <><Check size={16} /> Сохранено</> : "Сохранить изменения"}
+              {saved && !active.dirty ? <><Check size={16} /> Сохранено</> : "Сохранить изменения"}
             </Button>
           </div>
         </aside>

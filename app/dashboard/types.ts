@@ -47,6 +47,10 @@ export type StylePreset = {
   silenceRemoval: boolean;
   banner: boolean;
   colors: [string, string];
+  version?: number;
+  versionId?: string;
+  persisted?: boolean;
+  dirty?: boolean;
 };
 
 export type MinuteTransaction = {
@@ -82,4 +86,3 @@ export type AppAnalyticsEvent =
   | "minutes_insufficient"
   | "minutes_package_select"
   | "minutes_purchase_complete";
-

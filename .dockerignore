@@ -1,0 +1,11 @@
+.git
+.github
+.next
+.vinext
+.wrangler
+node_modules
+services/control-api/dist
+services/media-worker/**/__pycache__
+.env*
+*.log
+*.tsbuildinfo

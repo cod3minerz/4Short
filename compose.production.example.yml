@@ -1,0 +1,37 @@
+services:
+  control-api:
+    image: ghcr.io/cod3minerz/4short-control-api:${IMAGE_TAG:?set IMAGE_TAG}
+    restart: unless-stopped
+    env_file: .env.production
+    ports:
+      - "127.0.0.1:4100:4100"
+    mem_limit: 384m
+    cpus: 0.75
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4100/health/ready').then(r=>{if(!r.ok)process.exit(1)})"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+
+  media-worker:
+    image: ghcr.io/cod3minerz/4short-media-worker:${IMAGE_TAG:?set IMAGE_TAG}
+    restart: unless-stopped
+    env_file: .env.production
+    mem_limit: 3g
+    cpus: 2
+    pids_limit: 256
+    volumes:
+      - worker-scratch:/var/lib/4short/jobs
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      control-api:
+        condition: service_healthy
+
+volumes:
+  worker-scratch:

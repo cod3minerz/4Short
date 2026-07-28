@@ -1,0 +1,82 @@
+import type { FastifyInstance } from "fastify";
+import { defaultStyleConfig, productPlans } from "../../../../packages/product-config/src/index.js";
+import {
+  minuteBuckets,
+  plans,
+  stylePresets,
+  styleVersions,
+  workspaceMembers,
+  workspaces,
+} from "../../../../db/schema.js";
+import { getIdempotencyKey } from "../lib/http.js";
+import { runIdempotent } from "../services/idempotency.js";
+import { auth } from "../auth/index.js";
+
+export async function onboardingRoutes(app: FastifyInstance) {
+  app.post("/v1/onboarding/workspace", async (request, reply) => {
+    const session = await auth.api.getSession({ headers: new Headers(request.headers as Record<string, string>) });
+    const developmentUserId = process.env.NODE_ENV !== "production"
+      ? request.headers["x-development-user-id"]
+      : undefined;
+    const userId = session?.user.id ?? (typeof developmentUserId === "string" ? developmentUserId : null);
+    if (!userId) throw app.httpErrors.unauthorized("Use an authenticated session");
+    const body = request.body as { name?: string };
+    const name = body.name?.trim() || "Мой 4Short";
+    const key = getIdempotencyKey(request);
+    const provisionalWorkspaceId = crypto.randomUUID();
+    const result = await runIdempotent({
+      db: app.db,
+      workspaceId: provisionalWorkspaceId,
+      key,
+      body,
+      statusCode: 201,
+      execute: async (tx) => {
+        for (const plan of Object.values(productPlans)) {
+          await tx.insert(plans).values({
+            code: plan.code,
+            name: plan.name,
+            priceKopecks: plan.priceKopecks,
+            includedSeconds: plan.includedSeconds,
+            queueWeight: String(plan.queueWeight),
+            activeProjects: plan.activeProjects,
+            sourceRetentionDays: plan.sourceRetentionDays,
+            outputRetentionDays: plan.outputRetentionDays,
+            exportHeight: plan.exportHeight,
+            watermark: plan.watermark,
+          }).onConflictDoUpdate({
+            target: plans.code,
+            set: { priceKopecks: plan.priceKopecks, updatedAt: new Date() },
+          });
+        }
+        const [workspace] = await tx.insert(workspaces).values({
+          id: provisionalWorkspaceId,
+          name,
+          slug: `workspace-${provisionalWorkspaceId.slice(0, 8)}`,
+          planCode: "free",
+        }).returning();
+        await tx.insert(workspaceMembers).values({ workspaceId: workspace.id, userId, role: "owner" });
+        await tx.insert(minuteBuckets).values({
+          workspaceId: workspace.id,
+          source: "free_trial",
+          grantedSeconds: productPlans.free.includedSeconds,
+          availableSeconds: productPlans.free.includedSeconds,
+          priority: 10,
+        });
+        const [preset] = await tx.insert(stylePresets).values({
+          workspaceId: workspace.id,
+          name: "Основной",
+          description: "Чистые субтитры, автоматический кадр и безопасные зоны.",
+          isDefault: true,
+        }).returning();
+        const [version] = await tx.insert(styleVersions).values({
+          stylePresetId: preset.id,
+          version: 1,
+          config: defaultStyleConfig,
+          createdBy: userId,
+        }).returning();
+        return { workspace, defaultStyleVersionId: version.id };
+      },
+    });
+    return reply.code(result.replayed ? 200 : 201).send(result.value);
+  });
+}

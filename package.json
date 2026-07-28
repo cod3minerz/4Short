@@ -7,14 +7,26 @@
   },
   "scripts": {
     "dev": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext dev",
+    "dev:api": "tsx watch services/control-api/src/server.ts",
     "build": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
     "build:vercel": "next build",
+    "build:api": "tsc -p services/control-api/tsconfig.json",
     "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
-    "test": "npm run build && node --test tests/rendered-html.test.mjs",
+    "start:api": "node services/control-api/dist/services/control-api/src/server.js",
+    "test": "npm run test:unit && npm run build && node --test tests/rendered-html.test.mjs",
+    "test:unit": "tsx --test tests/unit/**/*.test.ts",
+    "test:worker": "python3 -m unittest discover -s services/media-worker/tests",
+    "typecheck": "tsc --noEmit && tsc -p services/control-api/tsconfig.json",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:check": "drizzle-kit check"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.922.0",
+    "@aws-sdk/s3-request-presigner": "^3.922.0",
+    "@fastify/cors": "^11.1.0",
+    "@fastify/sensible": "^6.0.3",
     "@heroui/react": "^3.0.5",
     "@heroui/styles": "^3.0.5",
     "@hookform/resolvers": "^5.2.1",
@@ -22,9 +34,14 @@
     "@mdx-js/react": "^3.1.1",
     "@next/mdx": "^16.2.12",
     "@types/mdx": "^2.0.14",
+    "better-auth": "^1.6.25",
     "drizzle-orm": "0.45.2",
+    "fast-uri": "^4.1.1",
+    "fastify": "^5.6.2",
+    "fastify-plugin": "^5.1.0",
     "lucide-react": "^0.468.0",
-    "next": "16.2.6",
+    "next": "^16.2.12",
+    "postgres": "^3.4.7",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "react-hook-form": "^7.62.0",
@@ -46,10 +63,15 @@
     "eslint-config-next": "16.2.6",
     "react-server-dom-webpack": "19.2.6",
     "tailwindcss": "4.2.1",
+    "tsx": "^4.20.6",
     "typescript": "5.9.3",
     "vinext": "0.0.50",
     "vite": "8.0.13",
     "wrangler": "4.92.0"
+  },
+  "overrides": {
+    "postcss": "^8.5.19",
+    "sharp": "^0.35.0"
   },
   "type": "module"
 }

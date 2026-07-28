@@ -17,6 +17,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import {
+  ControlApiError,
+  createMultipartUpload,
+  createProject,
+  getProject,
+  isControlApiConfigured,
+} from "../lib/control-api";
 import { trackApp } from "../lib/track-app";
 import { useDashboardStore } from "../store";
 import { DashboardSwitch } from "./dashboard-switch";
@@ -83,6 +90,11 @@ export function NewProjectWizard({
   const [showAllIntents, setShowAllIntents] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [processingIndex, setProcessingIndex] = useState(0);
+  const [processingProjectId, setProcessingProjectId] = useState<string | null>(null);
+  const [processingStatus, setProcessingStatus] = useState("probing");
+  const [uploadId, setUploadId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [launchError, setLaunchError] = useState("");
 
   useEffect(() => {
     trackApp("project_create_start");
@@ -90,11 +102,33 @@ export function NewProjectWizard({
   }, [initialSource]);
 
   useEffect(() => {
-    if (!processing) return;
-    if (processingIndex >= processingStages.length) return;
-    const timer = window.setTimeout(() => setProcessingIndex((value) => value + 1), 900);
-    return () => window.clearTimeout(timer);
-  }, [processing, processingIndex]);
+    if (!processingProjectId) return;
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const response = await getProject(processingProjectId);
+        if (cancelled) return;
+        const status = response.project.status;
+        setProcessingStatus(status);
+        setProcessingIndex({
+          probing: 0,
+          importing: 0,
+          transcribing: 2,
+          finding_moments: 3,
+          review_required: processingStages.length,
+          failed: 0,
+        }[status] ?? 1);
+      } catch (pollError) {
+        if (!cancelled) setLaunchError(pollError instanceof Error ? pollError.message : "Не удалось получить состояние проекта");
+      }
+    };
+    void poll();
+    const timer = window.setInterval(() => void poll(), 3_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [processingProjectId]);
 
   const verifyUrl = () => {
     if (!/^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(url.trim())) {
@@ -119,28 +153,75 @@ export function NewProjectWizard({
 
   const currentStyle = styles.find((style) => style.id === styleId) ?? styles[0];
 
+  const launchProject = async () => {
+    setLaunchError("");
+    if (!isControlApiConfigured()) {
+      setLaunchError("Российский control API не подключён. Проект не запущен и минуты не списаны.");
+      return;
+    }
+    if (!currentStyle?.versionId) {
+      setLaunchError("Сначала сохраните выбранный стиль на сервере.");
+      return;
+    }
+    if (sourceType === "file" && !uploadId) {
+      setLaunchError("Дождитесь завершения загрузки файла.");
+      return;
+    }
+    const durationRange = duration === "до 30 секунд"
+      ? [10, 30]
+      : duration === "60–90 секунд" ? [60, 90] : [30, 60];
+    try {
+      const response = await createProject({
+        title: sourceName,
+        source: sourceType === "youtube"
+          ? { kind: "youtube", url }
+          : { kind: "upload", uploadId: uploadId!, originalFileName: sourceName },
+        momentSettings: {
+          mode: intent as "best" | "opinions" | "tips" | "stories" | "qa" | "product" | "custom",
+          query: intent === "custom" ? customPrompt : undefined,
+          count: count === "recommended" ? "recommended" : Number(count),
+          durationMinSeconds: durationRange[0],
+          durationMaxSeconds: durationRange[1],
+          diversity: "high",
+          excludedTopics: [],
+        },
+        styleVersionId: currentStyle.versionId,
+      });
+      trackApp("project_settings_complete", { intent, duration, style: styleId });
+      trackApp("analysis_start");
+      setProcessingProjectId(response.project.id);
+      setProcessingStatus(response.project.status);
+      setProcessing(true);
+    } catch (projectError) {
+      setLaunchError(projectError instanceof ControlApiError ? projectError.message : "Не удалось создать проект");
+    }
+  };
+
   if (processing) {
-    const completed = processingIndex >= processingStages.length;
+    const completed = processingStatus === "review_required";
+    const failed = processingStatus === "failed";
     return (
       <main className="wizard-processing">
         <Link className="wizard-close-link" href="/dashboard/projects">Проекты</Link>
         <div className="wizard-processing__card">
-          <div className={`wizard-processing__mark ${completed ? "is-complete" : ""}`}>
-            {completed ? <Check size={32} /> : <LoaderCircle size={32} />}
+          <div className={`wizard-processing__mark ${completed ? "is-complete" : failed ? "is-failed" : ""}`}>
+            {completed ? <Check size={32} /> : failed ? <span aria-hidden="true">!</span> : <LoaderCircle size={32} />}
           </div>
-          <span className="dash-eyebrow">{completed ? "Анализ завершён" : "Можно закрыть страницу"}</span>
-          <h1>{completed ? "МOMЕНТЫ ГОТОВЫ К ПРОВЕРКЕ" : "ИЩЕМ СИЛЬНЫЕ МОМЕНТЫ"}</h1>
+          <span className="dash-eyebrow">{completed ? "Анализ завершён" : failed ? "Нужна помощь" : "Можно закрыть страницу"}</span>
+          <h1>{completed ? "МOMЕНТЫ ГОТОВЫ К ПРОВЕРКЕ" : failed ? "ОБРАБОТКА ОСТАНОВЛЕНА" : "ИЩЕМ СИЛЬНЫЕ МОМЕНТЫ"}</h1>
           <p>
             {completed
-              ? "Мы нашли 8 самостоятельных фрагментов. Выберите те, из которых нужно создать клипы."
-              : "4Short продолжит работу, даже если вы перейдёте в другой раздел."}
+              ? "Мы нашли самостоятельные фрагменты. Выберите те, из которых нужно создать клипы."
+              : failed
+                ? "Откройте проект: там указан этап ошибки и доступное действие."
+                : "4Short продолжит работу после закрытия вкладки. Состояние приходит с российского сервера."}
           </p>
 
           <div className="wizard-processing__source">
             <span className="dash-media-mark">4S</span>
             <div>
               <strong>{sourceName}</strong>
-              <small>01:03:42 · 64 минуты</small>
+              <small>Обработка идёт по сохранённым этапам</small>
             </div>
           </div>
 
@@ -157,8 +238,10 @@ export function NewProjectWizard({
             ))}
           </ol>
 
-          {completed ? (
-            <Link className="dash-primary-link wizard-processing__action" href="/dashboard/projects/podcast-24">
+          {launchError ? <span className="dash-field-error" role="alert">{launchError}</span> : null}
+
+          {completed && processingProjectId ? (
+            <Link className="dash-primary-link wizard-processing__action" href={`/dashboard/projects/${processingProjectId}`}>
               Проверить моменты
               <ArrowRight size={18} />
             </Link>
@@ -226,16 +309,34 @@ export function NewProjectWizard({
                   className="sr-only"
                   type="file"
                   accept="video/mp4,video/quicktime,video/webm"
-                  onChange={(event) => {
+                  onChange={async (event) => {
                     const file = event.target.files?.[0];
                     if (!file) return;
                     setSourceType("file");
                     setSourceName(file.name);
-                    setSourceReady(true);
+                    setSourceReady(false);
+                    setUploading(true);
+                    setError("");
                     trackApp("source_upload_start", { fileType: file.type });
-                    trackApp("source_upload_complete");
+                    try {
+                      const upload = await createMultipartUpload(file);
+                      setUploadId(upload.uploadId);
+                      setSourceReady(true);
+                      trackApp("source_upload_complete");
+                    } catch (uploadError) {
+                      setError(uploadError instanceof Error ? uploadError.message : "Не удалось загрузить файл");
+                    } finally {
+                      setUploading(false);
+                    }
                   }}
                 />
+                {uploading ? (
+                  <span className="dash-field-note">
+                    <LoaderCircle className="is-spinning" size={15} />
+                    Загружаем напрямую в защищённое хранилище…
+                  </span>
+                ) : null}
+                {error && sourceType === "file" ? <span className="dash-field-error" role="alert">{error}</span> : null}
               </div>
             ) : (
               <div className="wizard-source-ready">
@@ -247,9 +348,9 @@ export function NewProjectWizard({
                   <span className="dash-status tone-success"><Check size={14} /> Источник готов</span>
                   <h2>{sourceName}</h2>
                   <dl>
-                    <div><dt>Длительность</dt><dd>01:03:42</dd></div>
-                    <div><dt>Будет зарезервировано</dt><dd>64 минуты</dd></div>
-                    <div><dt>Останется после запуска</dt><dd>120 минут</dd></div>
+                    <div><dt>Источник</dt><dd>{sourceType === "youtube" ? "YouTube" : "Файл загружен"}</dd></div>
+                    <div><dt>Длительность</dt><dd>Проверит media-worker</dd></div>
+                    <div><dt>Списание</dt><dd>По фактической длительности</dd></div>
                   </dl>
                   <button type="button" onClick={() => setSourceReady(false)}>Выбрать другое видео</button>
                 </div>
@@ -257,7 +358,7 @@ export function NewProjectWizard({
             )}
 
             <div className="wizard-footer">
-              <span>{sourceReady ? "Метаданные получены. Загрузка продолжится в фоне." : "Списание произойдёт только после подтверждения."}</span>
+              <span>{sourceReady ? "Источник сохранён. Техническая проверка продолжится на сервере." : "Списание произойдёт только после проверки исходника."}</span>
               <Button isDisabled={!sourceReady} onPress={() => setStep(2)}>
                 Какие клипы нужны
                 <ArrowRight size={18} />
@@ -455,29 +556,26 @@ export function NewProjectWizard({
                 <span className="dash-eyebrow">Проверка</span>
                 <h2>Всё готово к запуску</h2>
                 <dl>
-                  <div><dt>Источник</dt><dd>64 минуты</dd></div>
+                  <div><dt>Источник</dt><dd>{sourceType === "youtube" ? "YouTube" : "Загруженный файл"}</dd></div>
                   <div><dt>Задача</dt><dd>{intents.find((item) => item.id === intent)?.title}</dd></div>
                   <div><dt>Результат</dt><dd>{count === "recommended" ? "6–10 клипов" : "8 клипов"}</dd></div>
                   <div><dt>Длительность</dt><dd>{duration}</dd></div>
                   <div><dt>Стиль</dt><dd>{styles.find((style) => style.id === styleId)?.name}</dd></div>
                 </dl>
                 <div className="wizard-summary__charge">
-                  <span>Будет списано</span>
-                  <strong>64 минуты</strong>
+                  <span>Списание</span>
+                  <strong>По длине исходника</strong>
                   <small>Повторный поиск и рендер внутри проекта — без повторного списания.</small>
                 </div>
                 <Button
                   fullWidth
                   size="lg"
-                  onPress={() => {
-                    trackApp("project_settings_complete", { intent, duration, style: styleId });
-                    trackApp("analysis_start");
-                    setProcessing(true);
-                  }}
+                  onPress={() => void launchProject()}
                 >
                   Найти моменты
                   <ArrowRight size={18} />
                 </Button>
+                {launchError ? <span className="dash-field-error" role="alert">{launchError}</span> : null}
               </aside>
             </div>
 

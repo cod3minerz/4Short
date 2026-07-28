@@ -33,10 +33,10 @@
   "exclude": [
     "node_modules",
     "build",
-    "db",
     "examples",
     "worker",
-    "drizzle.config.ts",
+    "services/control-api",
+    "services/media-worker",
     "vite.config.ts"
   ]
 }

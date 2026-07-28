@@ -1,0 +1,182 @@
+from __future__ import annotations
+
+from pathlib import Path
+import hashlib
+import subprocess
+import time
+
+from .config import Settings
+from .control_api import Job
+from .errors import JobError
+from .media import extract_audio, probe_media, validate_render
+from .providers import YandexGpt, YandexSpeechKit
+from .render import render_clip
+from .storage import Storage
+from .subtitles import write_ass
+
+
+class StageRunner:
+    def __init__(self, settings: Settings, storage: Storage):
+        self.settings = settings
+        self.storage = storage
+
+    def source_url(self, payload: dict) -> str:
+        source = payload.get("source") or payload.get("input")
+        if not isinstance(source, dict):
+            raise JobError("SOURCE_MISSING", "Job has no source", retryable=False)
+        if source.get("kind") == "s3":
+            return self.storage.signed_get(source["bucket"], source["key"], expires=4 * 60 * 60)
+        if source.get("url") and str(source["url"]).startswith("https://"):
+            return str(source["url"])
+        raise JobError("SOURCE_INVALID", "Unsupported source locator", retryable=False)
+
+    def run(self, job: Job, job_dir: Path) -> tuple[dict, dict]:
+        started = time.monotonic()
+        if job.type == "probe":
+            result = self.probe(job)
+        elif job.type == "youtube_import":
+            result = self.youtube_import(job)
+        elif job.type == "extract_audio":
+            result = self.extract_audio(job, job_dir)
+        elif job.type == "speech_to_text":
+            result = self.speech_to_text(job)
+        elif job.type == "find_moments":
+            result = self.find_moments(job)
+        elif job.type == "render_clip":
+            result = self.render(job, job_dir)
+        elif job.type == "validate_render":
+            result = self.validate(job, job_dir)
+        elif job.type == "face_track":
+            result = self.face_track(job)
+        elif job.type in {"zip_project", "cleanup"}:
+            raise JobError("STAGE_NOT_ENABLED", f"{job.type} adapter is not enabled on this worker image", retryable=False)
+        else:
+            raise JobError("UNKNOWN_JOB_TYPE", f"Unknown job type: {job.type}", retryable=False)
+        return result, {"wallSeconds": round(time.monotonic() - started, 3)}
+
+    def probe(self, job: Job) -> dict:
+        source = job.payload["source"]
+        url = self.source_url(job.payload)
+        result = probe_media(self.settings, url)
+        if source.get("kind") == "s3":
+            result["fingerprint"] = self.storage.sha256_object(source["bucket"], source["key"])
+        return result
+
+    def youtube_import(self, job: Job) -> dict:
+        url = str(job.payload.get("source", {}).get("url", ""))
+        hostname = url.split("/", 3)[2].lower() if url.startswith("https://") else ""
+        if hostname not in {"youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"}:
+            raise JobError("IMPORT_DOMAIN_DENIED", "Only YouTube imports are allowed", retryable=False)
+        key = f"{job.workspace_id}/{job.payload['sourceId']}/source.mp4"
+        process = subprocess.Popen(
+            [
+                self.settings.ytdlp_path,
+                "--no-playlist",
+                "--no-progress",
+                "--no-warnings",
+                "--format", "best[ext=mp4][vcodec^=avc1][acodec^=mp4a]/best[ext=mp4]",
+                "--output", "-",
+                url,
+            ],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=False,
+        )
+        if process.stdout is None:
+            raise JobError("IMPORT_PIPE_FAILED", "Could not open YouTube import stream", retryable=True)
+
+        class HashingReader:
+            def __init__(self, raw):
+                self.raw = raw
+                self.digest = hashlib.sha256()
+
+            def read(self, size=-1):
+                chunk = self.raw.read(size)
+                if chunk:
+                    self.digest.update(chunk)
+                return chunk
+
+        reader = HashingReader(process.stdout)
+        try:
+            artifact = self.storage.upload_stream(reader, self.settings.s3_raw_bucket, key, "video/mp4")
+        except Exception as error:
+            process.kill()
+            raise JobError("YOUTUBE_IMPORT_UPLOAD_FAILED", "Could not persist imported video", retryable=True) from error
+        stderr = process.stderr.read().decode("utf-8", errors="replace")[-2000:] if process.stderr else ""
+        return_code = process.wait(timeout=60)
+        if return_code != 0:
+            raise JobError(
+                "YOUTUBE_IMPORT_FAILED",
+                "YouTube did not provide a compatible video stream",
+                retryable=return_code in {1, 2},
+                details={"returnCode": return_code, "stderr": stderr},
+            )
+        source_url = self.storage.signed_get(artifact["bucket"], artifact["key"], expires=3600)
+        probe = probe_media(self.settings, source_url)
+        return {**artifact, **probe, "fingerprint": reader.digest.hexdigest()}
+
+    def extract_audio(self, job: Job, job_dir: Path) -> dict:
+        output = job_dir / "audio.mp3"
+        extract_audio(self.settings, self.source_url(job.payload), output)
+        key = f"{job.workspace_id}/{job.project_id}/{job.id}/audio.mp3"
+        artifact = self.storage.upload_file(output, self.settings.s3_derived_bucket, key, "audio/mpeg")
+        artifact["expiresInHours"] = 24
+        return {"audio": artifact}
+
+    def speech_to_text(self, job: Job) -> dict:
+        audio = job.payload["audio"]
+        url = self.storage.signed_get(audio["bucket"], audio["key"], expires=4 * 60 * 60)
+        provider = YandexSpeechKit(self.settings)
+        operation_id = provider.submit(url, job.payload.get("language", "auto"))
+        response = provider.wait(operation_id)
+        return {"provider": "yandex_speechkit_v3", "operationId": operation_id, "response": response}
+
+    def find_moments(self, job: Job) -> dict:
+        transcript = job.payload["transcript"]
+        settings = job.payload["settings"]
+        system = (
+            "Ты редактор коротких видео. Верни только JSON с массивом candidates. "
+            "Каждый кандидат: startMs, endMs, title, topic, explanation, score. "
+            "Фрагмент должен быть самостоятельным, завершённым и не обещать просмотры."
+        )
+        prompt = f"Настройки:\n{settings}\n\nТранскрипт с таймкодами:\n{transcript}"
+        lite = YandexGpt(self.settings).complete_json("yandexgpt-lite", system, prompt)
+        rerank_prompt = f"Удалите дубли и обеспечьте разнообразие. Кандидаты:\n{lite}"
+        ranked = YandexGpt(self.settings).complete_json("yandexgpt", system, rerank_prompt)
+        return ranked
+
+    def face_track(self, job: Job) -> dict:
+        # The safe result is intentional: the renderer can continue without a
+        # face model and the UI receives a warning instead of a failed series.
+        # A model-enabled image replaces this handler without changing EDL/API.
+        return {
+            "cropTrack": [],
+            "fallback": "static_crop",
+            "warnings": ["FACE_MODEL_NOT_INSTALLED"],
+        }
+
+    def render(self, job: Job, job_dir: Path) -> dict:
+        edl = job.payload["edl"]
+        ass_path = None
+        cues = job.payload.get("subtitleCues", [])
+        if edl["subtitles"].get("enabled") and cues:
+            ass_path = job_dir / "subtitles.ass"
+            write_ass(ass_path, cues, edl["subtitles"], edl["export"]["width"], edl["export"]["height"])
+        output = job_dir / "clip.mp4"
+        render_clip(self.settings, self.source_url(job.payload), edl, ass_path, output)
+        validation = validate_render(
+            self.settings,
+            output,
+            edl["range"]["endMs"] - edl["range"]["startMs"],
+        )
+        if not validation["valid"]:
+            raise JobError("RENDER_VALIDATION_FAILED", "Rendered clip failed validation", retryable=True, details=validation)
+        key = f"{job.workspace_id}/{job.project_id}/{job.clip_id}/{job.id}/clip.mp4"
+        artifact = self.storage.upload_file(output, self.settings.s3_derived_bucket, key, "video/mp4")
+        return {"artifact": artifact, "validation": validation}
+
+    def validate(self, job: Job, job_dir: Path) -> dict:
+        source_url = self.source_url(job.payload)
+        local = job_dir / "validation.mp4"
+        raise JobError("VALIDATION_REQUIRES_LOCAL_ARTIFACT", f"Standalone validation is not enabled for {source_url}", retryable=False)

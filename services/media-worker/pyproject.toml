@@ -1,0 +1,19 @@
+[project]
+name = "fourshort-media-worker"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "boto3==1.40.61",
+  "httpx==0.28.1",
+  "psutil==7.1.0",
+  "pydantic==2.12.3",
+  "pydantic-settings==2.11.0",
+  "yt-dlp==2026.7.28"
+]
+
+[project.scripts]
+fourshort-worker = "fourshort_worker.main:main"
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
