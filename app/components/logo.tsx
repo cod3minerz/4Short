@@ -1,12 +1,25 @@
 import Image from "next/image";
 
-export function Logo({ className = "" }: { className?: string }) {
+type LogoProps = {
+  className?: string;
+  priority?: boolean;
+};
+
+/**
+ * The supplied brand artwork is rendered as-is.
+ * Geometry, lettering and colors come directly from logo2.svg.
+ */
+export function Logo({ className = "", priority = false }: LogoProps) {
   return (
-    <span className={className} aria-label="4Short">
-      <span className="site-logo__mark">
-        <Image src="/assets/logo-source.svg" alt="" width={36} height={36} priority />
-      </span>
-      <strong><i>4</i>Short</strong>
+    <span className={`brand-logo ${className}`.trim()}>
+      <Image
+        src="/assets/logo-source.svg"
+        alt="4Short"
+        width={170}
+        height={50}
+        priority={priority}
+        sizes="(max-width: 600px) 112px, 132px"
+      />
     </span>
   );
 }

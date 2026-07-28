@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://4short.ru"),
   title: { default: "4Short — AI-нарезка видео", template: "%s | 4Short" },
   description: "Превращайте длинные видео в готовые Shorts, Reels, TikTok и VK Клипы.",
-  icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
+  icons: { icon: "/assets/logo-source.svg", shortcut: "/assets/logo-source.svg" },
   openGraph: {
     type: "website",
     locale: "ru_RU",
