@@ -114,13 +114,11 @@ h2 {
   text-transform: uppercase;
 }
 
-.section-index::before,
-.hero-kicker::before {
-  width: 22px;
-  height: 2px;
-  flex: 0 0 auto;
-  background: currentColor;
-  content: "";
+.section-index,
+.hero-kicker {
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: var(--surface-blue);
 }
 
 .brand-logo {
@@ -128,9 +126,6 @@ h2 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 6px 10px;
-  border-radius: 14px;
-  background: var(--ink);
 }
 
 .brand-logo img {
@@ -225,14 +220,25 @@ h2 {
   color: var(--ink);
   font-weight: 800;
   cursor: pointer;
-  transition: background-color 180ms ease, transform 180ms ease;
+  transition: background-color 180ms ease;
 }
 
 .header-cta:hover,
 .cta-button:hover,
 .minutes-button:hover {
   background: color-mix(in oklch, var(--accent) 86%, white);
-  transform: translateY(-2px);
+  transform: none;
+}
+
+.header-cta,
+.cta-button,
+.minutes-button,
+.price-button,
+.header-cta[data-pressed="true"],
+.cta-button[data-pressed="true"],
+.minutes-button[data-pressed="true"],
+.price-button[data-pressed="true"] {
+  transform: none !important;
 }
 
 .menu-button {
@@ -240,47 +246,79 @@ h2 {
 }
 
 .mobile-drawer {
-  width: min(390px, 100vw) !important;
+  width: 100vw !important;
+  max-width: none !important;
+  height: 100dvh !important;
+  inset: 0 !important;
 }
 
-.mobile-drawer [data-slot="dialog"] {
-  height: 100%;
-  padding: 20px;
-  border-radius: 34px 0 0 34px;
+.mobile-drawer .drawer__dialog {
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  padding: 22px clamp(18px, 5vw, 32px);
+  border-radius: 0;
   background: white;
 }
 
-.mobile-drawer [data-slot="header"] {
+.mobile-drawer .drawer__header {
+  min-height: 66px;
   display: flex;
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
+  padding: 0;
 }
 
-.mobile-drawer [data-slot="heading"] {
+.mobile-drawer .drawer__heading {
   font-size: 0;
 }
 
 .mobile-drawer__close {
-  position: absolute;
-  top: 24px;
-  right: 24px;
+  width: 46px;
+  height: 46px;
+  position: static;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink);
 }
 
 .mobile-drawer nav {
-  padding-top: 34px;
+  padding-top: clamp(34px, 7vh, 68px);
   display: flex;
   flex-direction: column;
+  gap: 12px;
 }
 
 .mobile-drawer nav a {
-  padding: 18px 2px;
-  border-bottom: 1px solid var(--line);
-  font-family: "Ermilov", sans-serif;
-  font-size: 28px;
+  min-height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: white;
+  font-size: clamp(19px, 5vw, 24px);
+  font-weight: 700;
 }
 
-.mobile-drawer [data-slot="footer"] .header-cta {
+.mobile-drawer .drawer__body {
+  padding: 0;
+}
+
+.mobile-drawer .drawer__footer {
+  padding: 18px 0 max(18px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+}
+
+.mobile-drawer .drawer__footer .header-cta {
   width: 100%;
+  min-height: 58px;
 }
 
 /* Hero */
@@ -295,10 +333,19 @@ h2 {
 .hero__clouds {
   position: absolute;
   inset: 0;
-  background-image: url("/assets/hero-clouds.png");
-  background-position: center bottom;
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.76) 0%,
+      rgba(255, 255, 255, 0.54) 34%,
+      rgba(255, 255, 255, 0.12) 62%,
+      rgba(255, 255, 255, 0.05) 100%
+    ),
+    radial-gradient(circle at 50% 22%, rgba(255, 255, 255, 0.72), transparent 42%),
+    url("/assets/hero-landscape.webp");
+  background-position: center, center, center;
   background-size: cover;
-  opacity: 0.86;
+  opacity: 1;
   pointer-events: none;
 }
 
@@ -321,7 +368,10 @@ h2 {
 }
 
 .hero-kicker {
+  background: rgba(255, 255, 255, 0.74);
   color: var(--ink-soft);
+  box-shadow: 0 8px 26px rgba(31, 74, 90, 0.08);
+  backdrop-filter: blur(10px);
 }
 
 .hero h1 {
@@ -406,6 +456,14 @@ h2 {
   background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 20px 55px rgba(27, 80, 101, 0.12);
   backdrop-filter: blur(12px);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.url-form__row:focus-within {
+  border-color: var(--accent-strong);
+  box-shadow:
+    0 0 0 3px color-mix(in oklch, var(--accent) 28%, transparent),
+    0 20px 55px rgba(27, 80, 101, 0.12);
 }
 
 .url-form__field {
@@ -438,8 +496,8 @@ h2 {
 }
 
 .url-form__input:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .cta-button {
@@ -552,26 +610,13 @@ h2 {
   opacity: 0.62;
 }
 
-.scroll-cue {
-  width: 42px;
-  height: 42px;
-  position: absolute;
-  z-index: 6;
-  right: 0;
-  bottom: 28px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: white;
-  box-shadow: 0 10px 28px rgba(18, 53, 65, 0.13);
-}
-
 /* Shared section heading */
 .section-intro {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.58fr);
-  gap: clamp(36px, 8vw, 120px);
-  align-items: end;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  text-align: center;
 }
 
 .section-intro h2,
@@ -584,6 +629,9 @@ h2 {
 }
 
 .section-intro__aside {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding-bottom: 4px;
 }
 
@@ -592,6 +640,7 @@ h2 {
   color: var(--muted);
   font-size: 17px;
   line-height: 1.55;
+  text-align: center;
 }
 
 /* Pricing */
@@ -633,9 +682,9 @@ h2 {
 
 .pricing-shell {
   margin-top: 52px;
-  padding: 14px;
-  border: 1px solid var(--line);
-  background: var(--surface);
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .pricing-grid {
@@ -786,21 +835,28 @@ h2 {
 
 .minutes-panel {
   display: grid;
-  grid-template-columns: 0.8fr 1.25fr 0.82fr;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.72fr);
   gap: clamp(26px, 4vw, 54px);
   align-items: center;
   padding: clamp(34px, 5vw, 64px);
   background: var(--surface-blue);
 }
 
+.minutes-panel__copy {
+  grid-column: 1 / -1;
+  text-align: center;
+}
+
 .minutes-panel h2 {
-  max-width: 410px;
+  max-width: 780px;
+  margin-inline: auto;
   font-size: clamp(2.2rem, 3.5vw, 3.55rem);
 }
 
 .minutes-panel__copy > p {
   max-width: 360px;
   margin-top: 18px;
+  margin-inline: auto;
   color: var(--muted);
   line-height: 1.55;
 }
@@ -827,11 +883,11 @@ h2 {
   color: var(--ink);
   text-align: left;
   cursor: pointer;
-  transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+  transition: background-color 180ms ease, border-color 180ms ease;
 }
 
 .minute-package:hover {
-  transform: translateY(-3px);
+  border-color: color-mix(in oklch, var(--accent-strong) 42%, white);
 }
 
 .minute-package.is-selected {
@@ -931,23 +987,26 @@ h2 {
 
 .faq-layout {
   display: grid;
-  grid-template-columns: minmax(260px, 0.52fr) minmax(0, 1fr);
-  gap: clamp(50px, 9vw, 130px);
+  grid-template-columns: minmax(0, 900px);
+  justify-content: center;
+  gap: clamp(42px, 6vw, 72px);
   align-items: start;
 }
 
 .faq-layout__intro {
-  position: sticky;
-  top: 120px;
+  position: static;
+  text-align: center;
 }
 
 .faq-layout h2 {
-  max-width: 480px;
+  max-width: 760px;
+  margin-inline: auto;
   font-size: clamp(2.3rem, 3.7vw, 3.75rem);
 }
 
 .faq-layout__intro > p {
   margin-top: 20px;
+  text-align: center;
   color: var(--muted);
   font-size: 16px;
   line-height: 1.55;
@@ -994,6 +1053,7 @@ h2 {
 }
 
 .final-cta .section-index {
+  background: rgba(255, 255, 255, 0.09);
   color: var(--accent);
 }
 
@@ -1187,8 +1247,8 @@ h2 {
 
   .section-intro__aside {
     display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
+    align-items: center;
+    justify-content: center;
     gap: 30px;
   }
 
@@ -1242,11 +1302,6 @@ h2 {
 
   .container {
     width: min(calc(100% - 24px), var(--container));
-  }
-
-  .brand-logo {
-    padding: 5px 8px;
-    border-radius: 12px;
   }
 
   .brand-logo img {
@@ -1329,10 +1384,6 @@ h2 {
 
   .hero-clip[data-distance="2"],
   .hero-clip[data-distance="3"] {
-    display: none;
-  }
-
-  .scroll-cue {
     display: none;
   }
 

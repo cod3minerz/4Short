@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { ArrowDown } from "lucide-react";
 import { HeroCarousel, PlatformCycler } from "./components/hero-showcase";
 import {
   FaqSection,
@@ -61,10 +60,6 @@ export default function Home() {
             </div>
 
             <HeroCarousel />
-
-            <a className="scroll-cue" href="#pricing" aria-label="Перейти к тарифам">
-              <ArrowDown size={18} />
-            </a>
           </div>
         </section>
 
@@ -85,7 +80,7 @@ export default function Home() {
       <footer className="footer">
         <div className="container footer__grid">
           <div className="footer__brand">
-            <Logo />
+            <Logo tone="light" />
             <p>Длинные видео превращаются в короткий контент без часов ручного просмотра.</p>
           </div>
 

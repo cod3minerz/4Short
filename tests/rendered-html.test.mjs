@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 async function render(pathname = "/") {
@@ -34,6 +35,7 @@ test("server-renders the 4Short landing page and its primary action", async () =
   assert.match(html, /КОНТЕНТ НА НЕДЕЛИ\./);
   assert.match(html, /placeholder="Вставьте ссылку на YouTube"/);
   assert.match(html, /Создать шортсы/);
+  assert.match(html, /\/assets\/logo-dark\.svg/);
   assert.match(html, /\/assets\/logo-source\.svg/);
   assert.match(html, /ВЫБЕРИТЕ СВОЙ ОБЪЁМ/);
   assert.match(html, /ДОБАВЬТЕ МИНУТЫ, НЕ МЕНЯЯ ТАРИФ/);
@@ -55,6 +57,22 @@ test("ships SEO metadata and excludes removed product sections", async () => {
   assert.doesNotMatch(html, /Три шага/);
   assert.doesNotMatch(html, /Из обычного фрагмента/);
   assert.doesNotMatch(html, /Для тех, у кого уже есть что сказать/);
+  assert.doesNotMatch(html, /scroll-cue/);
+});
+
+test("keeps the approved visual assets and interaction rules in source", async () => {
+  const [css, logo] = await Promise.all([
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../public/assets/logo-dark.svg", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(css, /url\("\/assets\/hero-landscape\.webp"\)/);
+  assert.match(css, /\.url-form__row:focus-within/);
+  assert.match(css, /\.mobile-drawer \.drawer__dialog/);
+  assert.match(css, /width:\s*100vw\s*!important/);
+  assert.match(css, /\.pricing-shell[\s\S]*?background:\s*transparent/);
+  assert.doesNotMatch(css, /\.scroll-cue\s*\{/);
+  assert.match(logo, /path:first-of-type\s*\{\s*fill:\s*#202b35/);
 });
 
 test("serves robots and sitemap routes", async () => {

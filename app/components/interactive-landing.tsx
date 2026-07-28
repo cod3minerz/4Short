@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Accordion, Button, Drawer, Input } from "@heroui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, Check, Menu, Upload } from "lucide-react";
+import { ArrowRight, Check, ChevronRight, Menu, Upload, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
@@ -76,21 +76,28 @@ export function Header() {
         </div>
       </div>
 
-      <Drawer.Backdrop isOpen={open} onOpenChange={setOpen} variant="blur">
+      <Drawer.Backdrop isOpen={open} onOpenChange={setOpen} variant="opaque">
         <Drawer.Content className="mobile-drawer" placement="right">
           <Drawer.Dialog aria-label="Навигация 4Short">
-            <Drawer.CloseTrigger className="mobile-drawer__close" />
             <Drawer.Header>
               <Logo />
               <Drawer.Heading>Меню</Drawer.Heading>
+              <Drawer.CloseTrigger aria-label="Закрыть меню" className="mobile-drawer__close">
+                <X size={25} aria-hidden="true" />
+              </Drawer.CloseTrigger>
             </Drawer.Header>
             <Drawer.Body>
               <nav aria-label="Мобильная навигация">
                 {navigation.map((item) => (
                   <a href={item.href} key={item.href} onClick={() => setOpen(false)}>
-                    {item.label}
+                    <span>{item.label}</span>
+                    <ChevronRight size={23} aria-hidden="true" />
                   </a>
                 ))}
+                <a href="#top" onClick={() => setOpen(false)}>
+                  <span>Войти</span>
+                  <ChevronRight size={23} aria-hidden="true" />
+                </a>
               </nav>
             </Drawer.Body>
             <Drawer.Footer>
