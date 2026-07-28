@@ -36,6 +36,10 @@ test("server-renders the 4Short landing page and its primary action", async () =
   assert.match(html, /<span>КОНТЕНТ<\/span><span>НА НЕДЕЛИ\.<\/span>/);
   assert.match(html, /placeholder="Вставьте ссылку на YouTube"/);
   assert.match(html, /Создать шортсы/);
+  assert.match(html, /СПИКЕР ВСЕГДА ОСТАЁТСЯ В КАДРЕ/);
+  assert.match(html, /СЛОВА СТАНОВЯТСЯ ЧАСТЬЮ ВИДЕО/);
+  assert.match(html, /ДОБАВЛЯЙТЕ ОФФЕРЫ ПРЯМО В РОЛИК/);
+  assert.match(html, /ОБРАБАТЫВАЙТЕ НЕСКОЛЬКО ИСХОДНИКОВ/);
   assert.match(html, /\/assets\/logo-dark\.svg/);
   assert.match(html, /\/assets\/logo-source\.svg/);
   assert.match(html, /ВЫБЕРИТЕ СВОЙ ОБЪЁМ/);
@@ -43,7 +47,7 @@ test("server-renders the 4Short landing page and its primary action", async () =
   assert.match(html, /ОТВЕТЫ БЕЗ МЕЛКОГО ШРИФТА/);
 });
 
-test("ships SEO metadata and excludes removed product sections", async () => {
+test("ships SEO metadata and the product story", async () => {
   const html = await (await render()).text();
 
   assert.match(html, /rel="canonical" href="https:\/\/4short\.ru\/"/);
@@ -53,11 +57,8 @@ test("ships SEO metadata and excludes removed product sections", async () => {
   assert.match(html, /SoftwareApplication/);
   assert.match(html, /FAQPage/);
 
-  assert.doesNotMatch(html, /Настройте результат/);
-  assert.doesNotMatch(html, /Загрузите один раз/);
-  assert.doesNotMatch(html, /Три шага/);
-  assert.doesNotMatch(html, /Из обычного фрагмента/);
-  assert.doesNotMatch(html, /Для тех, у кого уже есть что сказать/);
+  assert.match(html, /id="features"/);
+  assert.match(html, /ВСЁ, ЧТО НУЖНО ДЛЯ КОРОТКОГО ВИДЕО/);
   assert.doesNotMatch(html, /scroll-cue/);
 });
 

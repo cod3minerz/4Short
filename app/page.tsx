@@ -9,6 +9,7 @@ import {
   UrlActionForm,
 } from "./components/interactive-landing";
 import { Logo } from "./components/logo";
+import { ProductSections } from "./components/product-sections";
 import { faqItems, navigation } from "./data/content";
 
 export const metadata: Metadata = {
@@ -69,6 +70,7 @@ export default function Home() {
           </div>
         </section>
 
+        <ProductSections />
         <PricingSection />
         <MinutesSection />
         <FaqSection />

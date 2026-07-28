@@ -1,4 +1,5 @@
 export const navigation = [
+  { label: "Возможности", href: "#features" },
   { label: "Тарифы", href: "#pricing" },
   { label: "Минуты", href: "#minutes" },
   { label: "FAQ", href: "#faq" },
