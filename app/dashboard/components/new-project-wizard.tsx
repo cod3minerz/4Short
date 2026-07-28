@@ -17,8 +17,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { styles } from "../data";
 import { trackApp } from "../lib/track-app";
+import { useDashboardStore } from "../store";
 
 const intents = [
   { id: "best", title: "Лучшие моменты", text: "Сбалансированный выбор сильных самостоятельных фрагментов." },
@@ -61,6 +61,7 @@ export function NewProjectWizard({
   initialSource?: string;
   initialUpload?: boolean;
 }) {
+  const { styles, defaultStyleId } = useDashboardStore();
   const fileRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(1);
   const [url, setUrl] = useState(initialSource);
@@ -72,11 +73,13 @@ export function NewProjectWizard({
   const [customPrompt, setCustomPrompt] = useState("");
   const [duration, setDuration] = useState("30–60 секунд");
   const [count, setCount] = useState("recommended");
-  const [styleId, setStyleId] = useState("main");
+  const [styleOverride, setStyleOverride] = useState<string | null>(null);
+  const styleId = styleOverride ?? defaultStyleId;
   const [captions, setCaptions] = useState(true);
   const [silence, setSilence] = useState(true);
   const [banner, setBanner] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [showAllIntents, setShowAllIntents] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [processingIndex, setProcessingIndex] = useState(0);
 
@@ -103,6 +106,17 @@ export function NewProjectWizard({
     trackApp("source_url_submit");
     trackApp("source_probe_complete", { source: "youtube" });
   };
+
+  const chooseStyle = (id: string) => {
+    const style = styles.find((item) => item.id === id);
+    if (!style) return;
+    setStyleOverride(id);
+    setCaptions(style.captions !== "Выключены");
+    setSilence(style.silenceRemoval);
+    setBanner(style.banner);
+  };
+
+  const currentStyle = styles.find((style) => style.id === styleId) ?? styles[0];
 
   if (processing) {
     const completed = processingIndex >= processingStages.length;
@@ -260,7 +274,7 @@ export function NewProjectWizard({
             </div>
 
             <div className="wizard-intent-grid">
-              {intents.map((item) => (
+              {intents.filter((_, index) => showAllIntents || index < 4).map((item) => (
                 <button
                   className={intent === item.id ? "is-selected" : ""}
                   type="button"
@@ -273,6 +287,12 @@ export function NewProjectWizard({
                 </button>
               ))}
             </div>
+            {!showAllIntents ? (
+              <button className="wizard-more-intents" type="button" onClick={() => setShowAllIntents(true)}>
+                Ещё сценарии и свой запрос
+                <ChevronDown size={17} />
+              </button>
+            ) : null}
 
             {intent === "custom" ? (
               <label className="wizard-custom-prompt">
@@ -350,7 +370,13 @@ export function NewProjectWizard({
             </div>
 
             <div className="wizard-style-layout">
-              <div className="wizard-phone-preview">
+              <div
+                className="wizard-phone-preview"
+                style={{
+                  "--preview-bg": currentStyle.colors[0],
+                  "--preview-accent": currentStyle.colors[1],
+                } as React.CSSProperties}
+              >
                 <div className="wizard-phone-preview__safe"><span>Безопасная зона</span></div>
                 <span className="dash-media-mark">4S</span>
                 {captions ? (
@@ -370,7 +396,7 @@ export function NewProjectWizard({
                       className={styleId === style.id ? "is-selected" : ""}
                       type="button"
                       key={style.id}
-                      onClick={() => setStyleId(style.id)}
+                      onClick={() => chooseStyle(style.id)}
                     >
                       <span style={{ background: `linear-gradient(135deg, ${style.colors[0]} 50%, ${style.colors[1]} 50%)` }} />
                       <b>{style.name}</b>

@@ -21,6 +21,9 @@ const navItems = [
   { href: "/dashboard", label: "Главная", icon: Home, exact: true },
   { href: "/dashboard/projects", label: "Проекты", icon: FolderOpen },
   { href: "/dashboard/styles", label: "Стили", icon: Palette },
+];
+
+const utilityItems = [
   { href: "/dashboard/billing", label: "Минуты и тариф", icon: ReceiptText },
   { href: "/dashboard/help", label: "Помощь", icon: CircleHelp },
 ];
@@ -65,6 +68,20 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="dash-sidebar__spacer" />
+
+        <nav className="dash-nav dash-nav--utility" aria-label="Оплата и помощь">
+          {utilityItems.map(({ href, label, icon: Icon }) => (
+            <Link
+              className={pathname.startsWith(href) ? "is-active" : ""}
+              href={href}
+              key={href}
+              onClick={() => setMenuOpen(false)}
+            >
+              <Icon size={18} strokeWidth={2} />
+              <span>{label}</span>
+            </Link>
+          ))}
+        </nav>
 
         <Link className="dash-balance" href="/dashboard/billing" onClick={() => setMenuOpen(false)}>
           <span className="dash-balance__label">Баланс</span>

@@ -8,32 +8,32 @@ import {
   ChevronRight,
   Download,
   FileArchive,
-  Frame,
   LoaderCircle,
   Play,
   RotateCcw,
   Search,
-  SlidersHorizontal,
+  Settings2,
   Sparkles,
   Subtitles,
   WandSparkles,
+  X,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { moments as initialMoments, styles, transcript } from "../data";
+import { useEffect, useMemo, useState } from "react";
+import { moments as initialMoments, transcript } from "../data";
 import { trackApp } from "../lib/track-app";
+import { useDashboardStore } from "../store";
 
-type Tab = "moments" | "transcript" | "style" | "settings";
+type Tab = "moments" | "transcript";
 type RenderState = "review" | "rendering" | "ready";
 
 const tabs: Array<{ id: Tab; label: string }> = [
-  { id: "moments", label: "Моменты" },
+  { id: "moments", label: "Клипы" },
   { id: "transcript", label: "Транскрипт" },
-  { id: "style", label: "Стиль" },
-  { id: "settings", label: "Настройки проекта" },
 ];
 
 export function ProjectWorkspace() {
+  const { styles, defaultStyleId } = useDashboardStore();
   const [tab, setTab] = useState<Tab>("moments");
   const [items, setItems] = useState(initialMoments);
   const [activeId, setActiveId] = useState(initialMoments[0].id);
@@ -41,16 +41,28 @@ export function ProjectWorkspace() {
   const [search, setSearch] = useState("");
   const [editingTranscript, setEditingTranscript] = useState(false);
   const [transcriptDraft, setTranscriptDraft] = useState(transcript.map((line) => line.text).join("\n\n"));
-  const [styleId, setStyleId] = useState("main");
+  const [styleOverride, setStyleOverride] = useState<string | null>(null);
+  const styleId = styleOverride ?? defaultStyleId;
   const [captions, setCaptions] = useState(true);
   const [silence, setSilence] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const selected = items.filter((item) => item.selected);
   const active = items.find((item) => item.id === activeId) ?? items[0];
+  const currentStyle = styles.find((style) => style.id === styleId) ?? styles[0];
   const filteredTranscript = useMemo(
     () => transcript.filter((line) => line.text.toLowerCase().includes(search.toLowerCase())),
     [search],
   );
+
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSettingsOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [settingsOpen]);
 
   const toggleMoment = (id: string) => {
     setItems((current) =>
@@ -78,7 +90,7 @@ export function ProjectWorkspace() {
               {renderState === "review" ? "Нужна проверка" : renderState === "rendering" ? "Создаём клипы" : "Готово"}
             </span>
             <h1>Подкаст №24 — как запускать продукты</h1>
-            <p>YouTube · 01:03:42 · стиль «Основной»</p>
+            <p>YouTube · 01:03:42 · стиль «{currentStyle.name}»</p>
           </div>
         </div>
         <div className="project-header__actions">
@@ -88,6 +100,10 @@ export function ProjectWorkspace() {
               Скачать всё
             </Button>
           ) : null}
+          <Button variant="outline" onPress={() => setSettingsOpen(true)}>
+            <Settings2 size={18} />
+            Параметры
+          </Button>
           <Button isDisabled={!selected.length || renderState === "rendering"} onPress={startRender}>
             {renderState === "rendering" ? <LoaderCircle className="is-spinning" size={18} /> : <Sparkles size={18} />}
             {renderState === "review"
@@ -134,7 +150,7 @@ export function ProjectWorkspace() {
                 <span className="dash-eyebrow">Найдено {items.length}</span>
                 <h2>Выберите клипы для рендера</h2>
               </div>
-              <button type="button" onClick={() => trackApp("moments_recompute")}>
+              <button type="button" onClick={() => setSettingsOpen(true)}>
                 <RotateCcw size={16} />
                 Найти иначе
               </button>
@@ -298,55 +314,88 @@ export function ProjectWorkspace() {
         </section>
       ) : null}
 
-      {tab === "style" ? (
-        <section className="project-style-layout">
-          <div className="project-style-preview">
-            <span className="dash-media-mark">4S</span>
-            {captions ? <div><span>ПРОВЕРЯЙТЕ</span><strong>ЦЕННОСТЬ</strong><span>ДО МАСШТАБА</span></div> : null}
-          </div>
-          <div className="project-style-panel">
-            <span className="dash-eyebrow">Стиль проекта</span>
-            <h2>Оформление всех выбранных клипов</h2>
-            <div className="project-style-choices">
-              {styles.map((style) => (
-                <button className={styleId === style.id ? "is-selected" : ""} type="button" key={style.id} onClick={() => setStyleId(style.id)}>
-                  <span style={{ background: `linear-gradient(135deg, ${style.colors[0]} 50%, ${style.colors[1]} 50%)` }} />
-                  <b>{style.name}</b>
-                  <small>{style.description}</small>
-                  {styleId === style.id ? <Check size={17} /> : null}
-                </button>
-              ))}
-            </div>
-            <div className="project-setting-row">
-              <span><Subtitles size={19} /><span><strong>Субтитры</strong><small>Активное слово</small></span></span>
-              <Switch aria-label="Субтитры" isSelected={captions} onChange={setCaptions}><Switch.Control><Switch.Thumb /></Switch.Control></Switch>
-            </div>
-            <div className="project-setting-row">
-              <span><WandSparkles size={19} /><span><strong>Удаление пауз</strong><small>Паузы длиннее 0,8 секунды</small></span></span>
-              <Switch aria-label="Удаление пауз" isSelected={silence} onChange={setSilence}><Switch.Control><Switch.Thumb /></Switch.Control></Switch>
-            </div>
-            <Button onPress={() => trackApp("style_apply", { style: styleId })}>Применить к выбранным клипам</Button>
-          </div>
-        </section>
-      ) : null}
+      {settingsOpen ? (
+        <>
+          <button
+            className="project-settings-backdrop"
+            type="button"
+            aria-label="Закрыть параметры проекта"
+            onClick={() => setSettingsOpen(false)}
+          />
+          <aside className="project-settings-drawer" role="dialog" aria-modal="true" aria-labelledby="project-settings-title">
+            <header>
+              <div>
+                <span className="dash-eyebrow">Один экран вместо вкладок</span>
+                <h2 id="project-settings-title">Параметры проекта</h2>
+                <p>Меняйте поиск и оформление здесь. Транскрипция повторно не запускается.</p>
+              </div>
+              <button type="button" aria-label="Закрыть" onClick={() => setSettingsOpen(false)}><X size={21} /></button>
+            </header>
 
-      {tab === "settings" ? (
-        <section className="project-settings-page">
-          <div className="project-settings-page__intro">
-            <span className="dash-eyebrow">Параметры поиска</span>
-            <h2>Что искать в исходнике</h2>
-            <p>Изменения применятся при следующем поиске и не запустят транскрипцию заново.</p>
-          </div>
-          <div className="project-settings-list">
-            <label><span><Sparkles size={19} /><span><strong>Тип моментов</strong><small>Законченные практические мысли</small></span></span><select defaultValue="tips"><option value="tips">Практические советы</option><option>Лучшие моменты</option><option>Сильные мнения</option><option>Истории</option></select></label>
-            <label><span><SlidersHorizontal size={19} /><span><strong>Количество</strong><small>Система не добавляет слабые фрагменты ради числа</small></span></span><select defaultValue="auto"><option value="auto">Рекомендуемое</option><option>Ровно 6</option><option>Ровно 8</option></select></label>
-            <label><span><Frame size={19} /><span><strong>Длительность</strong><small>Разрешено закончить мысль сверх лимита</small></span></span><select defaultValue="medium"><option value="medium">30–60 секунд</option><option>До 30 секунд</option><option>60–90 секунд</option></select></label>
-            <div className="project-warning"><AlertTriangle size={18} /><span><strong>Минуты повторно не спишутся.</strong> Поиск использует уже готовый транскрипт проекта.</span></div>
-            <Button onPress={() => trackApp("moments_recompute")}>Найти новые варианты</Button>
-          </div>
-        </section>
+            <section>
+              <h3>Что искать</h3>
+              <label>
+                <span>Сценарий</span>
+                <select defaultValue="tips">
+                  <option value="tips">Практические советы</option>
+                  <option>Лучшие моменты</option>
+                  <option>Сильные мнения</option>
+                  <option>Истории</option>
+                </select>
+              </label>
+              <div className="project-settings-drawer__pair">
+                <label><span>Количество</span><select defaultValue="auto"><option value="auto">Рекомендуемое</option><option>Ровно 6</option><option>Ровно 8</option></select></label>
+                <label><span>Длительность</span><select defaultValue="medium"><option value="medium">30–60 сек.</option><option>До 30 сек.</option><option>60–90 сек.</option></select></label>
+              </div>
+            </section>
+
+            <section>
+              <h3>Как оформить</h3>
+              <div className="project-drawer-styles">
+                {styles.map((style) => (
+                  <button
+                    className={styleId === style.id ? "is-selected" : ""}
+                    type="button"
+                    key={style.id}
+                    onClick={() => {
+                      setStyleOverride(style.id);
+                      setCaptions(style.captions !== "Выключены");
+                      setSilence(style.silenceRemoval);
+                    }}
+                  >
+                    <span style={{ background: `linear-gradient(135deg, ${style.colors[0]} 50%, ${style.colors[1]} 50%)` }} />
+                    <b>{style.name}</b>
+                    {styleId === style.id ? <Check size={15} /> : null}
+                  </button>
+                ))}
+              </div>
+              <div className="project-setting-row">
+                <span><Subtitles size={19} /><span><strong>Субтитры</strong><small>Применить к выбранным клипам</small></span></span>
+                <Switch aria-label="Субтитры" isSelected={captions} onChange={setCaptions}><Switch.Control><Switch.Thumb /></Switch.Control></Switch>
+              </div>
+              <div className="project-setting-row">
+                <span><WandSparkles size={19} /><span><strong>Удаление пауз</strong><small>Не обрезать окончания фраз</small></span></span>
+                <Switch aria-label="Удаление пауз" isSelected={silence} onChange={setSilence}><Switch.Control><Switch.Thumb /></Switch.Control></Switch>
+              </div>
+              <Link href="/dashboard/styles">Изменить сам пресет <ChevronRight size={16} /></Link>
+            </section>
+
+            <div className="project-warning">
+              <AlertTriangle size={18} />
+              <span><strong>Повторного списания не будет.</strong> Новый поиск использует готовый транскрипт.</span>
+            </div>
+
+            <footer>
+              <Button variant="outline" onPress={() => { trackApp("moments_recompute"); setSettingsOpen(false); }}>
+                Найти новые варианты
+              </Button>
+              <Button onPress={() => { trackApp("style_apply", { style: styleId }); setSettingsOpen(false); }}>
+                Применить
+              </Button>
+            </footer>
+          </aside>
+        </>
       ) : null}
     </main>
   );
 }
-

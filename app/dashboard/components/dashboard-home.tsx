@@ -1,20 +1,12 @@
 "use client";
 
 import { Button, Input } from "@heroui/react";
-import {
-  ArrowRight,
-  CheckCircle2,
-  Clock3,
-  FileUp,
-  Plus,
-  Sparkles,
-  Youtube,
-} from "lucide-react";
+import { ArrowRight, Clock3, FileUp, Plus, Sparkles, Youtube } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { trackApp } from "../lib/track-app";
-import { minuteBalance, projects, styles } from "../data";
+import { minuteBalance, projects } from "../data";
 import { PageHeading } from "./page-heading";
 import { ProjectCard } from "./project-card";
 
@@ -143,35 +135,6 @@ export function DashboardHome() {
         </div>
       </section>
 
-      <section className="dash-section-block">
-        <div className="dash-section-head">
-          <div>
-            <span className="dash-eyebrow">Оформление</span>
-            <h2>Быстрый выбор стиля</h2>
-          </div>
-          <Link href="/dashboard/styles">Настроить стили <ArrowRight size={16} /></Link>
-        </div>
-        <div className="dash-style-strip">
-          {styles.map((style) => (
-            <Link className="dash-style-mini" href="/dashboard/styles" key={style.id}>
-              <span
-                className="dash-style-mini__preview"
-                style={{ "--style-a": style.colors[0], "--style-b": style.colors[1] } as React.CSSProperties}
-              >
-                <i>ОДНА МЫСЛЬ</i>
-                <i>МОЖЕТ СТАТЬ</i>
-                <i>ЦЕЛЫМ КЛИПОМ</i>
-              </span>
-              <span>
-                <strong>{style.name}</strong>
-                <small>{style.captions}</small>
-              </span>
-              {style.isDefault ? <CheckCircle2 size={18} aria-label="Стиль по умолчанию" /> : null}
-            </Link>
-          ))}
-        </div>
-      </section>
     </main>
   );
 }
-
