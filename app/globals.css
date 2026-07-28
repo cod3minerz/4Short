@@ -1362,12 +1362,12 @@ h2 {
   }
 
   .hero-carousel {
-    --clip-center: 116px;
-    --clip-step: 18px;
-    width: 340px;
-    height: 290px;
-    bottom: 56px;
-    gap: 6px;
+    --clip-center: 150px;
+    --clip-step: 22px;
+    width: 414px;
+    height: 332px;
+    bottom: 34px;
+    gap: 8px;
   }
 
   .hero-clip {
