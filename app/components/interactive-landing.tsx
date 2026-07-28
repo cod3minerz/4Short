@@ -63,8 +63,8 @@ export function Header() {
         </nav>
 
         <div className="site-header__actions">
-          <a className="login-link" href="#top">Войти</a>
-          <a className="header-cta" href="#top">Создать шортсы</a>
+          <Link className="login-link" href="/dashboard">Войти</Link>
+          <Link className="header-cta" href="/dashboard/new">Создать шортсы</Link>
           <Button
             aria-label="Открыть меню"
             className="menu-button"
@@ -95,16 +95,16 @@ export function Header() {
                     <ChevronRight size={23} aria-hidden="true" />
                   </Link>
                 ))}
-                <a href="#top" onClick={() => setOpen(false)}>
+                <Link href="/dashboard" onClick={() => setOpen(false)}>
                   <span>Войти</span>
                   <ChevronRight size={23} aria-hidden="true" />
-                </a>
+                </Link>
               </nav>
             </Drawer.Body>
             <Drawer.Footer>
-              <a className="header-cta" href="#top" onClick={() => setOpen(false)}>
+              <Link className="header-cta" href="/dashboard/new" onClick={() => setOpen(false)}>
                 Создать шортсы
-              </a>
+              </Link>
             </Drawer.Footer>
           </Drawer.Dialog>
         </Drawer.Content>
@@ -124,9 +124,9 @@ export function UrlActionForm({ placement }: { placement: Placement }) {
     defaultValues: { url: "" },
   });
 
-  const submit = () => {
+  const submit = (data: UrlForm) => {
     track(placement === "hero" ? "hero_url_submit" : "final_cta_submit");
-    notify();
+    window.location.assign(`/dashboard/new?source=${encodeURIComponent(data.url)}`);
   };
 
   const upload = () => {
@@ -181,7 +181,7 @@ export function UrlActionForm({ placement }: { placement: Placement }) {
           if (!file) return;
           track("video_upload_start", { fileType: file.type });
           track("video_upload_complete");
-          notify();
+          window.location.assign("/dashboard/new?upload=1");
         }}
       />
     </form>

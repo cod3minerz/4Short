@@ -8,7 +8,15 @@ export type AnalyticsEvent =
   | "blog_view" | "blog_search" | "blog_filter" | "blog_article_click"
   | "article_view" | "article_scroll_55" | "article_toc_click"
   | "article_cta_view" | "article_cta_submit" | "article_modal_open"
-  | "article_modal_close" | "article_related_click";
+  | "article_modal_close" | "article_related_click"
+  | "dashboard_view" | "project_create_start" | "source_url_submit"
+  | "source_upload_start" | "source_upload_complete" | "source_probe_complete"
+  | "project_settings_complete" | "analysis_start" | "analysis_complete"
+  | "analysis_failed" | "moment_select" | "moments_recompute"
+  | "transcript_edit" | "render_start" | "clip_render_complete"
+  | "clip_render_failed" | "clip_rerender" | "clip_download"
+  | "project_download_all" | "style_create" | "style_apply"
+  | "minutes_insufficient";
 
 declare global {
   interface Window {

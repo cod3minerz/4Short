@@ -1,5 +1,8 @@
 import vinext from "vinext";
 import { defineConfig } from "vite";
+import mdx from "@mdx-js/rollup";
+import remarkGfm from "remark-gfm";
+import rehypeSlug from "rehype-slug";
 import hostingConfig from "./.openai/hosting.json";
 import { sites } from "./build/sites-vite-plugin";
 
@@ -48,6 +51,7 @@ export default defineConfig(async () => {
       ? { watch: { useFsEvents: false, usePolling: true } }
       : undefined,
     plugins: [
+      mdx({ remarkPlugins: [remarkGfm], rehypePlugins: [rehypeSlug] }),
       vinext(),
       sites(),
       cloudflare({

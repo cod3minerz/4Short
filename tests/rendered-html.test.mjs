@@ -132,3 +132,35 @@ test("lists blog routes in sitemap and serves RSS", async () => {
   assert.match(rss.headers.get("content-type") ?? "", /application\/rss\+xml/);
   assert.match(await rss.text(), /<title>Блог 4Short<\/title>/);
 });
+
+test("server-renders the dashboard and its primary factory entry point", async () => {
+  const response = await render("/dashboard");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+
+  assert.match(html, /ДОБРЫЙ ДЕНЬ, КИРИЛЛ/);
+  assert.match(html, /ИЗ ДЛИННОГО ВИДЕО — СЕРИЯ ГОТОВЫХ КЛИПОВ/);
+  assert.match(html, /184[\s\S]*300[\s\S]*мин/);
+  assert.match(html, /Нужна проверка/);
+  assert.match(html, /robots\" content=\"noindex, nofollow/);
+});
+
+test("server-renders all primary cabinet surfaces", async () => {
+  const [projects, wizard, styles, billing, project] = await Promise.all([
+    render("/dashboard/projects"),
+    render("/dashboard/new"),
+    render("/dashboard/styles"),
+    render("/dashboard/billing"),
+    render("/dashboard/projects/podcast-24"),
+  ]);
+
+  for (const response of [projects, wizard, styles, billing, project]) {
+    assert.equal(response.status, 200);
+  }
+
+  assert.match(await projects.text(), /Все исходники, найденные моменты/);
+  assert.match(await wizard.text(), /ДОБАВЬТЕ ИСХОДНОЕ ВИДЕО/);
+  assert.match(await styles.text(), /Сохраните оформление один раз/);
+  assert.match(await billing.text(), /Минуты списываются один раз/);
+  assert.match(await project.text(), /Выберите клипы для рендера/);
+});
