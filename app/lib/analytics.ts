@@ -4,7 +4,11 @@ export type AnalyticsEvent =
   | "video_upload_complete" | "generation_start" | "generation_complete"
   | "pricing_view" | "plan_select" | "billing_period_change"
   | "minutes_package_select" | "minutes_purchase_start"
-  | "minutes_purchase_complete" | "faq_open" | "final_cta_submit";
+  | "minutes_purchase_complete" | "faq_open" | "final_cta_submit"
+  | "blog_view" | "blog_search" | "blog_filter" | "blog_article_click"
+  | "article_view" | "article_scroll_55" | "article_toc_click"
+  | "article_cta_view" | "article_cta_submit" | "article_modal_open"
+  | "article_modal_close" | "article_related_click";
 
 declare global {
   interface Window {

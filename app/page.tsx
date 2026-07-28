@@ -8,9 +8,9 @@ import {
   PricingSection,
   UrlActionForm,
 } from "./components/interactive-landing";
-import { Logo } from "./components/logo";
 import { ProductSections } from "./components/product-sections";
-import { faqItems, navigation } from "./data/content";
+import { SiteFooter } from "./components/site-footer";
+import { faqItems } from "./data/content";
 
 export const metadata: Metadata = {
   title: "4Short — AI-нарезка видео в Shorts, Reels и TikTok",
@@ -85,41 +85,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="footer">
-        <div className="container footer__grid">
-          <div className="footer__brand">
-            <Logo tone="light" />
-            <p>Длинные видео превращаются в короткий контент без часов ручного просмотра.</p>
-          </div>
-
-          <div>
-            <h3>Навигация</h3>
-            {navigation.map((item) => (
-              <a href={item.href} key={item.href}>{item.label}</a>
-            ))}
-          </div>
-
-          <div>
-            <h3>Контакты</h3>
-            <a href="mailto:hello@4short.ru">hello@4short.ru</a>
-            <span>Поддержка</span>
-            <span>Статус сервиса</span>
-          </div>
-
-          <div>
-            <h3>Документы</h3>
-            <span>Политика конфиденциальности</span>
-            <span>Пользовательское соглашение</span>
-            <span>Условия оплаты</span>
-          </div>
-        </div>
-
-        <div className="container footer__bottom">
-          <span>© 2026 4Short</span>
-          <span>Русский</span>
-          <span>Реквизиты будут добавлены до начала оплаты</span>
-        </div>
-      </footer>
+      <SiteFooter />
 
       <Notice />
 

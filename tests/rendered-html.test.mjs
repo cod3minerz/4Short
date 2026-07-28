@@ -93,3 +93,42 @@ test("serves robots and sitemap routes", async () => {
   assert.match(await robots.text(), /Sitemap:\s*https:\/\/4short\.ru\/sitemap\.xml/i);
   assert.match(await sitemap.text(), /<loc>https:\/\/4short\.ru\/?<\/loc>/i);
 });
+
+test("server-renders the blog index and its SEO cluster", async () => {
+  const response = await render("/blog");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+
+  assert.match(html, /ПРАКТИКА КОРОТКИХ ВИДЕО/);
+  assert.match(html, /Как превратить длинное видео в короткие ролики/);
+  assert.match(html, /Как сделать Shorts из видео YouTube/);
+  assert.match(html, /Автоматические субтитры для вертикальных видео/);
+  assert.match(html, /rel="canonical" href="https:\/\/4short\.ru\/blog"/);
+  assert.match(html, /"@type":"Blog"/);
+});
+
+test("server-renders an article with metadata, content and conversion points", async () => {
+  const response = await render("/blog/youtube-to-shorts");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+
+  assert.match(html, /<h1>Как сделать Shorts из видео YouTube<\/h1>/);
+  assert.match(html, /Подготовьте ссылку и цель/);
+  assert.match(html, /Вставьте ссылку — не нужно предварительно скачивать файл/);
+  assert.match(html, /"@type":"BlogPosting"/);
+  assert.match(html, /"@type":"BreadcrumbList"/);
+  assert.match(html, /rel="canonical" href="https:\/\/4short\.ru\/blog\/youtube-to-shorts"/);
+});
+
+test("lists blog routes in sitemap and serves RSS", async () => {
+  const [sitemap, rss] = await Promise.all([
+    render("/sitemap.xml"),
+    render("/blog/rss.xml"),
+  ]);
+
+  assert.equal(sitemap.status, 200);
+  assert.equal(rss.status, 200);
+  assert.match(await sitemap.text(), /https:\/\/4short\.ru\/blog\/ai-video-clipping/);
+  assert.match(rss.headers.get("content-type") ?? "", /application\/rss\+xml/);
+  assert.match(await rss.text(), /<title>Блог 4Short<\/title>/);
+});

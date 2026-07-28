@@ -1,8 +1,9 @@
 export const navigation = [
-  { label: "Возможности", href: "#features" },
-  { label: "Тарифы", href: "#pricing" },
-  { label: "Минуты", href: "#minutes" },
-  { label: "FAQ", href: "#faq" },
+  { label: "Возможности", href: "/#features" },
+  { label: "Тарифы", href: "/#pricing" },
+  { label: "Минуты", href: "/#minutes" },
+  { label: "FAQ", href: "/#faq" },
+  { label: "Блог", href: "/blog" },
 ] as const;
 
 export type PricingPlan = {

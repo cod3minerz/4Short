@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Accordion, Button, Drawer, Input } from "@heroui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, Check, ChevronRight, Menu, Upload, X } from "lucide-react";
+import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
@@ -51,13 +52,13 @@ export function Header() {
   return (
     <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
       <div className="site-header__island">
-        <a className="site-header__brand" href="#top" aria-label="4Short — на главную">
+        <Link className="site-header__brand" href="/" aria-label="4Short — на главную">
           <Logo priority />
-        </a>
+        </Link>
 
         <nav className="site-header__nav" aria-label="Основная навигация">
           {navigation.map((item) => (
-            <a href={item.href} key={item.href}>{item.label}</a>
+            <Link href={item.href} key={item.href}>{item.label}</Link>
           ))}
         </nav>
 
@@ -89,10 +90,10 @@ export function Header() {
             <Drawer.Body>
               <nav aria-label="Мобильная навигация">
                 {navigation.map((item) => (
-                  <a href={item.href} key={item.href} onClick={() => setOpen(false)}>
+                  <Link href={item.href} key={item.href} onClick={() => setOpen(false)}>
                     <span>{item.label}</span>
                     <ChevronRight size={23} aria-hidden="true" />
-                  </a>
+                  </Link>
                 ))}
                 <a href="#top" onClick={() => setOpen(false)}>
                   <span>Войти</span>
