@@ -1328,8 +1328,12 @@ h2 {
   }
 
   .hero h1 {
+    width: calc(100vw - 8px);
+    max-width: none;
     margin-top: 17px;
-    font-size: clamp(1.62rem, 7.7vw, 2.45rem);
+    font-size: clamp(1.75rem, 8.9vw, 2.6rem);
+    letter-spacing: -0.06em;
+    line-height: 0.94;
   }
 
   .hero__platform-line {
