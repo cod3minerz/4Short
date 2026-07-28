@@ -151,9 +151,8 @@ export function UrlActionForm({ placement }: { placement: Placement }) {
             placeholder="Вставьте ссылку на YouTube"
             type="url"
             variant="secondary"
-            {...register("url", {
-              onFocus: () => placement === "hero" && track("hero_url_focus"),
-            })}
+            {...register("url")}
+            onFocus={() => placement === "hero" && track("hero_url_focus")}
           />
         </div>
         <Button className="cta-button" type="submit">
