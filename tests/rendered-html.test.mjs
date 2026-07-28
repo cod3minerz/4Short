@@ -73,6 +73,11 @@ test("keeps the approved visual assets and interaction rules in source", async (
   assert.match(css, /\.mobile-drawer \.drawer__dialog/);
   assert.match(css, /width:\s*100vw\s*!important/);
   assert.match(css, /\.pricing-shell[\s\S]*?background:\s*transparent/);
+  assert.match(css, /\.product-series__group[\s\S]*?position:\s*sticky/);
+  assert.match(css, /\.product-series__group[\s\S]*?top:\s*88px/);
+  assert.match(css, /\.product-series__group::before[\s\S]*?background:\s*white/);
+  assert.doesNotMatch(css, /\.product-feature__visual::after/);
+  assert.doesNotMatch(css, /\.product-feature__visual\s*\{[^}]*box-shadow/);
   assert.doesNotMatch(css, /\.scroll-cue\s*\{/);
   assert.match(logo, /path:first-of-type\s*\{\s*fill:\s*#202b35/);
 });

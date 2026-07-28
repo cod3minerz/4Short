@@ -503,7 +503,11 @@ export function ProductSections() {
         {features.map((feature, index) => {
           const chapter = chapterBreaks[index];
           return (
-            <div className="product-series__group" key={feature.scene}>
+            <div
+              className="product-series__group"
+              key={feature.scene}
+              style={{ zIndex: index + 1 }}
+            >
               {chapter ? (
                 <div className="product-chapter" aria-hidden="true">
                   <span>{chapter.label}</span>
