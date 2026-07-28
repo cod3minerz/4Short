@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Switch } from "@heroui/react";
+import { Button } from "@heroui/react";
 import { Check, Copy, MoreHorizontal, Palette, Plus, UploadCloud } from "lucide-react";
 import { useState } from "react";
 import { trackApp } from "../lib/track-app";
@@ -11,6 +11,7 @@ import {
   updateStyle,
   useDashboardStore,
 } from "../store";
+import { DashboardSwitch } from "./dashboard-switch";
 import { PageHeading } from "./page-heading";
 
 export function StylesView() {
@@ -129,13 +130,11 @@ export function StylesView() {
             </label>
             <div className="style-editor__switch">
               <span><strong>Субтитры</strong><small>Выделять активное слово</small></span>
-              <Switch
-                aria-label="Субтитры"
-                isSelected={active.captions !== "Выключены"}
-                onChange={(value) => patch({ captions: value ? "Активное слово" : "Выключены" })}
-              >
-                <Switch.Control><Switch.Thumb /></Switch.Control>
-              </Switch>
+              <DashboardSwitch
+                checked={active.captions !== "Выключены"}
+                label="Субтитры"
+                onCheckedChange={(value) => patch({ captions: value ? "Активное слово" : "Выключены" })}
+              />
             </div>
             <div className="style-editor__colors">
               <span><strong>Цвета субтитров</strong><small>Основной и активный</small></span>
@@ -158,23 +157,19 @@ export function StylesView() {
             </div>
             <div className="style-editor__switch">
               <span><strong>Удалять паузы</strong><small>Длиннее 0,8 секунды</small></span>
-              <Switch
-                aria-label="Удалять паузы"
-                isSelected={active.silenceRemoval}
-                onChange={(value) => patch({ silenceRemoval: value })}
-              >
-                <Switch.Control><Switch.Thumb /></Switch.Control>
-              </Switch>
+              <DashboardSwitch
+                checked={active.silenceRemoval}
+                label="Удалять паузы"
+                onCheckedChange={(value) => patch({ silenceRemoval: value })}
+              />
             </div>
             <div className="style-editor__switch">
               <span><strong>Рекламный баннер</strong><small>Учитывает безопасную зону субтитров</small></span>
-              <Switch
-                aria-label="Рекламный баннер"
-                isSelected={active.banner}
-                onChange={(value) => patch({ banner: value })}
-              >
-                <Switch.Control><Switch.Thumb /></Switch.Control>
-              </Switch>
+              <DashboardSwitch
+                checked={active.banner}
+                label="Рекламный баннер"
+                onCheckedChange={(value) => patch({ banner: value })}
+              />
             </div>
             {active.banner ? <button className="style-upload-asset" type="button"><UploadCloud size={17} /> Загрузить баннер</button> : null}
           </div>

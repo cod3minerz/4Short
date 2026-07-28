@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Switch, TextArea } from "@heroui/react";
+import { Button, TextArea } from "@heroui/react";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -23,6 +23,7 @@ import { useEffect, useMemo, useState } from "react";
 import { moments as initialMoments, transcript } from "../data";
 import { trackApp } from "../lib/track-app";
 import { useDashboardStore } from "../store";
+import { DashboardSwitch } from "./dashboard-switch";
 
 type Tab = "moments" | "transcript";
 type RenderState = "review" | "rendering" | "ready";
@@ -371,11 +372,11 @@ export function ProjectWorkspace() {
               </div>
               <div className="project-setting-row">
                 <span><Subtitles size={19} /><span><strong>Субтитры</strong><small>Применить к выбранным клипам</small></span></span>
-                <Switch aria-label="Субтитры" isSelected={captions} onChange={setCaptions}><Switch.Control><Switch.Thumb /></Switch.Control></Switch>
+                <DashboardSwitch checked={captions} label="Субтитры" onCheckedChange={setCaptions} />
               </div>
               <div className="project-setting-row">
                 <span><WandSparkles size={19} /><span><strong>Удаление пауз</strong><small>Не обрезать окончания фраз</small></span></span>
-                <Switch aria-label="Удаление пауз" isSelected={silence} onChange={setSilence}><Switch.Control><Switch.Thumb /></Switch.Control></Switch>
+                <DashboardSwitch checked={silence} label="Удаление пауз" onCheckedChange={setSilence} />
               </div>
               <Link href="/dashboard/styles">Изменить сам пресет <ChevronRight size={16} /></Link>
             </section>

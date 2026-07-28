@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Input, Switch, TextArea } from "@heroui/react";
+import { Button, Input, TextArea } from "@heroui/react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -19,6 +19,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { trackApp } from "../lib/track-app";
 import { useDashboardStore } from "../store";
+import { DashboardSwitch } from "./dashboard-switch";
 
 const intents = [
   { id: "best", title: "Лучшие моменты", text: "Сбалансированный выбор сильных самостоятельных фрагментов." },
@@ -424,27 +425,21 @@ export function NewProjectWizard({
                     <span className="wizard-control-card__icon"><Subtitles size={19} /></span>
                     <span><strong>Субтитры</strong><small>Стиль можно изменить в готовом клипе</small></span>
                   </div>
-                  <Switch aria-label="Добавлять субтитры" isSelected={captions} onChange={setCaptions}>
-                    <Switch.Control><Switch.Thumb /></Switch.Control>
-                  </Switch>
+                  <DashboardSwitch checked={captions} label="Добавлять субтитры" onCheckedChange={setCaptions} />
                 </div>
                 <div className="wizard-control-card">
                   <div>
                     <span className="wizard-control-card__icon"><WandSparkles size={19} /></span>
                     <span><strong>Убрать длинные паузы</strong><small>Мы не обрежем окончания фраз</small></span>
                   </div>
-                  <Switch aria-label="Удалять длинные паузы" isSelected={silence} onChange={setSilence}>
-                    <Switch.Control><Switch.Thumb /></Switch.Control>
-                  </Switch>
+                  <DashboardSwitch checked={silence} label="Удалять длинные паузы" onCheckedChange={setSilence} />
                 </div>
                 <div className="wizard-control-card">
                   <div>
                     <span className="wizard-control-card__icon"><UploadCloud size={19} /></span>
                     <span><strong>Рекламный баннер</strong><small>Изображение или короткое видео</small></span>
                   </div>
-                  <Switch aria-label="Добавить баннер" isSelected={banner} onChange={setBanner}>
-                    <Switch.Control><Switch.Thumb /></Switch.Control>
-                  </Switch>
+                  <DashboardSwitch checked={banner} label="Добавить баннер" onCheckedChange={setBanner} />
                 </div>
 
                 {banner ? (
