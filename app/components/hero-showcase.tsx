@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   Captions,
   Flame,
@@ -37,6 +37,8 @@ const cards = [
 
 export function PlatformCycler() {
   const [index, setIndex] = useState(0);
+  const [wordWidth, setWordWidth] = useState<number>();
+  const wordRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -48,12 +50,33 @@ export function PlatformCycler() {
     return () => window.clearInterval(interval);
   }, []);
 
+  useLayoutEffect(() => {
+    setWordWidth(wordRef.current?.getBoundingClientRect().width);
+  }, [index]);
+
   return (
-    <span className="platform-cycler" aria-live="polite">
-      <span className="platform-cycler__word" key={platforms[index]}>
+    <span
+      className="platform-cycler"
+      aria-live="polite"
+      style={wordWidth ? { width: `${wordWidth}px` } : undefined}
+    >
+      <span className="platform-cycler__word" key={platforms[index]} ref={wordRef}>
         {platforms[index]}
       </span>
-      <span className="platform-cycler__underline" aria-hidden="true" />
+      <svg
+        className="platform-cycler__underline"
+        viewBox="0 0 100 12"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M1 7.5C15 3 30 10 45 6.5C60 3 75 9.5 99 5"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="2.5"
+        />
+      </svg>
     </span>
   );
 }
@@ -69,9 +92,7 @@ export function HeroCarousel() {
             key={card.caption}
           >
             <div className="hero-clip__media" role="img" aria-label={`Клип: ${card.timecode}`}>
-              <div className="hero-clip__pattern" aria-hidden="true" />
-              <div className="hero-clip__person" aria-hidden="true"><span /></div>
-              <div className="hero-clip__shade" aria-hidden="true" />
+              <span className="hero-clip__placeholder" aria-hidden="true">Медиа 9:16</span>
             </div>
             <div className="hero-clip__badge">
               <Icon aria-hidden="true" size={12} />

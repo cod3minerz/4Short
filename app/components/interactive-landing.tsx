@@ -43,12 +43,17 @@ function UrlActionForm({ placement }: { placement: "hero" | "final" }) {
   return (
     <form className="url-form" onSubmit={handleSubmit(submit)} noValidate>
       <div className="url-form__row">
-        <Input
-          aria-label="Ссылка на видео YouTube"
-          className="url-form__input"
-          placeholder="Вставьте ссылку на YouTube"
-          {...register("url", { onBlur: () => track("hero_url_focus", { placement }) })}
-        />
+        <div className="url-form__field">
+          <span className="url-form__youtube" aria-hidden="true">
+            <Play size={10} fill="currentColor" strokeWidth={3} />
+          </span>
+          <Input
+            aria-label="Ссылка на видео YouTube"
+            className="url-form__input"
+            placeholder="Вставьте ссылку на YouTube"
+            {...register("url", { onBlur: () => track("hero_url_focus", { placement }) })}
+          />
+        </div>
         <Button className="cta-button" type="submit">Создать шортсы</Button>
       </div>
       {errors.url ? <span className="url-form__error" role="alert">{errors.url.message}</span> : null}

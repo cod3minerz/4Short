@@ -103,10 +103,9 @@ export default function Home() {
             <div className="hero__clouds" aria-hidden="true" />
             <div className="container hero__inner">
               <div className="hero__copy">
-                <Eyebrow>AI-нарезка длинных видео</Eyebrow>
                 <h1>
-                  ОДНО ВИДЕО.
-                  <span>КОНТЕНТ НА НЕДЕЛИ.</span>
+                  <span className="hero__title-line">ОДНО ВИДЕО.</span>
+                  <span className="hero__title-line hero__title-line--accent">КОНТЕНТ НА НЕДЕЛИ.</span>
                 </h1>
                 <p className="hero__platform-line">
                   <span>Короткие видео из одного большого для</span>
