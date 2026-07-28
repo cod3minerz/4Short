@@ -53,8 +53,11 @@ export default function Home() {
                 <span>КОНТЕНТ НА НЕДЕЛИ.</span>
               </h1>
               <p className="hero__platform-line">
-                <span>Короткие видео из одного большого для</span>
-                <PlatformCycler />
+                <span>Короткие видео из одного большого</span>
+                <span className="hero__platform-tail">
+                  <span>для</span>
+                  <PlatformCycler />
+                </span>
               </p>
               <UrlActionForm placement="hero" />
             </div>

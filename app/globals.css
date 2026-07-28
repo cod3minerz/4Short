@@ -171,6 +171,9 @@ h2 {
 
 .site-header__brand {
   width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 12px;
 }
 
 .site-header__nav {
@@ -400,6 +403,13 @@ h2 {
   color: var(--muted);
   font-size: clamp(1rem, 1.35vw, 1.2rem);
   line-height: 1.55;
+}
+
+.hero__platform-tail {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 7px;
 }
 
 .platform-cycler {
@@ -1206,6 +1216,10 @@ h2 {
     grid-template-columns: 1fr auto;
   }
 
+  .site-header__brand {
+    margin-left: 6px;
+  }
+
   .site-header__nav,
   .login-link {
     display: none;
@@ -1339,7 +1353,14 @@ h2 {
   .hero__platform-line {
     max-width: 340px;
     margin-top: 20px;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 1px;
     font-size: 14px;
+  }
+
+  .hero__platform-tail {
+    min-height: 28px;
   }
 
   .url-form {
