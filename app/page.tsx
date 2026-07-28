@@ -15,6 +15,7 @@ import {
   Sparkles,
   WandSparkles,
 } from "lucide-react";
+import { HeroCarousel, PlatformCycler } from "./components/hero-showcase";
 import { InteractiveLanding } from "./components/interactive-landing";
 import { Logo } from "./components/logo";
 import { faqItems, pricingPlans } from "./data/content";
@@ -25,14 +26,6 @@ export const metadata: Metadata = {
     "Превращайте длинные видео, подкасты и интервью в готовые вертикальные ролики. 4Short найдёт лучшие моменты, добавит субтитры и удержит спикера в кадре.",
   alternates: { canonical: "/" },
 };
-
-const shorts = [
-  { platform: "Shorts", time: "00:37", label: "Сильный хук", tone: "mint" },
-  { platform: "Reels", time: "00:31", label: "Практический совет", tone: "blue" },
-  { platform: "TikTok", time: "00:42", label: "История", tone: "ink" },
-  { platform: "Shorts", time: "00:34", label: "92% потенциал", tone: "sky" },
-  { platform: "VK Клипы", time: "00:29", label: "Главная мысль", tone: "pearl" },
-];
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return <span className="eyebrow">{children}</span>;
@@ -112,39 +105,17 @@ export default function Home() {
               <div className="hero__copy">
                 <Eyebrow>AI-нарезка длинных видео</Eyebrow>
                 <h1>
-                  Одно видео.
-                  <span>Контент на недели.</span>
+                  ОДНО ВИДЕО.
+                  <span>КОНТЕНТ НА НЕДЕЛИ.</span>
                 </h1>
-                <p>
-                  4Short находит сильные моменты, собирает вертикальный кадр и
-                  добавляет субтитры для Shorts, Reels, TikTok и VK Клипов.
+                <p className="hero__platform-line">
+                  <span>Короткие видео из одного большого для</span>
+                  <PlatformCycler />
                 </p>
                 <div data-form-slot="hero" />
-                <div className="hero__trust">
-                  <span><Check size={15} /> Без карты</span>
-                  <span><Check size={15} /> Демо без регистрации</span>
-                  <span><Check size={15} /> Вы контролируете результат</span>
-                </div>
               </div>
 
-              <div className="shorts-arc" aria-label="Примеры вертикальных клипов">
-                {shorts.map((item, index) => (
-                  <article
-                    className={`short-card short-card--${index + 1} short-card--${item.tone}`}
-                    key={`${item.platform}-${index}`}
-                  >
-                    <div className="short-card__top">
-                      <span>{item.platform}</span>
-                      <span>{item.time}</span>
-                    </div>
-                    <div className="short-card__subject" aria-hidden="true">
-                      <span />
-                    </div>
-                    <div className="short-card__caption">{item.label}</div>
-                    <div className="short-card__progress"><span /></div>
-                  </article>
-                ))}
-              </div>
+              <HeroCarousel />
               <a className="scroll-cue" href="#features" aria-label="К возможностям">
                 <ArrowDown size={18} />
               </a>
