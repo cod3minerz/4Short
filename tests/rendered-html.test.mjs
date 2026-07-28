@@ -32,7 +32,8 @@ test("server-renders the 4Short landing page and its primary action", async () =
   assert.match(html, /<html lang="ru">/);
   assert.match(html, /<title>4Short — AI-нарезка видео/);
   assert.match(html, /ОДНО ВИДЕО\./);
-  assert.match(html, /КОНТЕНТ НА НЕДЕЛИ\./);
+  assert.match(html, /class="hero-title-secondary"/);
+  assert.match(html, /<span>КОНТЕНТ<\/span><span>НА НЕДЕЛИ\.<\/span>/);
   assert.match(html, /placeholder="Вставьте ссылку на YouTube"/);
   assert.match(html, /Создать шортсы/);
   assert.match(html, /\/assets\/logo-dark\.svg/);

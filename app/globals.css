@@ -388,6 +388,10 @@ h2 {
   white-space: nowrap;
 }
 
+.hero-title-secondary > span + span::before {
+  content: " ";
+}
+
 .hero h1 > span:last-child {
   color: var(--accent-strong);
 }
@@ -1342,16 +1346,20 @@ h2 {
   }
 
   .hero h1 {
-    width: calc(100vw - 4px);
+    width: calc(100vw - 16px);
     max-width: none;
     margin-top: 17px;
-    font-size: clamp(2rem, 10.2vw, 2.9rem);
-    letter-spacing: -0.1em;
-    line-height: 0.9;
+    font-size: clamp(2.15rem, 11vw, 3rem);
+    letter-spacing: -0.04em;
+    line-height: 0.92;
   }
 
-  .hero h1 > span:last-child {
-    font-size: 0.94em;
+  .hero-title-secondary > span {
+    display: block;
+  }
+
+  .hero-title-secondary > span + span::before {
+    content: none;
   }
 
   .hero__platform-line {

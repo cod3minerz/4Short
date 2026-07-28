@@ -50,7 +50,10 @@ export default function Home() {
               <span className="hero-kicker">AI-нарезка длинных видео</span>
               <h1>
                 <span>ОДНО ВИДЕО.</span>
-                <span>КОНТЕНТ НА НЕДЕЛИ.</span>
+                <span className="hero-title-secondary">
+                  <span>КОНТЕНТ</span>
+                  <span>НА НЕДЕЛИ.</span>
+                </span>
               </h1>
               <p className="hero__platform-line">
                 <span>Короткие видео из одного большого</span>
