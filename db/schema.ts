@@ -512,6 +512,7 @@ export const idempotencyRecords = pgTable("idempotency_records", {
 export const payments = pgTable("payments", {
   id: uuid("id").primaryKey().defaultRandom(),
   workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
+  provider: text("provider").notNull().default("tbank"),
   providerPaymentId: text("provider_payment_id").notNull(),
   status: paymentStatus("status").notNull(),
   amountKopecks: integer("amount_kopecks").notNull(),
@@ -521,12 +522,13 @@ export const payments = pgTable("payments", {
   metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
   ...timestamps,
 }, (table) => [
-  uniqueIndex("payments_provider_unique").on(table.providerPaymentId),
+  uniqueIndex("payments_provider_unique").on(table.provider, table.providerPaymentId),
   uniqueIndex("payments_idempotency_unique").on(table.workspaceId, table.idempotencyKey),
 ]);
 
 export const paymentWebhooks = pgTable("payment_webhooks", {
   id: uuid("id").primaryKey().defaultRandom(),
+  provider: text("provider").notNull().default("tbank"),
   providerEventId: text("provider_event_id").notNull(),
   signatureValid: boolean("signature_valid").notNull(),
   payload: jsonb("payload").$type<Record<string, unknown>>().notNull(),
@@ -534,7 +536,7 @@ export const paymentWebhooks = pgTable("payment_webhooks", {
   error: text("error"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
-  uniqueIndex("payment_webhooks_provider_unique").on(table.providerEventId),
+  uniqueIndex("payment_webhooks_provider_unique").on(table.provider, table.providerEventId),
 ]);
 
 export const providerUsageCosts = pgTable("provider_usage_costs", {

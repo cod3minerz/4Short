@@ -17,8 +17,18 @@ class Storage:
             region_name=settings.s3_region,
             aws_access_key_id=settings.s3_access_key_id,
             aws_secret_access_key=settings.s3_secret_access_key,
-            config=Config(signature_version="s3v4", retries={"max_attempts": 4, "mode": "adaptive"}),
+            config=Config(
+                signature_version="s3v4",
+                s3={"addressing_style": "path" if settings.s3_force_path_style else "virtual"},
+                retries={"max_attempts": 4, "mode": "adaptive"},
+            ),
         )
+
+    def _extra_args(self, content_type: str) -> dict:
+        args = {"ContentType": content_type}
+        if self.settings.s3_server_side_encryption == "AES256":
+            args["ServerSideEncryption"] = "AES256"
+        return args
 
     def signed_get(self, bucket: str, key: str, expires: int = 3600) -> str:
         return self.client.generate_presigned_url(
@@ -32,7 +42,7 @@ class Storage:
             str(path),
             bucket,
             key,
-            ExtraArgs={"ContentType": content_type, "ServerSideEncryption": "AES256"},
+            ExtraArgs=self._extra_args(content_type),
         )
         head = self.client.head_object(Bucket=bucket, Key=key)
         return {
@@ -56,7 +66,7 @@ class Storage:
             stream,
             bucket,
             key,
-            ExtraArgs={"ContentType": content_type, "ServerSideEncryption": "AES256"},
+            ExtraArgs=self._extra_args(content_type),
             Config=TransferConfig(
                 multipart_threshold=16 * 1024**2,
                 multipart_chunksize=16 * 1024**2,

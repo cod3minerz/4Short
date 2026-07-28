@@ -17,8 +17,10 @@ class Settings(BaseSettings):
     ffprobe_path: str = "ffprobe"
     ytdlp_path: str = "yt-dlp"
 
-    s3_endpoint: str = "https://storage.yandexcloud.net"
-    s3_region: str = "ru-central1"
+    s3_endpoint: str = "https://s3.twcstorage.ru"
+    s3_region: str = "ru-1"
+    s3_force_path_style: bool = True
+    s3_server_side_encryption: str = "none"
     s3_access_key_id: str
     s3_secret_access_key: str
     s3_raw_bucket: str = "4short-raw"
@@ -26,7 +28,29 @@ class Settings(BaseSettings):
 
     yandex_cloud_folder_id: str | None = None
     yandex_cloud_api_key: str | None = None
+    stt_provider: str = "yandex_speechkit"
+    stt_base_url: str | None = None
+    stt_api_key: str | None = None
+    stt_model: str | None = None
+
+    llm_provider: str = "openrouter"
+    openrouter_api_key: str | None = None
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    llm_candidate_model: str = "deepseek/deepseek-v4-flash"
+    llm_rerank_model: str = "deepseek/deepseek-v4-pro"
+    llm_allowed_models: str = "deepseek/deepseek-v4-flash,deepseek/deepseek-v4-pro"
+    llm_blocked_model_prefixes: str = "openai/,anthropic/"
+    deepseek_api_key: str | None = None
+    deepseek_base_url: str = "https://api.deepseek.com"
 
     @property
     def memory_limit_bytes(self) -> int:
         return int(1.4 * 1024**3) if self.worker_mode == "2gb" else int(3 * 1024**3)
+
+    @property
+    def allowed_llm_models(self) -> set[str]:
+        return {value.strip() for value in self.llm_allowed_models.split(",") if value.strip()}
+
+    @property
+    def blocked_llm_prefixes(self) -> tuple[str, ...]:
+        return tuple(value.strip() for value in self.llm_blocked_model_prefixes.split(",") if value.strip())

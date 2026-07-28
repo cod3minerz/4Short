@@ -137,13 +137,13 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
   if (completedJob.type === "speech_to_text") {
     const [transcript] = await db.insert(transcripts).values({
       sourceId: sourceRow.source.id,
-      provider: String(result.provider ?? "yandex_speechkit_v3"),
+      provider: String(result.provider ?? "unknown"),
       language: String(result.language ?? "auto"),
       originalPayload: result.response as Record<string, unknown>,
     }).onConflictDoUpdate({
       target: transcripts.sourceId,
       set: {
-        provider: String(result.provider ?? "yandex_speechkit_v3"),
+        provider: String(result.provider ?? "unknown"),
         originalPayload: result.response as Record<string, unknown>,
         updatedAt: new Date(),
       },

@@ -9,7 +9,7 @@ from .config import Settings
 from .control_api import Job
 from .errors import JobError
 from .media import extract_audio, probe_media, validate_render
-from .providers import YandexGpt, YandexSpeechKit
+from .providers import create_llm_provider, create_stt_provider
 from .render import render_clip
 from .storage import Storage
 from .subtitles import write_ass
@@ -39,7 +39,7 @@ class StageRunner:
         elif job.type == "extract_audio":
             result = self.extract_audio(job, job_dir)
         elif job.type == "speech_to_text":
-            result = self.speech_to_text(job)
+            result = self.speech_to_text(job, job_dir)
         elif job.type == "find_moments":
             result = self.find_moments(job)
         elif job.type == "render_clip":
@@ -124,13 +124,12 @@ class StageRunner:
         artifact["expiresInHours"] = 24
         return {"audio": artifact}
 
-    def speech_to_text(self, job: Job) -> dict:
+    def speech_to_text(self, job: Job, job_dir: Path) -> dict:
         audio = job.payload["audio"]
         url = self.storage.signed_get(audio["bucket"], audio["key"], expires=4 * 60 * 60)
-        provider = YandexSpeechKit(self.settings)
-        operation_id = provider.submit(url, job.payload.get("language", "auto"))
-        response = provider.wait(operation_id)
-        return {"provider": "yandex_speechkit_v3", "operationId": operation_id, "response": response}
+        provider = create_stt_provider(self.settings)
+        result = provider.transcribe(url, job.payload.get("language", "auto"), job_dir)
+        return {"provider": provider.name, **result}
 
     def find_moments(self, job: Job) -> dict:
         transcript = job.payload["transcript"]
@@ -141,10 +140,17 @@ class StageRunner:
             "Фрагмент должен быть самостоятельным, завершённым и не обещать просмотры."
         )
         prompt = f"Настройки:\n{settings}\n\nТранскрипт с таймкодами:\n{transcript}"
-        lite = YandexGpt(self.settings).complete_json("yandexgpt-lite", system, prompt)
+        provider = create_llm_provider(self.settings)
+        candidate_model = self.settings.llm_candidate_model
+        rerank_model = self.settings.llm_rerank_model
+        lite = provider.complete_json(candidate_model, system, prompt)
         rerank_prompt = f"Удалите дубли и обеспечьте разнообразие. Кандидаты:\n{lite}"
-        ranked = YandexGpt(self.settings).complete_json("yandexgpt", system, rerank_prompt)
-        return ranked
+        ranked = provider.complete_json(rerank_model, system, rerank_prompt)
+        return {
+            **ranked,
+            "provider": provider.name,
+            "models": {"candidate": candidate_model, "rerank": rerank_model},
+        }
 
     def face_track(self, job: Job) -> dict:
         # The safe result is intentional: the renderer can continue without a

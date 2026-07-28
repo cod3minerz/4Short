@@ -15,6 +15,13 @@
       "when": 1785271291781,
       "tag": "0001_equal_rictor",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785272480082,
+      "tag": "0002_blushing_vector",
+      "breakpoints": true
     }
   ]
 }

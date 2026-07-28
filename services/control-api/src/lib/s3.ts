@@ -13,6 +13,7 @@ const env = getEnv();
 export const s3 = new S3Client({
   endpoint: env.S3_ENDPOINT,
   region: env.S3_REGION,
+  forcePathStyle: env.S3_FORCE_PATH_STYLE,
   credentials: {
     accessKeyId: env.S3_ACCESS_KEY_ID,
     secretAccessKey: env.S3_SECRET_ACCESS_KEY,
@@ -24,7 +25,9 @@ export async function beginMultipartUpload(bucket: string, key: string, contentT
     Bucket: bucket,
     Key: key,
     ContentType: contentType,
-    ServerSideEncryption: "AES256",
+    ...(env.S3_SERVER_SIDE_ENCRYPTION === "AES256"
+      ? { ServerSideEncryption: "AES256" as const }
+      : {}),
   }));
   if (!result.UploadId) throw new Error("S3 did not return UploadId");
   return result.UploadId;
