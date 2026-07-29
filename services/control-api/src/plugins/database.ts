@@ -6,6 +6,7 @@ declare module "fastify" {
   interface FastifyInstance {
     db: Database;
     requireWorkspace(request: import("fastify").FastifyRequest): Promise<void>;
+    requirePlatformAdmin(request: import("fastify").FastifyRequest): Promise<void>;
   }
 }
 

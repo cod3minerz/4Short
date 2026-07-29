@@ -21,6 +21,8 @@ const timestamps = {
 };
 
 export const memberRole = pgEnum("member_role", ["owner", "admin", "member"]);
+export const platformRole = pgEnum("platform_role", ["user", "support", "admin", "super_admin"]);
+export const userStatus = pgEnum("user_status", ["active", "suspended"]);
 export const projectStatus = pgEnum("project_status", [
   "draft",
   "uploading",
@@ -68,9 +70,14 @@ export const users = pgTable("users", {
   name: text("name"),
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
+  platformRole: platformRole("platform_role").notNull().default("user"),
+  status: userStatus("status").notNull().default("active"),
+  suspendedAt: timestamp("suspended_at", { withTimezone: true }),
+  suspensionReason: text("suspension_reason"),
   ...timestamps,
 }, (table) => [
   uniqueIndex("users_email_unique").on(table.email),
+  index("users_platform_access_idx").on(table.platformRole, table.status),
 ]);
 
 export const sessions = pgTable("sessions", {
@@ -561,7 +568,11 @@ export const auditEvents = pgTable("audit_events", {
   entityId: text("entity_id").notNull(),
   metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => [
+  index("audit_events_created_idx").on(table.createdAt),
+  index("audit_events_actor_idx").on(table.actorUserId, table.createdAt),
+  index("audit_events_entity_idx").on(table.entityType, table.entityId, table.createdAt),
+]);
 
 export const outboxEvents = pgTable("outbox_events", {
   id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),

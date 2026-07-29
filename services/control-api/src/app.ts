@@ -7,6 +7,7 @@ import { handleBetterAuth } from "./lib/http.js";
 import { databasePlugin } from "./plugins/database.js";
 import { contextPlugin } from "./plugins/context.js";
 import { billingRoutes } from "./routes/billing.js";
+import { adminRoutes } from "./routes/admin.js";
 import { jobRoutes } from "./routes/jobs.js";
 import { onboardingRoutes } from "./routes/onboarding.js";
 import { projectRoutes } from "./routes/projects.js";
@@ -57,6 +58,7 @@ export async function buildApp() {
   });
 
   await app.register(onboardingRoutes);
+  await app.register(adminRoutes);
   await app.register(uploadRoutes);
   await app.register(projectRoutes);
   await app.register(styleRoutes);

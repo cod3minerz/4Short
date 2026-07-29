@@ -164,3 +164,15 @@ test("server-renders all primary cabinet surfaces", async () => {
   assert.match(await billing.text(), /Минуты списываются один раз/);
   assert.match(await project.text(), /Выберите клипы для рендера/);
 });
+
+test("server-renders the closed admin surface without mock platform data", async () => {
+  const response = await render("/admin");
+  assert.equal(response.status, 200);
+  const html = await response.text();
+
+  assert.match(html, /4SHORT \/ ADMIN/);
+  assert.match(html, /CONTROL API НЕ ПОДКЛЮЧЁН/);
+  assert.match(html, /PLATFORM_ADMIN_EMAILS/);
+  assert.match(html, /robots\" content=\"noindex, nofollow, nocache/);
+  assert.doesNotMatch(html, /demo-admin|mock-admin/);
+});

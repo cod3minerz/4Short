@@ -10,6 +10,7 @@ const environmentSchema = z.object({
   WEB_ORIGIN: z.string().url().default("http://localhost:3000"),
   API_PUBLIC_URL: z.string().url().default("http://localhost:4100"),
   BETTER_AUTH_SECRET: z.string().min(32),
+  PLATFORM_ADMIN_EMAILS: z.string().default(""),
   YANDEX_CLIENT_ID: z.string().optional(),
   YANDEX_CLIENT_SECRET: z.string().optional(),
   UNISENDER_GO_API_KEY: z.string().optional(),
