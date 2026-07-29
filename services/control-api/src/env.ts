@@ -38,6 +38,8 @@ const environmentSchema = z.object({
   TBANK_API_URL: z.string().url().default("https://securepay.tinkoff.ru/v2"),
   PAYMENT_RETURN_URL: z.string().url().default("http://localhost:3000/dashboard/billing"),
   IDEMPOTENCY_TTL_HOURS: z.coerce.number().int().min(1).max(168).default(24),
+  RATE_LIMIT_MAX: z.coerce.number().int().min(30).max(10_000).default(240),
+  RATE_LIMIT_WINDOW: z.string().default("1 minute"),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
 });
 

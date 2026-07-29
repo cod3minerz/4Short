@@ -1,0 +1,16 @@
+{
+  "live-restore": true,
+  "userland-proxy": false,
+  "no-new-privileges": true,
+  "log-driver": "local",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  },
+  "default-address-pools": [
+    {
+      "base": "172.30.0.0/16",
+      "size": 24
+    }
+  ]
+}

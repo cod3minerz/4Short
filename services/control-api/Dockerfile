@@ -14,6 +14,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/services/control-api/dist ./services/control-api/dist
+COPY drizzle ./drizzle
 COPY infra/certs/timeweb-cloud-root.crt /etc/ssl/certs/timeweb-cloud-root.crt
 USER node
 EXPOSE 4100

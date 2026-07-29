@@ -1,4 +1,5 @@
 import cors from "@fastify/cors";
+import rateLimit from "@fastify/rate-limit";
 import sensible from "@fastify/sensible";
 import Fastify from "fastify";
 import { ZodError } from "zod";
@@ -42,6 +43,20 @@ export async function buildApp() {
     allowedHeaders: ["Content-Type", "Authorization", "Idempotency-Key", "X-Workspace-Id"],
     exposedHeaders: ["Idempotency-Replayed"],
   });
+  await app.register(rateLimit, {
+    global: true,
+    max: env.RATE_LIMIT_MAX,
+    timeWindow: env.RATE_LIMIT_WINDOW,
+    ban: 10,
+    hook: "onRequest",
+    keyGenerator: (request) => request.ip,
+    errorResponseBuilder: (_request, context) => ({
+      statusCode: 429,
+      code: "RATE_LIMITED",
+      error: "Too Many Requests",
+      message: `Слишком много запросов. Повторите через ${Math.ceil(context.ttl / 1000)} сек.`,
+    }),
+  });
   await app.register(sensible);
   await app.register(databasePlugin);
   await app.register(contextPlugin);
@@ -49,6 +64,13 @@ export async function buildApp() {
   app.route({
     method: ["GET", "POST"],
     url: "/v1/auth/*",
+    config: {
+      rateLimit: {
+        max: 12,
+        timeWindow: "1 minute",
+        ban: 5,
+      },
+    },
     handler: handleBetterAuth,
   });
   app.get("/health/live", async () => ({ status: "ok" }));
