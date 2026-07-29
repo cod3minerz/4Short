@@ -53,6 +53,11 @@ public HTTP entrypoint and proxies to the control API on
 `127.0.0.1:4100`. Domain and ACME contact values are stored in
 `/etc/caddy/4short.env`, outside the repository.
 
+`web.4short.ru` is the pre-production frontend hostname. Caddy terminates TLS
+and proxies to the resource-limited Next.js standalone container on
+`127.0.0.1:3000`. The apex production domain remains unchanged until the
+frontend passes mobile and Russian-network checks.
+
 ## Recovery
 
 1. Use the Timeweb web console if SSH is unavailable.
@@ -67,7 +72,7 @@ Production is released from an immutable Git archive. The deployment script:
 - validates the full commit SHA;
 - builds images before replacing running containers;
 - runs database migrations once;
-- waits for both API and worker health checks;
+- waits for web, API and worker health checks;
 - switches `/opt/4short/current` only after success;
 - restores the previous release if activation fails.
 
