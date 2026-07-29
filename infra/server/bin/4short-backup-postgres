@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+umask 077
+
+environment_file="/etc/4short/control-api.env"
+backup_dir="/var/lib/4short-backups/postgres"
+backup_prefix="${S3_BACKUP_PREFIX:-backups/postgres}"
+backup_recipient_file="/etc/4short/backup-age-recipient"
+timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
+backup_name="4short-${timestamp}.dump.age"
+plain_backup_path="${backup_dir}/${backup_name%.age}"
+encrypted_backup_path="${backup_dir}/${backup_name}"
+
+if [[ ! -r "${environment_file}" ]]; then
+  echo "Control API environment is not readable." >&2
+  exit 1
+fi
+
+if [[ ! -r "${backup_recipient_file}" ]]; then
+  echo "Backup encryption recipient is not readable." >&2
+  exit 1
+fi
+
+install -d -o root -g root -m 0700 "${backup_dir}"
+
+while IFS='=' read -r variable_name variable_value; do
+  [[ "${variable_name}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+  export "${variable_name}=${variable_value%$'\r'}"
+done < "${environment_file}"
+
+required_variables=(
+  DATABASE_URL
+  DATABASE_SSL_ROOT_CERT
+  S3_ENDPOINT
+  S3_REGION
+  S3_ACCESS_KEY_ID
+  S3_SECRET_ACCESS_KEY
+  S3_BUCKET
+)
+
+for variable_name in "${required_variables[@]}"; do
+  if [[ -z "${!variable_name:-}" ]]; then
+    echo "Required backup setting ${variable_name} is missing." >&2
+    exit 1
+  fi
+done
+
+export PGSSLROOTCERT="${DATABASE_SSL_ROOT_CERT}"
+cleanup() {
+  rm -f "${plain_backup_path}" "${encrypted_backup_path}"
+}
+trap cleanup EXIT
+
+pg_dump \
+  --dbname="${DATABASE_URL}" \
+  --format=custom \
+  --compress=9 \
+  --no-owner \
+  --no-privileges \
+  --file="${plain_backup_path}"
+
+pg_restore --list "${plain_backup_path}" >/dev/null
+
+age \
+  --encrypt \
+  --recipient "$(<"${backup_recipient_file}")" \
+  --output "${encrypted_backup_path}" \
+  "${plain_backup_path}"
+rm -f "${plain_backup_path}"
+
+python3 - "${encrypted_backup_path}" "${backup_prefix}/${backup_name}" <<'PY'
+import json
+import os
+import sys
+
+import boto3
+from botocore.config import Config
+
+backup_path, object_key = sys.argv[1:3]
+client = boto3.client(
+    "s3",
+    endpoint_url=os.environ["S3_ENDPOINT"],
+    region_name=os.environ["S3_REGION"],
+    aws_access_key_id=os.environ["S3_ACCESS_KEY_ID"],
+    aws_secret_access_key=os.environ["S3_SECRET_ACCESS_KEY"],
+    config=Config(s3={"addressing_style": "path"}),
+)
+
+with open(backup_path, "rb") as backup_file:
+    client.put_object(
+        Bucket=os.environ["S3_BUCKET"],
+        Key=object_key,
+        Body=backup_file,
+        ContentType="application/octet-stream",
+    )
+
+metadata = client.head_object(
+    Bucket=os.environ["S3_BUCKET"],
+    Key=object_key,
+)
+expected_size = os.path.getsize(backup_path)
+actual_size = int(metadata["ContentLength"])
+if actual_size != expected_size:
+    raise RuntimeError(
+        f"Uploaded backup size mismatch: expected {expected_size}, got {actual_size}"
+    )
+
+print(
+    json.dumps(
+        {
+            "key": object_key,
+            "size": actual_size,
+            "encryption": metadata.get("ServerSideEncryption"),
+        }
+    )
+)
+PY

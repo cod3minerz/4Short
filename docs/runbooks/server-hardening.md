@@ -71,3 +71,24 @@ GitHub Actions requires these `production` environment secrets:
 - `DEPLOY_SSH_KNOWN_HOSTS`.
 
 The workflow deploys `main`; feature branches only run CI.
+
+## Database backups
+
+The server creates a custom-format PostgreSQL dump every day around 02:30
+Moscow time, encrypts it locally with `age`, and uploads only the encrypted
+archive to the private object-storage prefix `backups/postgres/`.
+
+Every run validates the archive with `pg_restore --list` before uploading and
+then verifies the uploaded object metadata. The local dump is always removed.
+
+The timer can be checked with:
+
+```bash
+systemctl list-timers 4short-postgres-backup.timer
+systemctl status 4short-postgres-backup.service
+```
+
+A restore drill must be run monthly against a disposable database. Successful
+upload is not treated as proof that a backup is restorable. The private age
+recovery key is intentionally stored outside the server and must have a second
+offline copy.

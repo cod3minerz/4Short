@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the 4Short PostgreSQL backup every day
+
+[Timer]
+OnCalendar=*-*-* 23:30:00 UTC
+Persistent=true
+RandomizedDelaySec=15m
+Unit=4short-postgres-backup.service
+
+[Install]
+WantedBy=timers.target
