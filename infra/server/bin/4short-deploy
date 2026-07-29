@@ -59,6 +59,7 @@ tar --extract \
 chown -R deploy:deploy "${release_dir}"
 
 cd "${release_dir}"
+install -o deploy -g deploy -m 0640 /dev/null .image-tag
 printf '%s\n' "${image_tag}" > .image-tag
 
 FOURSHORT_IMAGE_TAG="${image_tag}" \

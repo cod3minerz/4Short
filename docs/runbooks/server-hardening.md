@@ -46,6 +46,13 @@ where appropriate, a reverse proxy/CDN with request-rate controls.
 The Timeweb CDN attached to the S3 bucket is not used for private source videos
 or signed uploads. It can later serve explicitly public/static derivatives.
 
+## API TLS
+
+`api.4short.ru` resolves directly to the production server. Caddy is the only
+public HTTP entrypoint and proxies to the control API on
+`127.0.0.1:4100`. Domain and ACME contact values are stored in
+`/etc/caddy/4short.env`, outside the repository.
+
 ## Recovery
 
 1. Use the Timeweb web console if SSH is unavailable.
