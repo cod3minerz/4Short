@@ -55,8 +55,7 @@ tar --extract \
   --gzip \
   --file "${archive_path}" \
   --directory "${release_dir}" \
-  --no-same-owner \
-  --no-same-permissions
+  --no-same-owner
 chown -R deploy:deploy "${release_dir}"
 
 cd "${release_dir}"
