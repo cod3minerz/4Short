@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+umask 027
+
+release_sha="${1:-}"
+archive_path="${2:-}"
+release_root="/opt/4short/releases"
+current_link="/opt/4short/current"
+
+if [[ ! "${release_sha}" =~ ^[0-9a-f]{40}$ ]]; then
+  echo "Expected a full 40-character Git commit SHA." >&2
+  exit 2
+fi
+
+if [[ ! -f "${archive_path}" ]]; then
+  echo "Release archive does not exist." >&2
+  exit 2
+fi
+
+release_dir="${release_root}/${release_sha}"
+image_tag="${release_sha:0:12}"
+previous_release=""
+previous_tag=""
+
+if [[ -L "${current_link}" ]]; then
+  previous_release="$(readlink -f "${current_link}")"
+  if [[ -f "${previous_release}/.image-tag" ]]; then
+    previous_tag="$(<"${previous_release}/.image-tag")"
+  else
+    previous_tag="$(basename "${previous_release}" | cut -c1-12)"
+  fi
+fi
+
+rollback() {
+  local exit_code=$?
+
+  if [[ -n "${previous_release}" && -f "${previous_release}/compose.production.yml" ]]; then
+    echo "Deployment failed; restoring the previous release." >&2
+    (
+      cd "${previous_release}"
+      FOURSHORT_IMAGE_TAG="${previous_tag}" \
+        docker compose -f compose.production.yml up -d --no-build
+    ) || true
+    ln -sfn "${previous_release}" "${current_link}"
+  fi
+
+  exit "${exit_code}"
+}
+
+trap rollback ERR
+
+install -d -m 0750 -o deploy -g deploy "${release_root}" "${release_dir}"
+tar --extract \
+  --gzip \
+  --file "${archive_path}" \
+  --directory "${release_dir}" \
+  --no-same-owner \
+  --no-same-permissions
+chown -R deploy:deploy "${release_dir}"
+
+cd "${release_dir}"
+printf '%s\n' "${image_tag}" > .image-tag
+
+FOURSHORT_IMAGE_TAG="${image_tag}" \
+  docker compose -f compose.production.yml config --quiet
+FOURSHORT_IMAGE_TAG="${image_tag}" \
+  docker compose -f compose.production.yml build
+FOURSHORT_IMAGE_TAG="${image_tag}" \
+  docker compose -f compose.production.yml up -d --no-build
+
+for _ in $(seq 1 60); do
+  api_state="$(docker inspect --format='{{.State.Health.Status}}' 4short-control-api-1 2>/dev/null || true)"
+  worker_state="$(docker inspect --format='{{.State.Health.Status}}' 4short-media-worker-1 2>/dev/null || true)"
+
+  if [[ "${api_state}" == "healthy" && "${worker_state}" == "healthy" ]]; then
+    break
+  fi
+
+  sleep 2
+done
+
+[[ "${api_state}" == "healthy" ]]
+[[ "${worker_state}" == "healthy" ]]
+curl --fail --silent --show-error http://127.0.0.1:4100/health/ready >/dev/null
+
+ln -sfn "${release_dir}" "${current_link}"
+rm -f "${archive_path}"
+trap - ERR
+
+echo "Release ${release_sha} is healthy."

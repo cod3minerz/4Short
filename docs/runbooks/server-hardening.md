@@ -49,6 +49,25 @@ or signed uploads. It can later serve explicitly public/static derivatives.
 ## Recovery
 
 1. Use the Timeweb web console if SSH is unavailable.
-2. Validate `/etc/ssh/sshd_config.d/99-4short-hardening.conf`.
+2. Validate `/etc/ssh/sshd_config.d/00-4short-hardening.conf`.
 3. Temporarily disable the drop-in only from the provider console.
 4. Never open PostgreSQL, Docker or Control API ports directly to the Internet.
+
+## Production deployment
+
+Production is released from an immutable Git archive. The deployment script:
+
+- validates the full commit SHA;
+- builds images before replacing running containers;
+- runs database migrations once;
+- waits for both API and worker health checks;
+- switches `/opt/4short/current` only after success;
+- restores the previous release if activation fails.
+
+GitHub Actions requires these `production` environment secrets:
+
+- `DEPLOY_HOST`;
+- `DEPLOY_SSH_PRIVATE_KEY`;
+- `DEPLOY_SSH_KNOWN_HOSTS`.
+
+The workflow deploys `main`; feature branches only run CI.

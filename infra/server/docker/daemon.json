@@ -2,6 +2,9 @@
   "live-restore": true,
   "userland-proxy": false,
   "no-new-privileges": true,
+  "registry-mirrors": [
+    "https://mirror.gcr.io"
+  ],
   "log-driver": "local",
   "log-opts": {
     "max-size": "10m",
