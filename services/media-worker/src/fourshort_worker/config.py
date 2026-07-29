@@ -23,8 +23,11 @@ class Settings(BaseSettings):
     s3_server_side_encryption: str = "none"
     s3_access_key_id: str
     s3_secret_access_key: str
+    s3_bucket: str | None = None
     s3_raw_bucket: str = "4short-raw"
     s3_derived_bucket: str = "4short-derived"
+    s3_raw_prefix: str = "raw"
+    s3_derived_prefix: str = "derived"
 
     yandex_cloud_folder_id: str | None = None
     yandex_cloud_api_key: str | None = None
@@ -54,3 +57,17 @@ class Settings(BaseSettings):
     @property
     def blocked_llm_prefixes(self) -> tuple[str, ...]:
         return tuple(value.strip() for value in self.llm_blocked_model_prefixes.split(",") if value.strip())
+
+    @property
+    def effective_raw_bucket(self) -> str:
+        return self.s3_bucket or self.s3_raw_bucket
+
+    @property
+    def effective_derived_bucket(self) -> str:
+        return self.s3_bucket or self.s3_derived_bucket
+
+    def object_key(self, kind: str, key: str) -> str:
+        prefix = self.s3_raw_prefix if kind == "raw" else self.s3_derived_prefix
+        normalized_prefix = prefix.strip("/")
+        normalized_key = key.lstrip("/")
+        return f"{normalized_prefix}/{normalized_key}" if normalized_prefix else normalized_key

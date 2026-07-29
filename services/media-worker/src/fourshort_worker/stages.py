@@ -67,7 +67,7 @@ class StageRunner:
         hostname = url.split("/", 3)[2].lower() if url.startswith("https://") else ""
         if hostname not in {"youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"}:
             raise JobError("IMPORT_DOMAIN_DENIED", "Only YouTube imports are allowed", retryable=False)
-        key = f"{job.workspace_id}/{job.payload['sourceId']}/source.mp4"
+        key = self.settings.object_key("raw", f"{job.workspace_id}/{job.payload['sourceId']}/source.mp4")
         process = subprocess.Popen(
             [
                 self.settings.ytdlp_path,
@@ -99,7 +99,12 @@ class StageRunner:
 
         reader = HashingReader(process.stdout)
         try:
-            artifact = self.storage.upload_stream(reader, self.settings.s3_raw_bucket, key, "video/mp4")
+            artifact = self.storage.upload_stream(
+                reader,
+                self.settings.effective_raw_bucket,
+                key,
+                "video/mp4",
+            )
         except Exception as error:
             process.kill()
             raise JobError("YOUTUBE_IMPORT_UPLOAD_FAILED", "Could not persist imported video", retryable=True) from error
@@ -119,8 +124,16 @@ class StageRunner:
     def extract_audio(self, job: Job, job_dir: Path) -> dict:
         output = job_dir / "audio.mp3"
         extract_audio(self.settings, self.source_url(job.payload), output)
-        key = f"{job.workspace_id}/{job.project_id}/{job.id}/audio.mp3"
-        artifact = self.storage.upload_file(output, self.settings.s3_derived_bucket, key, "audio/mpeg")
+        key = self.settings.object_key(
+            "derived",
+            f"{job.workspace_id}/{job.project_id}/{job.id}/audio.mp3",
+        )
+        artifact = self.storage.upload_file(
+            output,
+            self.settings.effective_derived_bucket,
+            key,
+            "audio/mpeg",
+        )
         artifact["expiresInHours"] = 24
         return {"audio": artifact}
 
@@ -178,8 +191,16 @@ class StageRunner:
         )
         if not validation["valid"]:
             raise JobError("RENDER_VALIDATION_FAILED", "Rendered clip failed validation", retryable=True, details=validation)
-        key = f"{job.workspace_id}/{job.project_id}/{job.clip_id}/{job.id}/clip.mp4"
-        artifact = self.storage.upload_file(output, self.settings.s3_derived_bucket, key, "video/mp4")
+        key = self.settings.object_key(
+            "derived",
+            f"{job.workspace_id}/{job.project_id}/{job.clip_id}/{job.id}/clip.mp4",
+        )
+        artifact = self.storage.upload_file(
+            output,
+            self.settings.effective_derived_bucket,
+            key,
+            "video/mp4",
+        )
         return {"artifact": artifact, "validation": validation}
 
     def validate(self, job: Job, job_dir: Path) -> dict:

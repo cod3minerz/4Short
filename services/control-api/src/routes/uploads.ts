@@ -3,24 +3,27 @@ import { and, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { completeUploadSchema, createUploadSchema } from "../../../../packages/contracts/src/index.js";
 import { mediaObjects, sources, uploads } from "../../../../db/schema.js";
-import { getEnv } from "../env.js";
-import { beginMultipartUpload, completeMultipartUpload, signUploadPart } from "../lib/s3.js";
+import {
+  beginMultipartUpload,
+  completeMultipartUpload,
+  s3ObjectLocation,
+  signUploadPart,
+} from "../lib/s3.js";
 
 export async function uploadRoutes(app: FastifyInstance) {
   app.post("/v1/uploads", { preHandler: app.requireWorkspace }, async (request, reply) => {
     const body = createUploadSchema.parse(request.body);
     const { workspaceId } = request.authContext!;
-    const env = getEnv();
     const mediaId = randomUUID();
-    const objectKey = `${workspaceId}/${mediaId}/source`;
-    const providerUploadId = await beginMultipartUpload(env.S3_RAW_BUCKET, objectKey, body.mimeType);
+    const object = s3ObjectLocation("raw", `${workspaceId}/${mediaId}/source`);
+    const providerUploadId = await beginMultipartUpload(object.bucket, object.key, body.mimeType);
 
     const result = await app.db.transaction(async (tx) => {
       const [media] = await tx.insert(mediaObjects).values({
         id: mediaId,
         workspaceId,
-        bucket: env.S3_RAW_BUCKET,
-        objectKey,
+        bucket: object.bucket,
+        objectKey: object.key,
         kind: "source",
         mimeType: body.mimeType,
         byteSize: body.byteSize,

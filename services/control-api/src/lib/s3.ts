@@ -10,6 +10,22 @@ import { getEnv } from "../env.js";
 
 const env = getEnv();
 
+export type S3ArtifactKind = "raw" | "proxy" | "derived" | "assets";
+
+const legacyBuckets: Record<S3ArtifactKind, string> = {
+  raw: env.S3_RAW_BUCKET,
+  proxy: env.S3_PROXY_BUCKET,
+  derived: env.S3_DERIVED_BUCKET,
+  assets: env.S3_ASSETS_BUCKET,
+};
+
+const prefixes: Record<S3ArtifactKind, string> = {
+  raw: env.S3_RAW_PREFIX,
+  proxy: env.S3_PROXY_PREFIX,
+  derived: env.S3_DERIVED_PREFIX,
+  assets: env.S3_ASSETS_PREFIX,
+};
+
 export const s3 = new S3Client({
   endpoint: env.S3_ENDPOINT,
   region: env.S3_REGION,
@@ -19,6 +35,15 @@ export const s3 = new S3Client({
     secretAccessKey: env.S3_SECRET_ACCESS_KEY,
   },
 });
+
+export function s3ObjectLocation(kind: S3ArtifactKind, key: string) {
+  const prefix = prefixes[kind].replace(/^\/+|\/+$/g, "");
+  const normalizedKey = key.replace(/^\/+/, "");
+  return {
+    bucket: env.S3_BUCKET ?? legacyBuckets[kind],
+    key: prefix ? `${prefix}/${normalizedKey}` : normalizedKey,
+  };
+}
 
 export async function beginMultipartUpload(bucket: string, key: string, contentType: string) {
   const result = await s3.send(new CreateMultipartUploadCommand({
