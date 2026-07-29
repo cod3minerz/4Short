@@ -77,7 +77,6 @@ services:
     networks:
       - backend
     restart: unless-stopped
-    init: true
     read_only: true
     tmpfs:
       - /tmp:size=256m,mode=1777
