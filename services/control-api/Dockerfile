@@ -15,7 +15,11 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/services/control-api/dist ./services/control-api/dist
 COPY drizzle ./drizzle
-COPY --chmod=0444 infra/certs/timeweb-cloud-root.crt /etc/ssl/certs/timeweb-cloud-root.crt
+COPY infra/certs/timeweb-cloud-root.crt /tmp/timeweb-cloud-root.crt
+RUN install -o root -g root -m 0444 \
+      /tmp/timeweb-cloud-root.crt \
+      /etc/ssl/certs/timeweb-cloud-root.crt \
+    && rm /tmp/timeweb-cloud-root.crt
 USER node
 EXPOSE 4100
 CMD ["node", "services/control-api/dist/services/control-api/src/server.js"]
