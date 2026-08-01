@@ -7,18 +7,18 @@ import { postMetadata } from "./registry";
 export const metadata: Metadata = {
   title: "Блог о коротких видео, Shorts и Reels",
   description:
-    "Практические материалы 4Short о нарезке длинных видео, субтитрах, вертикальном кадре, подкастах и YouTube Shorts.",
+    "Практические материалы Hashpix о нарезке длинных видео, субтитрах, вертикальном кадре, подкастах и YouTube Shorts.",
   alternates: { canonical: "/blog" },
   openGraph: {
     type: "website",
-    title: "Практика коротких видео — блог 4Short",
+    title: "Практика коротких видео — блог Hashpix",
     description: "Разбираем нарезку, субтитры, вертикальный формат и работу с длинными видео.",
     url: "/blog",
     images: [{ url: "/assets/hero-landscape.webp" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Практика коротких видео — блог 4Short",
+    title: "Практика коротких видео — блог Hashpix",
     description: "Разбираем нарезку, субтитры и вертикальный формат.",
     images: ["/assets/hero-landscape.webp"],
   },
@@ -29,7 +29,7 @@ export default function BlogPage() {
   const blogJsonLd = {
     "@context": "https://schema.org",
     "@type": "Blog",
-    name: "Блог 4Short",
+    name: "Блог Hashpix",
     description: metadata.description,
     url: `${base}/blog`,
     inLanguage: "ru-RU",
@@ -49,7 +49,7 @@ export default function BlogPage() {
       <main className="blog-page">
         <section className="blog-hero">
           <div className="container blog-hero__inner">
-            <span className="blog-marker">4SHORT / БЛОГ</span>
+            <span className="blog-marker">HASHPIX / БЛОГ</span>
             <h1>ПРАКТИКА КОРОТКИХ ВИДЕО</h1>
             <p>
               Разбираем, как находить сильные моменты, собирать вертикальный кадр,

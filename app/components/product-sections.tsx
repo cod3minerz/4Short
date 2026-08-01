@@ -40,7 +40,7 @@ const features: readonly Feature[] = [
     eyebrow: "Умное кадрирование",
     title: "СПИКЕР ВСЕГДА ОСТАЁТСЯ В КАДРЕ",
     description:
-      "4Short отслеживает активного спикера и перестраивает горизонтальное видео под вертикальный формат.",
+      "Hashpix отслеживает активного спикера и перестраивает горизонтальное видео под вертикальный формат.",
     result: "16:9 превращается в аккуратный 9:16",
     scene: "tracking",
   },
@@ -54,7 +54,7 @@ const features: readonly Feature[] = [
   },
   {
     eyebrow: "Поиск моментов",
-    title: "4SHORT НАХОДИТ СИЛЬНЫЕ ФРАГМЕНТЫ",
+    title: "HASHPIX НАХОДИТ СИЛЬНЫЕ ФРАГМЕНТЫ",
     description:
       "Сервис анализирует длинное видео и выделяет законченные мысли, сильные ответы и самостоятельные сюжеты.",
     result: "Меньше ручного просмотра каждого часа",
@@ -96,7 +96,7 @@ const features: readonly Feature[] = [
     eyebrow: "Чистый темп",
     title: "ПАУЗЫ УБИРАЮТСЯ АВТОМАТИЧЕСКИ",
     description:
-      "4Short помогает сократить молчание и сделать фрагмент плотнее, сохраняя контроль над финальной версией.",
+      "Hashpix помогает сократить молчание и сделать фрагмент плотнее, сохраняя контроль над финальной версией.",
     result: "Динамичнее без ручной чистки таймлайна",
     scene: "silence",
   },
@@ -232,7 +232,7 @@ function EconomyScene() {
       <MediaSlot label="Один длинный выпуск" />
       <div className="economy-process">
         <Sparkles size={17} aria-hidden="true" />
-        <span>4Short собирает клипы</span>
+        <span>Hashpix собирает клипы</span>
       </div>
       <div className="economy-results">
         {["Сильный ответ", "История", "Практический совет"].map((label) => (
@@ -248,7 +248,7 @@ function YoutubeScene() {
     <div className="scene scene--youtube">
       <div className="youtube-source">
         <span className="youtube-source__icon" aria-hidden="true" />
-        <span>youtube.com/watch?v=4short</span>
+        <span>youtube.com/watch?v=hashpix</span>
         <Link2 size={18} aria-hidden="true" />
       </div>
       <div className="youtube-preview">
@@ -290,7 +290,7 @@ function AdsScene() {
       <div className="ad-safe-area" aria-hidden="true" />
       <div className="ad-banner">
         <span>ПРОМОКОД</span>
-        <strong>4SHORT</strong>
+        <strong>HASHPIX</strong>
         <small>Название продукта или CTA</small>
       </div>
       <div className="ad-controls">
@@ -481,7 +481,7 @@ function FeatureScene({ scene }: { scene: Scene }) {
 }
 
 const chapterBreaks: Record<number, { label: string; title: string }> = {
-  0: { label: "01 · Найти", title: "СНАЧАЛА 4SHORT ПОНИМАЕТ ВИДЕО" },
+  0: { label: "01 · Найти", title: "СНАЧАЛА HASHPIX ПОНИМАЕТ ВИДЕО" },
   3: { label: "02 · Собрать", title: "ЗАТЕМ СОБИРАЕТ ВЕРТИКАЛЬНЫЙ РОЛИК" },
   7: { label: "03 · Настроить", title: "РЕЗУЛЬТАТ ОСТАЁТСЯ ПОД ВАШИМ КОНТРОЛЕМ" },
   10: { label: "04 · Масштабировать", title: "ГОТОВЫЙ ФОРМАТ ДЛЯ РЕГУЛЯРНОЙ РАБОТЫ" },

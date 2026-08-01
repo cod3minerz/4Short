@@ -13,7 +13,7 @@ const oauthConfig = env.YANDEX_CLIENT_ID && env.YANDEX_CLIENT_SECRET
   : [];
 
 export const auth = betterAuth({
-  appName: "4Short",
+  appName: "Hashpix",
   baseURL: env.API_PUBLIC_URL,
   basePath: "/v1/auth",
   secret: env.BETTER_AUTH_SECRET,

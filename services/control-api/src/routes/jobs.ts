@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, gt } from "drizzle-orm";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import {
   enqueueJobSchema,
@@ -105,13 +105,16 @@ export async function jobRoutes(app: FastifyInstance) {
 
     let cursor = Number.isFinite(lastEventId) ? lastEventId : 0;
     const send = async () => {
+      // The cursor has to be part of the query, not a filter applied after
+      // LIMIT: selecting the oldest 100 rows and then skipping the ones
+      // already sent meant that past 100 events per workspace the batch was
+      // always fully consumed and no new event ever reached the client.
       const events = await app.db.select()
         .from(jobEvents)
-        .where(eq(jobEvents.workspaceId, workspaceId))
+        .where(and(eq(jobEvents.workspaceId, workspaceId), gt(jobEvents.id, cursor)))
         .orderBy(jobEvents.id)
         .limit(100);
       for (const event of events) {
-        if (event.id <= cursor) continue;
         cursor = event.id;
         reply.raw.write(`id: ${event.id}\nevent: ${event.type}\ndata: ${JSON.stringify(event.payload)}\n\n`);
       }

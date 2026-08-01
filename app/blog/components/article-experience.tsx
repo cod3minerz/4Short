@@ -19,7 +19,7 @@ export function ArticleExperience({
 }) {
   const [progress, setProgress] = useState(0);
   const [open, setOpen] = useState(false);
-  const storageKey = `4short:article-cta:${slug}`;
+  const storageKey = `hashpix:article-cta:${slug}`;
 
   useEffect(() => {
     track("article_view", { slug });

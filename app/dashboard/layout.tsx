@@ -4,7 +4,7 @@ import "./dashboard.css";
 
 export const metadata: Metadata = {
   title: "Личный кабинет",
-  description: "Проекты, стили и минуты 4Short.",
+  description: "Проекты, стили и минуты Hashpix.",
   robots: { index: false, follow: false },
 };
 

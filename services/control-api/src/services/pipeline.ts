@@ -15,9 +15,13 @@ import {
   sources,
   styleVersions,
   transcripts,
+  workspaces,
 } from "../../../../db/schema.js";
 import { clipEdlSchema, styleConfigSchema } from "../../../../packages/contracts/src/index.js";
+import { clampExportForPlan, productPlans, type PlanCode } from "../../../../packages/product-config/src/index.js";
 import { commitReservation, reserveMinutes } from "./minutes.js";
+import { buildSubtitleCues } from "./subtitles.js";
+import { parseSttResponse, writeTranscriptSegments } from "./transcript.js";
 
 function canonicalJson(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
@@ -32,6 +36,20 @@ function canonicalJson(value: unknown): string {
 
 function renderHash(edl: unknown) {
   return createHash("sha256").update(canonicalJson(edl)).digest("hex");
+}
+
+async function mediaExpiry(db: Database, workspaceId: string, kind: "source" | "clip") {
+  const [workspace] = await db.select({ planCode: workspaces.planCode })
+    .from(workspaces)
+    .where(eq(workspaces.id, workspaceId))
+    .limit(1);
+  const planCode = (workspace?.planCode && workspace.planCode in productPlans
+    ? workspace.planCode
+    : "free") as PlanCode;
+  const days = kind === "source"
+    ? productPlans[planCode].sourceRetentionDays
+    : productPlans[planCode].outputRetentionDays;
+  return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 }
 
 async function projectSource(db: Database, projectId: string) {
@@ -66,6 +84,7 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
     }
     let originalMediaId = sourceRow.source.originalMediaId;
     if (!originalMediaId && result.bucket && result.key) {
+      const expiresAt = await mediaExpiry(db, completedJob.workspaceId, "source");
       const [media] = await db.insert(mediaObjects).values({
         workspaceId: completedJob.workspaceId,
         bucket: String(result.bucket),
@@ -74,8 +93,13 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
         mimeType: String(result.mimeType ?? "video/mp4"),
         byteSize: Number(result.byteSize ?? 0),
         sha256: fingerprint,
+        expiresAt,
       }).returning();
       originalMediaId = media.id;
+    } else if (originalMediaId) {
+      await db.update(mediaObjects)
+        .set({ expiresAt: await mediaExpiry(db, completedJob.workspaceId, "source") })
+        .where(eq(mediaObjects.id, originalMediaId));
     }
     await db.update(sources).set({
       originalMediaId,
@@ -148,8 +172,15 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
         updatedAt: new Date(),
       },
     }).returning();
+    const parsedSegments = parseSttResponse(result.response);
+    if (parsedSegments) await writeTranscriptSegments(db, transcript.id, parsedSegments);
     const reservationId = completedJob.payload.reservationId;
     if (typeof reservationId === "string") await commitReservation(db, reservationId);
+    await db.update(sources).set({
+      analyzedAt: new Date(),
+      lastProcessedAt: new Date(),
+      updatedAt: new Date(),
+    }).where(eq(sources.id, sourceRow.source.id));
     const [version] = await db.select().from(projectVersions)
       .where(and(eq(projectVersions.projectId, completedJob.projectId), eq(projectVersions.version, sourceRow.project.currentVersion)))
       .limit(1);
@@ -220,7 +251,22 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
       .where(eq(clips.id, completedJob.clipId))
       .limit(1);
     if (!clip || !sourceRow.source.fingerprint || !sourceRow.media) throw new Error("CLIP_RENDER_INPUT_MISSING");
-    const style = styleConfigSchema.parse(clip.style.config);
+    const [projectVersion] = await db.select({ settings: projectVersions.settings })
+      .from(projectVersions)
+      .where(and(
+        eq(projectVersions.projectId, sourceRow.project.id),
+        eq(projectVersions.version, sourceRow.project.currentVersion),
+      ))
+      .limit(1);
+    // The wizard's per-project format pick (`projectOverrides`, e.g. layout)
+    // is stored on the project version at creation time but only ever meant
+    // for THIS project's clips — applied on top of the style, never
+    // persisted back onto the shared style itself.
+    const projectOverrides = (projectVersion?.settings as { projectOverrides?: Record<string, unknown> } | undefined)
+      ?.projectOverrides ?? {};
+    const style = styleConfigSchema.parse({ ...styleConfigSchema.parse(clip.style.config), ...projectOverrides });
+    const [renderWorkspace] = await db.select({ planCode: workspaces.planCode })
+      .from(workspaces).where(eq(workspaces.id, completedJob.workspaceId)).limit(1);
     const edl = clipEdlSchema.parse({
       schemaVersion: 1,
       sourceId: sourceRow.source.id,
@@ -234,7 +280,7 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
       title: style.title,
       logo: style.logo,
       banner: style.banner,
-      export: style.export,
+      export: clampExportForPlan(style.export, (renderWorkspace?.planCode as PlanCode) ?? "free"),
       styleVersionId: clip.style.id,
       rendererVersion: "0.1.0",
     });
@@ -258,6 +304,7 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
       target: [clipVersions.clipId, clipVersions.version],
       set: { edl, renderHash: hash },
     }).returning();
+    const subtitleCues = await buildSubtitleCues(db, sourceRow.source.id, clip.moment.startMs, clip.moment.endMs);
     await enqueue(db, {
       workspaceId: completedJob.workspaceId,
       projectId: completedJob.projectId,
@@ -268,7 +315,7 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
         clipVersionId: version.id,
         edl,
         source: { kind: "s3", bucket: sourceRow.media.bucket, key: sourceRow.media.objectKey },
-        subtitleCues: [],
+        subtitleCues,
       },
       idempotencyKey: `clip:${clip.clip.id}:render:${hash}`,
       artifactHash: hash,
@@ -280,6 +327,7 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
 
   if (completedJob.type === "render_clip" && completedJob.clipId) {
     const artifact = result.artifact as Record<string, unknown>;
+    const expiresAt = await mediaExpiry(db, completedJob.workspaceId, "clip");
     const [media] = await db.insert(mediaObjects).values({
       workspaceId: completedJob.workspaceId,
       bucket: String(artifact.bucket),
@@ -287,6 +335,7 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
       kind: "clip",
       mimeType: String(artifact.mimeType ?? "video/mp4"),
       byteSize: Number(artifact.byteSize ?? 0),
+      expiresAt,
     }).returning();
     const clipVersionId = String(completedJob.payload.clipVersionId);
     await db.insert(renderArtifacts).values({

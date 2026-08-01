@@ -10,6 +10,7 @@ import { contextPlugin } from "./plugins/context.js";
 import { billingRoutes } from "./routes/billing.js";
 import { adminRoutes } from "./routes/admin.js";
 import { jobRoutes } from "./routes/jobs.js";
+import { mediaRoutes } from "./routes/media.js";
 import { onboardingRoutes } from "./routes/onboarding.js";
 import { projectRoutes } from "./routes/projects.js";
 import { styleRoutes } from "./routes/styles.js";
@@ -40,7 +41,7 @@ export async function buildApp() {
   await app.register(cors, {
     origin: env.WEB_ORIGIN,
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization", "Idempotency-Key", "X-Workspace-Id"],
+    allowedHeaders: ["Content-Type", "Authorization", "Idempotency-Key", "X-Workspace-Id", "X-Development-User-Id"],
     exposedHeaders: ["Idempotency-Replayed"],
   });
   await app.register(rateLimit, {
@@ -81,6 +82,7 @@ export async function buildApp() {
 
   await app.register(onboardingRoutes);
   await app.register(adminRoutes);
+  await app.register(mediaRoutes);
   await app.register(uploadRoutes);
   await app.register(projectRoutes);
   await app.register(styleRoutes);

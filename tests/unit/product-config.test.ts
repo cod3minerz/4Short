@@ -14,10 +14,11 @@ test("paid plans keep 1080p and all packages cost more per minute than subscript
   }
 });
 
-test("queue weight and project concurrency grow monotonically", () => {
+test("queue weight, project concurrency and storage grow monotonically", () => {
   const ordered = [productPlans.free, productPlans.start, productPlans.creator, productPlans.studio];
   for (let index = 1; index < ordered.length; index += 1) {
     assert.ok(ordered[index].queueWeight >= ordered[index - 1].queueWeight);
     assert.ok(ordered[index].activeProjects >= ordered[index - 1].activeProjects);
+    assert.ok(ordered[index].storageBytes > ordered[index - 1].storageBytes);
   }
 });

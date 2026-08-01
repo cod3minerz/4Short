@@ -10,7 +10,7 @@ export function InlineArticleCta({
   description: string;
 }) {
   return (
-    <aside className="article-inline-cta squircle" aria-label="Попробовать 4Short">
+    <aside className="article-inline-cta squircle" aria-label="Попробовать Hashpix">
       <span>Попробуйте на своём видео</span>
       <h2>{title}</h2>
       <p>{description}</p>

@@ -65,8 +65,17 @@ class StageRunner:
     def youtube_import(self, job: Job) -> dict:
         url = str(job.payload.get("source", {}).get("url", ""))
         hostname = url.split("/", 3)[2].lower() if url.startswith("https://") else ""
-        if hostname not in {"youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be"}:
-            raise JobError("IMPORT_DOMAIN_DENIED", "Only YouTube imports are allowed", retryable=False)
+        # Mirrors SUPPORTED_SOURCE_HOSTS in packages/contracts/src/api.ts — yt-dlp
+        # itself handles all four extractors; this whitelist exists so an
+        # arbitrary URL can't be smuggled through as an "import".
+        allowed_hosts = {
+            "youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be",
+            "vk.com", "www.vk.com", "vkvideo.ru", "www.vkvideo.ru",
+            "rutube.ru", "www.rutube.ru",
+            "twitch.tv", "www.twitch.tv", "clips.twitch.tv", "m.twitch.tv",
+        }
+        if hostname not in allowed_hosts:
+            raise JobError("IMPORT_DOMAIN_DENIED", "Import is only allowed from YouTube, VK, RuTube or Twitch", retryable=False)
         key = self.settings.object_key("raw", f"{job.workspace_id}/{job.payload['sourceId']}/source.mp4")
         process = subprocess.Popen(
             [

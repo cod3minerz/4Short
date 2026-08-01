@@ -6,6 +6,7 @@ export const productPlans = {
     includedSeconds: 30 * 60,
     queueWeight: 1,
     activeProjects: 1,
+    storageBytes: 2 * 1024 ** 3,
     sourceRetentionDays: 3,
     outputRetentionDays: 3,
     exportHeight: 1280,
@@ -18,6 +19,7 @@ export const productPlans = {
     includedSeconds: 60 * 60,
     queueWeight: 1.25,
     activeProjects: 1,
+    storageBytes: 10 * 1024 ** 3,
     sourceRetentionDays: 30,
     outputRetentionDays: 90,
     exportHeight: 1920,
@@ -30,6 +32,7 @@ export const productPlans = {
     includedSeconds: 300 * 60,
     queueWeight: 2,
     activeProjects: 2,
+    storageBytes: 50 * 1024 ** 3,
     sourceRetentionDays: 90,
     outputRetentionDays: 365,
     exportHeight: 1920,
@@ -42,6 +45,7 @@ export const productPlans = {
     includedSeconds: 1_000 * 60,
     queueWeight: 3,
     activeProjects: 5,
+    storageBytes: 200 * 1024 ** 3,
     sourceRetentionDays: 180,
     outputRetentionDays: 365,
     exportHeight: 1920,
@@ -109,3 +113,30 @@ export const defaultStyleConfig = {
 };
 
 export type PlanCode = keyof typeof productPlans;
+
+/**
+ * Server-side enforcement of the per-plan export cap and watermark.
+ * `exportHeight`/`watermark` were configured per plan but never actually
+ * read anywhere in services/control-api — a free-tier caller could submit
+ * `export: { height: 1920, watermark: false }` directly in a clip's EDL and
+ * it rendered exactly that. Call this wherever an `export` object is about
+ * to be persisted into a `clipVersions.edl`, using the WORKSPACE's plan —
+ * never trust a plan code the caller supplies.
+ */
+export function clampExportForPlan<T extends { height: number; width: number; watermark: boolean }>(
+  exportConfig: T,
+  planCode: PlanCode,
+): T {
+  const plan = productPlans[planCode];
+  const maxHeight = plan.exportHeight;
+  if (exportConfig.height <= maxHeight && (!plan.watermark || exportConfig.watermark)) {
+    return exportConfig;
+  }
+  const height = Math.min(exportConfig.height, maxHeight);
+  // Portrait 9:16 export — width tracks height at that ratio, matching the
+  // 1080x1920 / 720x1280 pairs already used throughout the schema defaults.
+  const width = exportConfig.height === height
+    ? exportConfig.width
+    : Math.round(height * 9 / 16);
+  return { ...exportConfig, height, width, watermark: exportConfig.watermark || plan.watermark };
+}

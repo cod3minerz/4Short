@@ -1,98 +1,75 @@
-# vinext-starter
+# Hashpix / 4Short
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+Конвейер коротких вертикальных видео: источник → транскрипция → поиск моментов → проверка → оформление → независимый рендер клипов.
 
-## Prerequisites
+## Состав репозитория
 
-- Node.js `>=22.13.0`
+- `app/` — Next.js App Router: публичный сайт, блог, кабинет и закрытая админка.
+- `services/control-api/` — Fastify API: авторизация, проекты, очередь, минуты, платежи, S3 и SSE.
+- `services/media-worker/` — Python/FFmpeg worker для probe, импорта, анализа и рендера.
+- `packages/contracts/` — общие Zod-контракты web/API/worker.
+- `packages/product-config/` — тарифы, квоты, retention и безопасные product defaults.
+- `db/` и `drizzle/` — PostgreSQL schema и миграции.
+- `docs/architecture/` и `docs/runbooks/` — production-решения и эксплуатация.
+- `.claude/skills/` — обязательные правила UI/UX, capability map и regression checks.
 
-## Quick Start
+## Локальный запуск
+
+Требуется Node.js 22 и Python 3.12 для тестов worker.
 
 ```bash
 npm install
+cp .env.example .env.local
 npm run dev
+```
+
+Control API запускается отдельно:
+
+```bash
+npm run dev:api
+```
+
+Публичный web по умолчанию доступен на `http://localhost:3000`, API — на `http://localhost:4100`. Без настроенного API кабинет явно работает в локальном preview-режиме и не должен выдавать демонстрационные данные за серверные.
+
+## Основные проверки
+
+```bash
+npm run lint
+npm run typecheck
+npm run test:unit
+npm run test:worker
+npm run db:check
 npm run build
+npm run build:vercel
 ```
 
-This starter does not use `wrangler.jsonc`.
+`npm test` собирает vinext-версию и проверяет серверный HTML публичных и закрытых маршрутов. CI дополнительно собирает официальный Next.js output для Vercel.
 
-## Included Shape
+## Данные и инфраструктура
 
-- edit site code under `app/`
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
+- PostgreSQL — единственный источник истины для аккаунтов, проектов, очереди и minute ledger.
+- Timeweb Object Storage — приватные исходники, производные файлы, бренд-ассеты и результаты.
+- Multipart upload идёт из браузера напрямую в S3; API выдаёт только подписанные URL.
+- Хранилище ограничено тарифом и проверяется сервером до создания upload session.
+- T-Банк используется для интернет-эквайринга.
+- STT и LLM подключаются через адаптеры и allowlist; конкретный провайдер не зашит в продуктовую модель.
+- Пользовательские media и PII не должны проходить через публичный Next.js hosting.
 
-## Workspace Auth Headers
+Полная схема: [`docs/architecture/production-foundation.md`](docs/architecture/production-foundation.md). Настройка Timeweb: [`docs/runbooks/timeweb-bootstrap.md`](docs/runbooks/timeweb-bootstrap.md). Серверная безопасность: [`docs/runbooks/server-hardening.md`](docs/runbooks/server-hardening.md).
 
-OpenAI workspace sites can read the current user's email from
-`oai-authenticated-user-email`.
+## Правила разработки кабинета
 
-SIWC-authenticated workspace sites may also receive
-`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
-`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
-`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
+Перед изменением `app/dashboard/**` прочитайте применимые skills:
 
-Treat the full name as optional and fall back to email when it is absent:
+- `dashboard-design-system` — токены, плотность, HeroUI primitives;
+- `dashboard-ux-flows` — четырёхшаговый flow, проекты, квоты и удаление;
+- `backend-capability-map` — что действительно поддержано API/worker;
+- `no-dead-ui` — запрет неработающих контролов;
+- `css-regression-guard` — обязательный визуальный QA;
+- `clip-formats` и `subtitle-styles` — возможности рендера.
 
-```tsx
-import { headers } from "next/headers";
+Нельзя добавлять UI-функцию как активный control, пока её эффект не проходит до API/worker. Неподдержанное состояние показывается как честный `LockedField`.
 
-export default async function Home() {
-  const requestHeaders = await headers();
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
+## Секреты
 
-  const displayName = fullName ?? email;
-  // ...
-}
-```
-
-## Optional Dispatch-Owned ChatGPT Sign-In
-
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
-optional or required ChatGPT sign-in:
-
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
-  anonymous visitors through Sign in with ChatGPT.
-- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
-  browser links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in
-  or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because
-  they depend on per-request identity headers.
-
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
-OAuth cookies, and identity header injection. Do not implement app routes for
-those reserved paths. Routes that do not import and call the helper remain
-anonymous-compatible.
-
-SIWC establishes identity only; it does not prove workspace membership. Use the
-Sites hosting platform's access policy controls for workspace-wide restrictions,
-or enforce explicit server-side membership or allowlist checks.
-
-Use SIWC for account pages, user-specific dashboards, saved records, and write
-actions tied to the current ChatGPT user. Leave public content anonymous.
-
-## Useful Commands
-
-- `npm run dev`: start local development
-- `npm run build`: verify the vinext build output
-- `npm test`: build the starter and verify its rendered loading skeleton
-- `npm run db:generate`: generate Drizzle migrations after schema changes
-
-## Learn More
-
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+Используйте только переменные из `.env.example`. Реальные ключи, пароли, URL с credentials и production `.env` не коммитятся. В web допускаются лишь `NEXT_PUBLIC_*`; database, auth, S3, provider и payment secrets принадлежат control API/worker.

@@ -36,7 +36,7 @@ export function SiteFooter() {
       </div>
 
       <div className="container footer__bottom">
-        <span>© 2026 4Short</span>
+        <span>© 2026 Hashpix</span>
         <span>Русский</span>
         <span>Реквизиты будут добавлены до начала оплаты</span>
       </div>

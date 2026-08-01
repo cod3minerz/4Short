@@ -1,0 +1,143 @@
+.auth-shell {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--surface);
+}
+
+.auth-shell h1 {
+  font-family: var(--font-manrope), Arial, sans-serif;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: 40px 32px;
+  box-shadow: var(--shadow-soft);
+}
+
+.auth-card__logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 28px;
+  text-decoration: none;
+}
+
+.auth-card h1 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: center;
+}
+
+.auth-card p {
+  margin: 0 0 28px;
+  font-size: 14px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.auth-field span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.auth-field input {
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--white);
+}
+
+.auth-field input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.auth-field input.is-code {
+  text-align: center;
+  letter-spacing: 6px;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.auth-submit {
+  width: 100%;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: var(--accent);
+  color: var(--white);
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.auth-submit:hover:not(:disabled) { background: var(--accent-strong); }
+.auth-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.auth-error {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: oklch(95% 0.05 25);
+  color: oklch(40% 0.15 25);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.auth-resend {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.auth-resend button {
+  border: none;
+  background: none;
+  color: var(--accent-strong);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.auth-resend button:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.auth-change-email {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.auth-change-email button {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 4px;
+  text-decoration: underline;
+}

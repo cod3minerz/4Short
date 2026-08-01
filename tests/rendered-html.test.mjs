@@ -23,14 +23,14 @@ async function render(pathname = "/") {
   );
 }
 
-test("server-renders the 4Short landing page and its primary action", async () => {
+test("server-renders the Hashpix landing page and its primary action", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
   assert.match(html, /<html lang="ru">/);
-  assert.match(html, /<title>4Short — AI-нарезка видео/);
+  assert.match(html, /<title>Hashpix — AI-нарезка видео/);
   assert.match(html, /ОДНО ВИДЕО\./);
   assert.match(html, /class="hero-title-secondary"/);
   assert.match(html, /<span>КОНТЕНТ<\/span><span>НА НЕДЕЛИ\.<\/span>/);
@@ -68,7 +68,8 @@ test("keeps the approved visual assets and interaction rules in source", async (
     readFile(new URL("../public/assets/logo-dark.svg", import.meta.url), "utf8"),
   ]);
 
-  assert.match(css, /url\("\/assets\/hero-landscape\.webp"\)/);
+  assert.match(css, /\.hero__shader\s*\{[\s\S]*?position:\s*absolute/);
+  assert.doesNotMatch(css, /url\("\/assets\/hero-landscape\.webp"\)/);
   assert.match(css, /\.url-form__row:focus-within/);
   assert.match(css, /\.mobile-drawer \.drawer__dialog/);
   assert.match(css, /width:\s*100vw\s*!important/);
@@ -79,7 +80,7 @@ test("keeps the approved visual assets and interaction rules in source", async (
   assert.doesNotMatch(css, /\.product-feature__visual::after/);
   assert.doesNotMatch(css, /\.product-feature__visual\s*\{[^}]*box-shadow/);
   assert.doesNotMatch(css, /\.scroll-cue\s*\{/);
-  assert.match(logo, /path:first-of-type\s*\{\s*fill:\s*#202b35/);
+  assert.match(logo, /fill="#202b35"/);
 });
 
 test("serves robots and sitemap routes", async () => {
@@ -130,7 +131,7 @@ test("lists blog routes in sitemap and serves RSS", async () => {
   assert.equal(rss.status, 200);
   assert.match(await sitemap.text(), /https:\/\/4short\.ru\/blog\/ai-video-clipping/);
   assert.match(rss.headers.get("content-type") ?? "", /application\/rss\+xml/);
-  assert.match(await rss.text(), /<title>Блог 4Short<\/title>/);
+  assert.match(await rss.text(), /<title>Блог Hashpix<\/title>/);
 });
 
 test("server-renders the dashboard and its primary factory entry point", async () => {
@@ -138,10 +139,10 @@ test("server-renders the dashboard and its primary factory entry point", async (
   assert.equal(response.status, 200);
   const html = await response.text();
 
-  assert.match(html, /ДОБРЫЙ ДЕНЬ, КИРИЛЛ/);
-  assert.match(html, /ИЗ ДЛИННОГО ВИДЕО — СЕРИЯ ГОТОВЫХ КЛИПОВ/);
-  assert.match(html, /184[\s\S]*300[\s\S]*мин/);
-  assert.match(html, /Нужна проверка/);
+  assert.match(html, /Создать нарезку/);
+  assert.match(html, /Добавьте видео/);
+  assert.match(html, /Загрузить[\s\S]*Ссылка[\s\S]*Мои видео/);
+  assert.match(html, /Загруженные ранее/);
   assert.match(html, /robots\" content=\"noindex, nofollow/);
 });
 
@@ -154,15 +155,16 @@ test("server-renders all primary cabinet surfaces", async () => {
     render("/dashboard/projects/podcast-24"),
   ]);
 
-  for (const response of [projects, wizard, styles, billing, project]) {
+  for (const response of [projects, styles, billing, project]) {
     assert.equal(response.status, 200);
   }
+  assert.equal(wizard.status, 307);
+  assert.equal(new URL(wizard.headers.get("location") ?? "", "http://localhost").pathname, "/dashboard");
 
-  assert.match(await projects.text(), /Все исходники, найденные моменты/);
-  assert.match(await wizard.text(), /ДОБАВЬТЕ ИСХОДНОЕ ВИДЕО/);
+  assert.match(await projects.text(), /Исходники, найденные моменты/);
   assert.match(await styles.text(), /Сохраните оформление один раз/);
-  assert.match(await billing.text(), /Минуты списываются один раз/);
-  assert.match(await project.text(), /Выберите клипы для рендера/);
+  assert.match(await billing.text(), /Кредиты списываются один раз/);
+  assert.match(await project.text(), /Выберите, что превратить в клипы/);
 });
 
 test("server-renders the closed admin surface without mock platform data", async () => {
@@ -170,9 +172,9 @@ test("server-renders the closed admin surface without mock platform data", async
   assert.equal(response.status, 200);
   const html = await response.text();
 
-  assert.match(html, /4SHORT \/ ADMIN/);
-  assert.match(html, /CONTROL API НЕ ПОДКЛЮЧЁН/);
-  assert.match(html, /PLATFORM_ADMIN_EMAILS/);
+  assert.match(html, /HASHPIX \/ ADMIN/);
+  assert.match(html, /ПРОВЕРЯЕМ ДОСТУП/);
+  assert.match(html, /Проверяем активную сессию и платформенную роль/);
   assert.match(html, /robots\" content=\"noindex, nofollow, nocache/);
   assert.doesNotMatch(html, /demo-admin|mock-admin/);
 });

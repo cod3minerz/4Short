@@ -40,10 +40,10 @@ import {
   isAdminApiConfigured,
 } from "../lib/admin-api";
 
-type View = "overview" | "users" | "workspaces" | "jobs" | "audit";
+export type AdminView = "overview" | "users" | "workspaces" | "jobs" | "audit";
 type Notice = { tone: "success" | "danger"; text: string } | null;
 
-const views: Array<{ id: View; label: string; icon: typeof Gauge }> = [
+const views: Array<{ id: AdminView; label: string; icon: typeof Gauge }> = [
   { id: "overview", label: "Обзор", icon: Gauge },
   { id: "users", label: "Пользователи", icon: Users },
   { id: "workspaces", label: "Аккаунты", icon: WalletCards },
@@ -590,8 +590,8 @@ function AuditView({
   );
 }
 
-export function AdminConsole() {
-  const [view, setView] = useState<View>("overview");
+export function AdminConsole({ initialView = "overview" }: { initialView?: AdminView }) {
+  const view = initialView;
   const [menuOpen, setMenuOpen] = useState(false);
   const [me, setMe] = useState<AdminMe | null>(null);
   const [overview, setOverview] = useState<AdminOverview | null>(null);
@@ -599,7 +599,7 @@ export function AdminConsole() {
   const [workspaces, setWorkspaces] = useState<Paginated<AdminWorkspace> | null>(null);
   const [jobs, setJobs] = useState<Paginated<AdminJob> | null>(null);
   const [audit, setAudit] = useState<Paginated<AdminAuditEvent> | null>(null);
-  const [searches, setSearches] = useState<Record<View, string>>({
+  const [searches, setSearches] = useState<Record<AdminView, string>>({
     overview: "", users: "", workspaces: "", jobs: "", audit: "",
   });
   const [access, setAccess] = useState<"loading" | "ready" | "unconfigured" | "denied">(
@@ -616,6 +616,10 @@ export function AdminConsole() {
       setMe(actor);
       setOverview(summary);
       setAccess("ready");
+      if (initialView === "users") void adminApi.users("", 1).then(setUsers);
+      if (initialView === "workspaces") void adminApi.workspaces("", 1).then(setWorkspaces);
+      if (initialView === "jobs") void adminApi.jobs("", 1).then(setJobs);
+      if (initialView === "audit") void adminApi.audit("", 1).then(setAudit);
     }).catch((caught) => {
       if (!active) return;
       setError(caught instanceof Error ? caught.message : "Доступ запрещён");
@@ -624,7 +628,7 @@ export function AdminConsole() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [initialView]);
 
   useEffect(() => {
     if (!notice) return;
@@ -645,23 +649,13 @@ export function AdminConsole() {
     setAudit(await adminApi.audit(searches.audit, page));
   }, [searches.audit]);
 
-  const chooseView = (next: View) => {
-    setView(next);
-    setMenuOpen(false);
-    setNotice(null);
-    if (next === "users" && !users) void loadUsers();
-    if (next === "workspaces" && !workspaces) void loadWorkspaces();
-    if (next === "jobs" && !jobs) void loadJobs();
-    if (next === "audit" && !audit) void loadAudit();
-  };
-
   if (access !== "ready" || !me) {
     return (
       <main className="admin-gate">
-        <Link href="/" aria-label="4Short — на главную"><Logo priority /></Link>
+        <Link href="/" aria-label="Hashpix — на главную"><Logo priority /></Link>
         <section>
           {access === "loading" ? <LoaderCircle className="admin-gate__spinner" size={28} /> : <ShieldCheck size={30} />}
-          <span className="admin-eyebrow">4SHORT / ADMIN</span>
+          <span className="admin-eyebrow">HASHPIX / ADMIN</span>
           <h1>{access === "loading" ? "ПРОВЕРЯЕМ ДОСТУП" : access === "unconfigured" ? "CONTROL API НЕ ПОДКЛЮЧЁН" : "ДОСТУП ЗАКРЫТ"}</h1>
           <p>
             {access === "unconfigured"
@@ -680,15 +674,15 @@ export function AdminConsole() {
     <div className="admin-shell">
       <aside className={`admin-sidebar ${menuOpen ? "is-open" : ""}`}>
         <div className="admin-sidebar__brand">
-          <Link href="/" aria-label="4Short — на главную"><Logo priority /></Link>
+          <Link href="/" aria-label="Hashpix — на главную"><Logo priority /></Link>
           <Chip color="accent" variant="soft">ADMIN</Chip>
           <button type="button" onClick={() => setMenuOpen(false)} aria-label="Закрыть меню"><X size={21} /></button>
         </div>
         <nav aria-label="Разделы админ-панели">
           {views.map(({ id, label, icon: Icon }) => (
-            <button className={view === id ? "is-active" : ""} type="button" key={id} onClick={() => chooseView(id)}>
+            <Link className={view === id ? "is-active" : ""} href={id === "overview" ? "/admin" : `/admin/${id}`} key={id} onClick={() => setMenuOpen(false)}>
               <Icon size={18} /><span>{label}</span>
-            </button>
+            </Link>
           ))}
         </nav>
         <div className="admin-sidebar__spacer" />

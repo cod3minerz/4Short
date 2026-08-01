@@ -1,17 +1,17 @@
 import type {
+  ClipEditorState,
+  ClipResult,
   MinuteTransaction,
   MomentCandidate,
   Project,
   ProjectStatus,
+  SourceLibraryItem,
   StylePreset,
 } from "./types";
 
-export const minuteBalance = {
-  planUsed: 184,
-  planTotal: 300,
-  extra: 180,
-  renewsAt: "12 августа",
-};
+/** Offline/preview fallback only — real balance comes from GET /v1/billing/summary via the dashboard store. */
+export const previewBalanceSeconds = 296 * 60;
+export const previewPlanCode = "creator";
 
 export const projectStatus: Record<
   ProjectStatus,
@@ -19,6 +19,8 @@ export const projectStatus: Record<
 > = {
   draft: { label: "Черновик", tone: "neutral", action: "Продолжить" },
   uploading: { label: "Загружается", tone: "accent", action: "Открыть" },
+  importing: { label: "Загружаем видео", tone: "accent", action: "Открыть" },
+  probing: { label: "Проверяем видео", tone: "accent", action: "Открыть" },
   transcribing: { label: "Распознаём речь", tone: "accent", action: "Открыть" },
   finding_moments: { label: "Ищем моменты", tone: "accent", action: "Открыть" },
   review_required: { label: "Нужна проверка", tone: "accent", action: "Проверить" },
@@ -26,6 +28,7 @@ export const projectStatus: Record<
   ready: { label: "Готово", tone: "success", action: "Смотреть" },
   partially_ready: { label: "Частично готово", tone: "neutral", action: "Смотреть" },
   failed: { label: "Нужна помощь", tone: "danger", action: "Исправить" },
+  archived: { label: "В архиве", tone: "neutral", action: "Смотреть" },
 };
 
 export const projects: Project[] = [
@@ -206,6 +209,67 @@ export const transcript = [
   },
 ];
 
+export const sourceLibrary: SourceLibraryItem[] = [
+  {
+    id: "source-podcast-24",
+    title: "Подкаст №24 — как запускать продукты",
+    source: "YouTube",
+    duration: "01:03:42",
+    lastUsed: "Сегодня",
+    retainedUntil: "до 26 октября",
+  },
+  {
+    id: "source-webinar-sales",
+    title: "Вебинар: системные продажи",
+    source: "Файл",
+    duration: "48:16",
+    lastUsed: "24 июля",
+    retainedUntil: "до 22 октября",
+  },
+  {
+    id: "source-founder",
+    title: "Интервью с основателем",
+    source: "YouTube",
+    duration: "01:18:09",
+    lastUsed: "23 июля",
+    retainedUntil: "до 21 октября",
+  },
+];
+
+export const readyClips: ClipResult[] = moments.slice(0, 3).map((moment, index) => ({
+  id: `clip-${index + 1}`,
+  momentId: moment.id,
+  title: moment.title,
+  topic: moment.topic,
+  duration: moment.duration,
+  status: index === 2 ? "rendering" : "ready",
+  version: 1,
+}));
+
+export const defaultClipEditorState: ClipEditorState = {
+  title: "Почему первый продукт почти всегда ошибается",
+  socialTitle: "Первый продукт не обязан быть идеальным",
+  socialDescription: "Как проверить ценность продукта до долгой разработки.\n\n#продукт #стартап #бизнес",
+  startSeconds: 494,
+  endSeconds: 541,
+  layout: "active_speaker",
+  speaker: "Автоматически",
+  captionsEnabled: true,
+  subtitlePreset: "active_word",
+  fontFamily: "Manrope",
+  fontSize: 58,
+  subtitlePosition: "bottom",
+  primaryColor: "#ffffff",
+  activeColor: "#10b8f4",
+  titleEnabled: true,
+  titlePosition: "top",
+  bannerEnabled: false,
+  logoEnabled: false,
+  silenceRemoval: true,
+  normalizeAudio: true,
+  exportHeight: 1920,
+};
+
 export const styles: StylePreset[] = [
   {
     id: "main",
@@ -213,19 +277,36 @@ export const styles: StylePreset[] = [
     description: "Контрастные субтитры, активный спикер и аккуратный логотип.",
     isDefault: true,
     captions: "Активное слово",
+    subtitlePreset: "active_word",
+    fontFamily: "Manrope",
+    subtitlePosition: "bottom",
     framing: "Автоматически",
     silenceRemoval: true,
+    title: true,
+    logo: false,
     banner: false,
-    colors: ["#06131a", "#10b8f4"],
+    safeZones: ["shorts", "reels", "tiktok", "vk"],
+    // Fill must stay readable against the fixed #06131a outline (the ASS
+    // render default — see subtitles.py write_ass / packages/contracts
+    // media.ts outlineColor) — this used to be #06131a too, so fill and
+    // outline were identical: a solid near-black blob, invisible on any
+    // video darker than itself. White fill is what actually contrasts.
+    colors: ["#ffffff", "#10b8f4"],
   },
   {
     id: "expert",
     name: "Экспертный",
     description: "Спокойная типографика для советов, лекций и образовательных видео.",
     captions: "Две строки",
+    subtitlePreset: "clean",
+    fontFamily: "Manrope",
+    subtitlePosition: "bottom",
     framing: "Активный спикер",
     silenceRemoval: true,
+    title: true,
+    logo: true,
     banner: true,
+    safeZones: ["shorts", "reels", "tiktok", "vk"],
     colors: ["#ffffff", "#0d86b5"],
   },
   {
@@ -233,9 +314,15 @@ export const styles: StylePreset[] = [
     name: "Минимал",
     description: "Белые субтитры без анимации и статичный вертикальный кадр.",
     captions: "Минимал",
+    subtitlePreset: "minimal_box",
+    fontFamily: "Inter",
+    subtitlePosition: "bottom",
     framing: "Статичный кадр",
     silenceRemoval: false,
+    title: false,
+    logo: false,
     banner: false,
+    safeZones: ["shorts", "reels", "tiktok", "vk"],
     colors: ["#ffffff", "#111820"],
   },
 ];
@@ -246,4 +333,3 @@ export const minuteTransactions: MinuteTransaction[] = [
   { id: "tx-3", title: "Вебинар: системные продажи", date: "24 июля", amount: -49, kind: "charge" },
   { id: "tx-4", title: "Возврат за незавершённую обработку", date: "23 июля", amount: 23, kind: "refund" },
 ];
-

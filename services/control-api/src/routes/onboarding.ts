@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { defaultStyleConfig, productPlans } from "../../../../packages/product-config/src/index.js";
 import {
@@ -13,6 +14,13 @@ import { runIdempotent } from "../services/idempotency.js";
 import { auth } from "../auth/index.js";
 
 export async function onboardingRoutes(app: FastifyInstance) {
+  /**
+   * Idempotent by USER, not just by client-supplied idempotency key — a
+   * returning user (new device, cleared storage) must land back on their
+   * existing workspace, never get a second, disconnected one. This is the
+   * only place a workspace ID is ever minted; the dashboard has no other
+   * way to discover which workspace the signed-in user belongs to.
+   */
   app.post("/v1/onboarding/workspace", async (request, reply) => {
     const session = await auth.api.getSession({ headers: new Headers(request.headers as Record<string, string>) });
     const developmentUserId = process.env.NODE_ENV !== "production"
@@ -20,8 +28,20 @@ export async function onboardingRoutes(app: FastifyInstance) {
       : undefined;
     const userId = session?.user.id ?? (typeof developmentUserId === "string" ? developmentUserId : null);
     if (!userId) throw app.httpErrors.unauthorized("Use an authenticated session");
+
+    const [existingMembership] = await app.db.select({ workspaceId: workspaceMembers.workspaceId })
+      .from(workspaceMembers)
+      .where(eq(workspaceMembers.userId, userId))
+      .limit(1);
+    if (existingMembership) {
+      const [workspace] = await app.db.select().from(workspaces)
+        .where(eq(workspaces.id, existingMembership.workspaceId))
+        .limit(1);
+      if (workspace) return reply.code(200).send({ workspace, defaultStyleVersionId: null });
+    }
+
     const body = request.body as { name?: string };
-    const name = body.name?.trim() || "Мой 4Short";
+    const name = body.name?.trim() || "Мой Hashpix";
     const key = getIdempotencyKey(request);
     const provisionalWorkspaceId = crypto.randomUUID();
     const result = await runIdempotent({

@@ -24,10 +24,10 @@ export async function sendOtpEmail(input: {
       message: {
         recipients: [{ email: input.email }],
         body: {
-          html: `<p>Код входа в 4Short:</p><p style="font-size:28px;font-weight:700;letter-spacing:4px">${input.otp}</p><p>Код действует 10 минут.</p>`,
-          plaintext: `Код входа в 4Short: ${input.otp}. Код действует 10 минут.`,
+          html: `<p>Код входа в Hashpix:</p><p style="font-size:28px;font-weight:700;letter-spacing:4px">${input.otp}</p><p>Код действует 10 минут.</p>`,
+          plaintext: `Код входа в Hashpix: ${input.otp}. Код действует 10 минут.`,
         },
-        subject: "Код входа в 4Short",
+        subject: "Код входа в Hashpix",
         from_email: env.UNISENDER_GO_FROM_EMAIL,
         from_name: env.UNISENDER_GO_FROM_NAME,
       },

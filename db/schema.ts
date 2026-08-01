@@ -402,11 +402,26 @@ export const momentCandidates = pgTable("moment_candidates", {
   ...timestamps,
 });
 
+export const momentRevisions = pgTable("moment_revisions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  momentCandidateId: uuid("moment_candidate_id").notNull().references(() => momentCandidates.id, { onDelete: "cascade" }),
+  revision: integer("revision").notNull(),
+  patch: jsonb("patch").$type<Record<string, unknown>>().notNull(),
+  createdBy: uuid("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("moment_revisions_unique").on(table.momentCandidateId, table.revision),
+]);
+
 export const clips = pgTable("clips", {
   id: uuid("id").primaryKey().defaultRandom(),
   projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
   momentCandidateId: uuid("moment_candidate_id").references(() => momentCandidates.id, { onDelete: "set null" }),
   title: text("title").notNull(),
+  // The clip editor's "Для соцсетей" fields — previously only React state,
+  // lost on reload since nothing persisted them past the browser tab.
+  socialTitle: text("social_title"),
+  socialDescription: text("social_description"),
   status: text("status").notNull().default("draft"),
   currentVersion: integer("current_version").notNull().default(1),
   ...timestamps,
@@ -501,6 +516,42 @@ export const renderArtifacts = pgTable("render_artifacts", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
   uniqueIndex("render_artifacts_unique").on(table.clipVersionId, table.kind),
+]);
+
+export const generativeOperations = pgTable("generative_operations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id").references(() => projects.id, { onDelete: "cascade" }),
+  clipId: uuid("clip_id").references(() => clips.id, { onDelete: "cascade" }),
+  kind: text("kind").notNull(),
+  status: text("status").notNull().default("quoted"),
+  estimatedUnits: numeric("estimated_units", { precision: 14, scale: 4 }).notNull(),
+  actualUnits: numeric("actual_units", { precision: 14, scale: 4 }),
+  estimatedPriceKopecks: integer("estimated_price_kopecks").notNull(),
+  actualPriceKopecks: integer("actual_price_kopecks"),
+  settings: jsonb("settings").$type<Record<string, unknown>>().notNull().default({}),
+  idempotencyKey: text("idempotency_key").notNull(),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("generative_operations_idempotency_unique").on(table.workspaceId, table.idempotencyKey),
+  index("generative_operations_workspace_idx").on(table.workspaceId, table.createdAt),
+  index("generative_operations_clip_idx").on(table.clipId, table.createdAt),
+]);
+
+export const generativeBalanceTransactions = pgTable("generative_balance_transactions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
+  operationId: uuid("operation_id").references(() => generativeOperations.id, { onDelete: "set null" }),
+  kind: text("kind").notNull(),
+  amountKopecks: integer("amount_kopecks").notNull(),
+  balanceAfterKopecks: integer("balance_after_kopecks").notNull(),
+  reason: text("reason").notNull(),
+  idempotencyKey: text("idempotency_key").notNull(),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("generative_balance_transactions_idempotency_unique").on(table.workspaceId, table.idempotencyKey),
+  index("generative_balance_transactions_workspace_idx").on(table.workspaceId, table.createdAt),
 ]);
 
 export const idempotencyRecords = pgTable("idempotency_records", {

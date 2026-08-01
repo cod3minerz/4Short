@@ -83,7 +83,7 @@ export default async function ArticlePage({
     inLanguage: "ru-RU",
     mainEntityOfPage: `${base}/blog/${meta.slug}`,
     author: { "@type": "Organization", name: meta.author, url: base },
-    publisher: { "@type": "Organization", name: "4Short", url: base },
+    publisher: { "@type": "Organization", name: "Hashpix", url: base },
   };
 
   const breadcrumbJsonLd = {
@@ -133,7 +133,7 @@ export default async function ArticlePage({
             </div>
             <div className="article-cover squircle" aria-label="Место для обложки статьи">
               <span>{meta.category}</span>
-              <strong>4SHORT / EDITORIAL</strong>
+              <strong>HASHPIX / EDITORIAL</strong>
               <small>Media slot · 3:2 · 1600×1067</small>
             </div>
           </header>

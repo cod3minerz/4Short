@@ -42,6 +42,7 @@ next-env.d.ts
 services/**/dist/
 **/__pycache__/
 *.py[cod]
+*.egg-info/
 /.wrangler/
 /outputs/
 /work/

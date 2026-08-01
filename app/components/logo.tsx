@@ -15,9 +15,9 @@ export function Logo({ className = "", priority = false, tone = "dark" }: LogoPr
     <span className={`brand-logo ${className}`.trim()}>
       <Image
         src={tone === "dark" ? "/assets/logo-dark.svg" : "/assets/logo-source.svg"}
-        alt="4Short"
+        alt="Hashpix"
         width={170}
-        height={50}
+        height={35}
         priority={priority}
         sizes="(max-width: 600px) 112px, 132px"
       />

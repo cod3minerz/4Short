@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { and, eq } from "drizzle-orm";
+import { and, eq, gt, isNull, or, sql } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { completeUploadSchema, createUploadSchema } from "../../../../packages/contracts/src/index.js";
-import { mediaObjects, sources, uploads } from "../../../../db/schema.js";
+import { mediaObjects, sources, uploads, workspaces } from "../../../../db/schema.js";
+import { productPlans, type PlanCode } from "../../../../packages/product-config/src/index.js";
 import {
   beginMultipartUpload,
   completeMultipartUpload,
@@ -14,11 +15,38 @@ export async function uploadRoutes(app: FastifyInstance) {
   app.post("/v1/uploads", { preHandler: app.requireWorkspace }, async (request, reply) => {
     const body = createUploadSchema.parse(request.body);
     const { workspaceId } = request.authContext!;
-    const mediaId = randomUUID();
-    const object = s3ObjectLocation("raw", `${workspaceId}/${mediaId}/source`);
-    const providerUploadId = await beginMultipartUpload(object.bucket, object.key, body.mimeType);
 
     const result = await app.db.transaction(async (tx) => {
+      // Reserving a multipart upload also reserves its bytes. Locking the
+      // workspace makes the quota check safe when several tabs start uploads
+      // at the same time.
+      const [workspace] = await tx.select({ planCode: workspaces.planCode })
+        .from(workspaces)
+        .where(eq(workspaces.id, workspaceId))
+        .for("update")
+        .limit(1);
+      if (!workspace) throw app.httpErrors.notFound("Workspace not found");
+      const [usage] = await tx.select({
+        bytes: sql<number>`coalesce(sum(${mediaObjects.byteSize}), 0)::bigint`,
+      })
+        .from(mediaObjects)
+        .where(and(
+          eq(mediaObjects.workspaceId, workspaceId),
+          isNull(mediaObjects.deletedAt),
+          or(isNull(mediaObjects.expiresAt), gt(mediaObjects.expiresAt, new Date())),
+        ));
+      const planCode = (workspace.planCode in productPlans ? workspace.planCode : "free") as PlanCode;
+      const limitBytes = productPlans[planCode].storageBytes;
+      const usedBytes = Number(usage?.bytes ?? 0);
+      if (usedBytes + body.byteSize > limitBytes) {
+        const quotaError = new Error("В хранилище недостаточно места для этого видео") as Error & { statusCode: number };
+        quotaError.statusCode = 413;
+        throw quotaError;
+      }
+
+      const mediaId = randomUUID();
+      const object = s3ObjectLocation("raw", `${workspaceId}/${mediaId}/source`);
+      const providerUploadId = await beginMultipartUpload(object.bucket, object.key, body.mimeType);
       const [media] = await tx.insert(mediaObjects).values({
         id: mediaId,
         workspaceId,
@@ -112,11 +140,24 @@ export async function uploadRoutes(app: FastifyInstance) {
       uploadId: row.upload.providerUploadId,
       parts: body.parts,
     });
-    await app.db.update(uploads).set({
-      status: "completed",
-      completedParts: body.parts,
-      updatedAt: new Date(),
-    }).where(eq(uploads.id, uploadId));
+    await app.db.transaction(async (tx) => {
+      const [workspace] = await tx.select({ planCode: workspaces.planCode })
+        .from(workspaces)
+        .where(eq(workspaces.id, request.authContext!.workspaceId))
+        .limit(1);
+      if (!workspace) throw app.httpErrors.notFound("Workspace not found");
+      const planCode = (workspace.planCode in productPlans ? workspace.planCode : "free") as PlanCode;
+      const sourceExpiresAt = new Date(Date.now() + productPlans[planCode].sourceRetentionDays * 24 * 60 * 60 * 1000);
+      await Promise.all([
+        tx.update(uploads).set({
+          status: "completed",
+          completedParts: body.parts,
+          updatedAt: new Date(),
+        }).where(eq(uploads.id, uploadId)),
+        tx.update(mediaObjects).set({ expiresAt: sourceExpiresAt })
+          .where(eq(mediaObjects.id, row.media.id)),
+      ]);
+    });
     return { uploadId, sourceId: row.upload.sourceId, status: "completed" };
   });
 }

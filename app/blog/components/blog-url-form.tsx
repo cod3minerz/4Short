@@ -44,7 +44,7 @@ export function BlogUrlForm({
       noValidate
       onSubmit={handleSubmit(() => {
         track("article_cta_submit", { slug, placement });
-        window.dispatchEvent(new CustomEvent("4short:notice"));
+        window.dispatchEvent(new CustomEvent("hashpix:notice"));
         onSuccess?.();
       })}
     >

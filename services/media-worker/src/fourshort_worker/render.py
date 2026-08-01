@@ -19,7 +19,26 @@ def compile_video_filter(edl: dict, ass_path: Path | None) -> str:
             f"[fg]scale={width}:{height}:force_original_aspect_ratio=decrease[front];"
             f"[blur][front]overlay=(W-w)/2:(H-h)/2[v]"
         )
+    elif mode == "static_crop":
+        # x/y are normalized (0-1) positions of the crop window along the
+        # slack left over after the fill-scale, not raw pixel offsets — 0.5
+        # each reproduces the plain centre-crop the old unconditional branch
+        # always did, and this is the first place the "else" branch's silent
+        # x/y/zoom == "static_crop's own documented, contract-accepted
+        # params (packages/contracts/src/media.ts) were previously ignored.
+        zoom = max(float(layout.get("zoom", 1)), 1.0)
+        x_norm = min(max(float(layout.get("x", 0.5)), 0.0), 1.0)
+        y_norm = min(max(float(layout.get("y", 0.5)), 0.0), 1.0)
+        scale_w, scale_h = round(width * zoom), round(height * zoom)
+        chain = (
+            f"[0:v]scale={scale_w}:{scale_h}:force_original_aspect_ratio=increase,"
+            f"crop={width}:{height}:'(iw-{width})*{x_norm}':'(ih-{height})*{y_norm}'[v]"
+        )
     else:
+        # auto and every not-yet-implemented tracking-dependent mode
+        # (active_speaker/two_speakers/picture_in_picture/screen_gameplay —
+        # see the `clip-formats` skill for which are still UI-locked) fall
+        # back to the same plain centre-crop as before.
         chain = (
             f"[0:v]scale={width}:{height}:force_original_aspect_ratio=increase,"
             f"crop={width}:{height}[v]"

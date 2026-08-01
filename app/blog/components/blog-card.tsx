@@ -21,7 +21,7 @@ export function BlogCard({
     >
       <div className="blog-card__media" aria-hidden="true">
         <span>{post.category}</span>
-        <strong>4S</strong>
+        <strong>HP</strong>
       </div>
       <div className="blog-card__content">
         <div className="blog-card__meta">

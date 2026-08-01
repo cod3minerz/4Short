@@ -26,7 +26,7 @@
 
 .admin-shell .button--primary {
   background: var(--accent);
-  color: var(--admin-ink);
+  color: white;
 }
 
 .admin-sidebar {
@@ -127,6 +127,7 @@
   height: 36px;
   border-radius: 12px;
   background: var(--accent);
+  color: white;
   font-weight: 850;
 }
 
@@ -254,7 +255,7 @@
   place-items: center;
   border-radius: 13px;
   background: #e9f8fd;
-  color: #087eaa;
+  color: var(--accent-strong);
 }
 
 .admin-metric div {
@@ -589,7 +590,7 @@
   place-items: center;
   border-radius: 12px;
   background: #e8f8fd;
-  color: #087da9;
+  color: var(--accent-strong);
 }
 
 .admin-audit-list strong {
@@ -672,6 +673,12 @@
   width: 120px;
 }
 
+.admin-gate > a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
 .admin-gate section {
   width: min(100%, 660px);
   min-height: 420px;
@@ -689,7 +696,7 @@
 
 .admin-eyebrow {
   margin-top: 18px;
-  color: #087da9;
+  color: var(--accent-strong);
   font-size: 11px;
   font-weight: 820;
   letter-spacing: .1em;
@@ -721,6 +728,7 @@
   padding-inline: 18px;
   border-radius: 14px;
   background: var(--accent);
+  color: white;
   font-size: 13px;
   font-weight: 780;
 }

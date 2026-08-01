@@ -12,11 +12,12 @@ export type AnalyticsEvent =
   | "dashboard_view" | "project_create_start" | "source_url_submit"
   | "source_upload_start" | "source_upload_complete" | "source_probe_complete"
   | "project_settings_complete" | "analysis_start" | "analysis_complete"
-  | "analysis_failed" | "moment_select" | "moments_recompute"
+  | "analysis_failed" | "moment_select" | "moment_boundaries_apply" | "moments_recompute"
   | "transcript_edit" | "render_start" | "clip_render_complete"
   | "clip_render_failed" | "clip_rerender" | "clip_download"
   | "project_download_all" | "style_create" | "style_apply"
-  | "minutes_insufficient";
+  | "minutes_insufficient" | "clip_editor_open" | "clip_version_save"
+  | "clip_scope_apply" | "source_reuse" | "generative_quote_view";
 
 declare global {
   interface Window {
@@ -32,5 +33,5 @@ export function track(event: AnalyticsEvent, properties: Record<string, unknown>
   window.posthog?.capture(event, properties);
   const metrikaId = Number(process.env.NEXT_PUBLIC_YANDEX_METRIKA_ID);
   if (metrikaId && window.ym) window.ym(metrikaId, "reachGoal", event, properties);
-  if (process.env.NODE_ENV === "development") console.info("[4Short analytics]", event, properties);
+  if (process.env.NODE_ENV === "development") console.info("[Hashpix analytics]", event, properties);
 }

@@ -35,7 +35,7 @@ type Placement = "hero" | "final";
 const currency = new Intl.NumberFormat("ru-RU");
 
 function notify() {
-  window.dispatchEvent(new CustomEvent("4short:notice"));
+  window.dispatchEvent(new CustomEvent("hashpix:notice"));
 }
 
 export function Header() {
@@ -52,7 +52,7 @@ export function Header() {
   return (
     <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
       <div className="site-header__island">
-        <Link className="site-header__brand" href="/" aria-label="4Short — на главную">
+        <Link className="site-header__brand" href="/" aria-label="Hashpix — на главную">
           <Logo priority />
         </Link>
 
@@ -79,7 +79,7 @@ export function Header() {
 
       <Drawer.Backdrop isOpen={open} onOpenChange={setOpen} variant="opaque">
         <Drawer.Content className="mobile-drawer" placement="right">
-          <Drawer.Dialog aria-label="Навигация 4Short">
+          <Drawer.Dialog aria-label="Навигация Hashpix">
             <Drawer.Header>
               <Logo />
               <Drawer.Heading>Меню</Drawer.Heading>
@@ -138,13 +138,7 @@ export function UrlActionForm({ placement }: { placement: Placement }) {
     <form className="url-form" onSubmit={handleSubmit(submit)} noValidate>
       <div className="url-form__row">
         <div className="url-form__field">
-          <a
-            className="youtube-icon"
-            href="https://www.youtube.com/"
-            aria-label="Открыть YouTube"
-            target="_blank"
-            rel="noreferrer"
-          />
+          <span className="youtube-icon" aria-hidden="true" />
           <Input
             aria-invalid={Boolean(errors.url)}
             aria-label="Ссылка на видео YouTube"
@@ -443,9 +437,9 @@ export function Notice() {
       clearTimeout(timeout);
       timeout = setTimeout(() => setVisible(false), 3200);
     };
-    window.addEventListener("4short:notice", show);
+    window.addEventListener("hashpix:notice", show);
     return () => {
-      window.removeEventListener("4short:notice", show);
+      window.removeEventListener("hashpix:notice", show);
       clearTimeout(timeout);
     };
   }, []);

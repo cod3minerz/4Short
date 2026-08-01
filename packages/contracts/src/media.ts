@@ -109,6 +109,13 @@ export const clipEdlSchema = z.object({
   sourceHash: z.string().regex(/^[a-f0-9]{64}$/),
   range: timeRangeSchema,
   cuts: z.array(timeRangeSchema).default([]),
+  transcriptRevision: z.number().int().nonnegative().optional(),
+  transcriptEdits: z.array(z.object({
+    wordRef: z.string().min(1).max(160),
+    displayText: z.string().max(240).optional(),
+    hiddenFromSubtitles: z.boolean().default(false),
+    cutFromMedia: z.boolean().default(false),
+  })).max(2_000).default([]),
   layout: layoutConfigSchema,
   cropTrack: z.array(cropKeyframeSchema).optional(),
   subtitles: subtitleConfigSchema,

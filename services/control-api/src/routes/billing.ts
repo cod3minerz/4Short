@@ -1,8 +1,17 @@
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { reserveMinutesSchema } from "../../../../packages/contracts/src/index.js";
 import { minutePackages, productPlans } from "../../../../packages/product-config/src/index.js";
-import { minuteBuckets, paymentWebhooks, payments } from "../../../../db/schema.js";
+import {
+  minuteBuckets,
+  minuteReservations,
+  minuteTransactions,
+  paymentWebhooks,
+  payments,
+  projects,
+  workspaces,
+} from "../../../../db/schema.js";
+import type { Database } from "../../../../db/index.js";
 import { getIdempotencyKey } from "../lib/http.js";
 import { runIdempotent } from "../services/idempotency.js";
 import { getMinuteBalance, reserveMinutes } from "../services/minutes.js";
@@ -17,7 +26,47 @@ export async function billingRoutes(app: FastifyInstance) {
   app.get("/v1/billing/summary", { preHandler: app.requireWorkspace }, async (request) => {
     const { workspaceId } = request.authContext!;
     const balance = await getMinuteBalance(app.db, workspaceId);
-    return { balance, plans: productPlans, packages: minutePackages };
+    const [workspace] = await app.db.select({ planCode: workspaces.planCode })
+      .from(workspaces)
+      .where(eq(workspaces.id, workspaceId))
+      .limit(1);
+    return { balance, planCode: workspace?.planCode ?? "free", plans: productPlans, packages: minutePackages };
+  });
+
+  app.get("/v1/billing/transactions", { preHandler: app.requireWorkspace }, async (request) => {
+    const { workspaceId } = request.authContext!;
+    const rows = await app.db.select({
+      id: minuteTransactions.id,
+      kind: minuteTransactions.kind,
+      seconds: minuteTransactions.seconds,
+      reason: minuteTransactions.reason,
+      metadata: minuteTransactions.metadata,
+      createdAt: minuteTransactions.createdAt,
+      projectTitle: projects.title,
+    })
+      .from(minuteTransactions)
+      .leftJoin(minuteReservations, eq(minuteReservations.id, minuteTransactions.reservationId))
+      .leftJoin(projects, eq(projects.id, minuteReservations.projectId))
+      .where(eq(minuteTransactions.workspaceId, workspaceId))
+      .orderBy(desc(minuteTransactions.createdAt))
+      .limit(50);
+
+    const items = rows.map((row) => {
+      const metadata = row.metadata as { packageCode?: string };
+      const title = row.projectTitle
+        ?? (row.kind === "grant" && metadata.packageCode ? "Дополнительный пакет" : null)
+        ?? (row.kind === "reserve" ? "Обработка видео" : null)
+        ?? (row.kind === "release" || row.kind === "refund" ? "Возврат" : null)
+        ?? row.reason;
+      return {
+        id: row.id,
+        title,
+        date: row.createdAt,
+        amount: Math.round(row.seconds / 60),
+        kind: row.kind === "reserve" ? "charge" : row.kind === "release" || row.kind === "refund" ? "refund" : "credit",
+      };
+    });
+    return { items };
   });
 
   app.post("/v1/billing/reservations", { preHandler: app.requireWorkspace }, async (request, reply) => {
@@ -47,7 +96,7 @@ export async function billingRoutes(app: FastifyInstance) {
         const provider = await createTBankPayment({
           idempotencyKey,
           amountKopecks: item.priceKopecks,
-          description: `4Short: пакет ${item.seconds / 60} минут`,
+          description: `Hashpix: пакет ${item.seconds / 60} минут`,
           workspaceId,
           packageCode: item.code,
         });
@@ -115,14 +164,25 @@ export async function billingRoutes(app: FastifyInstance) {
             ))
             .limit(1);
           if (!existing.length) {
-            await tx.insert(minuteBuckets).values({
+            const [bucket] = await tx.insert(minuteBuckets).values({
               workspaceId: payment.workspaceId,
               source: `payment:${payment.id}`,
               grantedSeconds: item.seconds,
               availableSeconds: item.seconds,
               expiresAt: new Date(Date.now() + item.expiresDays * 24 * 60 * 60 * 1000),
               priority: 30,
-            });
+            }).returning();
+            const balance = await getMinuteBalance(tx as unknown as Database, payment.workspaceId);
+            await tx.insert(minuteTransactions).values({
+              workspaceId: payment.workspaceId,
+              bucketId: bucket.id,
+              kind: "grant",
+              seconds: item.seconds,
+              balanceAfterSeconds: balance.availableSeconds,
+              reason: "minute_package_purchase",
+              idempotencyKey: `payment:${payment.id}:grant`,
+              metadata: { packageCode: item.code, paymentId: payment.id },
+            }).onConflictDoNothing();
           }
         }
       }

@@ -1,3 +1,4 @@
+@import "@fontsource-variable/manrope";
 @import "tailwindcss";
 @import "@heroui/styles";
 
@@ -9,14 +10,14 @@
 }
 
 :root {
-  --accent: oklch(74.6% 0.16 232.661);
-  --accent-strong: oklch(52% 0.145 238);
+  --accent: #3153FF;
+  --accent-strong: color-mix(in oklch, #3153FF 80%, black);
   --ink: oklch(19% 0.02 242);
   --ink-soft: oklch(28% 0.022 242);
   --muted: oklch(49% 0.018 242);
   --line: oklch(89.5% 0.012 236);
   --surface: oklch(98.4% 0.005 235);
-  --surface-blue: oklch(95.8% 0.03 232);
+  --surface-blue: color-mix(in oklch, #3153FF 8%, white);
   --white: #fff;
   --container: 1240px;
   --section-space: clamp(6rem, 8vw, 8.5rem);
@@ -25,6 +26,7 @@
   --shadow-soft: 0 24px 70px rgba(21, 62, 78, 0.1);
   --background: var(--white);
   --foreground: var(--ink);
+  --font-manrope: "Manrope Variable";
   --font-sans: var(--font-manrope);
 }
 
@@ -220,7 +222,7 @@ h2 {
   border: 0;
   border-radius: 999px;
   background: var(--accent);
-  color: var(--ink);
+  color: white;
   font-weight: 800;
   cursor: pointer;
   transition: background-color 180ms ease;
@@ -333,22 +335,10 @@ h2 {
   background: white;
 }
 
-.hero__clouds {
+.hero__shader {
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.76) 0%,
-      rgba(255, 255, 255, 0.54) 34%,
-      rgba(255, 255, 255, 0.12) 62%,
-      rgba(255, 255, 255, 0.05) 100%
-    ),
-    radial-gradient(circle at 50% 22%, rgba(255, 255, 255, 0.72), transparent 42%),
-    url("/assets/hero-landscape.webp");
-  background-position: center, center, center;
-  background-size: cover;
-  opacity: 1;
+  z-index: 0;
   pointer-events: none;
 }
 
@@ -585,7 +575,7 @@ h2 {
 
 .hero-clip[data-tone="blue"] {
   background: var(--accent);
-  color: var(--ink);
+  color: white;
 }
 
 .hero-clip__media {
@@ -810,7 +800,7 @@ h2 {
   border: 0;
   border-radius: 48px;
   background: var(--accent);
-  color: var(--ink);
+  color: white;
 }
 
 .scene {
@@ -1739,7 +1729,7 @@ h2 {
   padding: 5px 8px;
   border-radius: 999px;
   background: var(--accent);
-  color: var(--ink);
+  color: white;
   font-size: 9px;
   letter-spacing: 0.08em;
 }
@@ -1819,7 +1809,7 @@ h2 {
 
 .is-popular .price-button {
   background: var(--accent);
-  color: var(--ink);
+  color: white;
 }
 
 .pricing-footnote {
@@ -2226,6 +2216,16 @@ h2 {
     grid-template-columns: 1fr auto;
   }
 
+  /* On mobile the header floats over the hero shader from the very top (no
+     room to wait for scroll like on desktop), so the dithered dots behind
+     it can clash with the dark logo/icons — keep it opaque unconditionally. */
+  .site-header__island {
+    border-color: rgba(13, 42, 53, 0.08);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 16px 50px rgba(22, 67, 84, 0.12);
+    backdrop-filter: blur(18px) saturate(145%);
+  }
+
   .site-header__brand {
     margin-left: 6px;
   }
@@ -2388,9 +2388,22 @@ h2 {
   }
 
   .header-cta {
-    min-height: 42px;
+    min-height: 44px;
     padding-inline: 14px;
     font-size: 12px;
+  }
+
+  .site-header__brand {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .menu-button {
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
   }
 
   .hero {
@@ -2536,6 +2549,10 @@ h2 {
     gap: 22px;
   }
 
+  .product-feature__copy {
+    min-width: 0;
+  }
+
   .product-feature__eyebrow {
     margin-top: 17px;
     font-size: 9px;
@@ -2543,7 +2560,7 @@ h2 {
 
   .product-feature h3 {
     margin-top: 16px;
-    font-size: clamp(2.05rem, 10.3vw, 2.65rem);
+    font-size: clamp(1.95rem, 9.8vw, 2.65rem);
   }
 
   .product-feature__copy > p {
@@ -2554,6 +2571,11 @@ h2 {
 
   .product-feature__result {
     margin-top: 20px;
+  }
+
+  .upload-link {
+    min-height: 44px;
+    padding-inline: 10px;
   }
 
   .product-feature__visual {
@@ -3022,7 +3044,7 @@ h2 {
   justify-content: space-between;
   padding: 22px;
   background: var(--accent);
-  color: var(--ink);
+  color: white;
 }
 
 .blog-card__media::after {
@@ -3031,7 +3053,7 @@ h2 {
   position: absolute;
   right: 11%;
   bottom: -34%;
-  border: 2px solid rgba(9, 36, 47, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.28);
   border-radius: 26px;
   content: "";
 }
@@ -3168,6 +3190,7 @@ h2 {
   padding: clamp(34px, 5vw, 64px);
   border-radius: var(--radius-section);
   background: var(--accent);
+  color: white;
 }
 
 .blog-index-cta > div > span,
@@ -3189,7 +3212,7 @@ h2 {
 .blog-index-cta > div > p,
 .article-end-cta > div > p {
   margin-top: 18px;
-  color: var(--ink-soft);
+  color: rgba(255, 255, 255, 0.75);
   line-height: 1.55;
 }
 
@@ -3321,7 +3344,7 @@ h2 {
   padding: clamp(28px, 5vw, 64px);
   border-radius: var(--radius-section);
   background: var(--accent);
-  color: var(--ink);
+  color: white;
   text-align: left;
 }
 
@@ -3487,7 +3510,7 @@ h2 {
   padding: clamp(28px, 5vw, 46px);
   border-radius: 32px;
   background: var(--accent);
-  color: var(--ink);
+  color: white;
 }
 
 .article-inline-cta > span {
@@ -3504,7 +3527,7 @@ h2 {
 
 .article-inline-cta > p {
   margin: 14px 0 24px;
-  color: var(--ink-soft);
+  color: rgba(255, 255, 255, 0.75);
   font-size: 16px;
   line-height: 1.55;
 }
@@ -3712,6 +3735,18 @@ h2 {
   .blog-filters {
     margin-inline: -14px;
     padding-inline: 14px;
+    scroll-padding-inline: 14px;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
+  }
+
+  .blog-filters .button {
+    min-height: 44px;
+  }
+
+  .blog-search .search-field__clear-button {
+    width: 36px;
+    height: 36px;
   }
 
   .blog-featured__side,
@@ -3762,6 +3797,12 @@ h2 {
     white-space: nowrap;
   }
 
+  .breadcrumbs a {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+  }
+
   .breadcrumbs span {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -3799,7 +3840,7 @@ h2 {
   }
 
   .article-prose h2 {
-    font-size: 2.15rem;
+    font-size: 2rem;
   }
 
   .article-inline-cta {
