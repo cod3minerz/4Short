@@ -3,6 +3,9 @@ name: 4short
 x-control-environment: &control-environment
   env_file:
     - /etc/4short/control-api.env
+    # Deployment-owned override. It is staged with mode 0600 for each release
+    # so the control API and remote media workers always share one token.
+    - /tmp/4short-worker-api-token.env
 
 services:
   migrate:

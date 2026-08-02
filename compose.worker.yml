@@ -4,6 +4,9 @@ services:
   media-worker:
     env_file:
       - /etc/4short/media-worker.env
+      # Staged by the deployment workflow; the file is removed after Docker
+      # has copied the value into the container configuration.
+      - /tmp/4short-worker-api-token.env
     environment:
       HF_HOME: /var/lib/4short/models/huggingface
       HF_HUB_CACHE: /var/lib/4short/models/huggingface/hub

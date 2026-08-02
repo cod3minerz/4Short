@@ -26,9 +26,10 @@ jobs:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           DEPLOY_SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+          WORKER_API_TOKEN: ${{ secrets.WORKER_API_TOKEN }}
         run: |
           missing=0
-          for name in DEPLOY_HOST DEPLOY_SSH_PRIVATE_KEY DEPLOY_SSH_KNOWN_HOSTS; do
+          for name in DEPLOY_HOST DEPLOY_SSH_PRIVATE_KEY DEPLOY_SSH_KNOWN_HOSTS WORKER_API_TOKEN; do
             if [ -z "${!name}" ]; then
               echo "::error::Production deployment secret ${name} is not configured"
               missing=1
@@ -43,11 +44,14 @@ jobs:
         env:
           DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
           DEPLOY_SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+          WORKER_API_TOKEN: ${{ secrets.WORKER_API_TOKEN }}
         run: |
           install -d -m 0700 ~/.ssh
           install -m 0600 /dev/null ~/.ssh/id_ed25519
           printf '%s\n' "${DEPLOY_SSH_PRIVATE_KEY}" > ~/.ssh/id_ed25519
           printf '%s\n' "${DEPLOY_SSH_KNOWN_HOSTS}" > ~/.ssh/known_hosts
+          printf 'WORKER_API_TOKEN=%s\n' "${WORKER_API_TOKEN}" > /tmp/4short-worker-api-token.env
+          chmod 0600 /tmp/4short-worker-api-token.env
 
       - name: Upload release
         env:
@@ -55,8 +59,8 @@ jobs:
         run: |
           scp \
             -o BatchMode=yes \
-            "/tmp/4short-${GITHUB_SHA}.tar.gz" \
-            "deploy@${DEPLOY_HOST}:/tmp/4short-${GITHUB_SHA}.tar.gz"
+            "/tmp/4short-${GITHUB_SHA}.tar.gz" "/tmp/4short-worker-api-token.env" \
+            "deploy@${DEPLOY_HOST}:/tmp/"
 
       - name: Activate release
         env:
@@ -64,3 +68,9 @@ jobs:
         run: |
           ssh -o BatchMode=yes "deploy@${DEPLOY_HOST}" \
             "sudo /usr/local/sbin/4short-deploy '${GITHUB_SHA}' '/tmp/4short-${GITHUB_SHA}.tar.gz'"
+
+      - name: Remove staged secret
+        if: always()
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: ssh -o BatchMode=yes "deploy@${DEPLOY_HOST}" "rm -f /tmp/4short-worker-api-token.env" || true

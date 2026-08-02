@@ -31,9 +31,10 @@ jobs:
           WORKER_HOST: ${{ secrets.WORKER_HOST }}
           WORKER_DEPLOY_PRIVATE_KEY: ${{ secrets.WORKER_DEPLOY_PRIVATE_KEY }}
           WORKER_DEPLOY_KNOWN_HOSTS: ${{ secrets.WORKER_DEPLOY_KNOWN_HOSTS }}
+          WORKER_API_TOKEN: ${{ secrets.WORKER_API_TOKEN }}
         run: |
           missing=0
-          for name in WORKER_HOST WORKER_DEPLOY_PRIVATE_KEY WORKER_DEPLOY_KNOWN_HOSTS; do
+          for name in WORKER_HOST WORKER_DEPLOY_PRIVATE_KEY WORKER_DEPLOY_KNOWN_HOSTS WORKER_API_TOKEN; do
             if [ -z "${!name}" ]; then
               echo "::error::Production secret ${name} is not configured"
               missing=1
@@ -48,19 +49,22 @@ jobs:
         env:
           WORKER_DEPLOY_PRIVATE_KEY: ${{ secrets.WORKER_DEPLOY_PRIVATE_KEY }}
           WORKER_DEPLOY_KNOWN_HOSTS: ${{ secrets.WORKER_DEPLOY_KNOWN_HOSTS }}
+          WORKER_API_TOKEN: ${{ secrets.WORKER_API_TOKEN }}
         run: |
           install -d -m 0700 ~/.ssh
           printf '%s\n' "${WORKER_DEPLOY_PRIVATE_KEY}" > ~/.ssh/id_ed25519
           printf '%s\n' "${WORKER_DEPLOY_KNOWN_HOSTS}" > ~/.ssh/known_hosts
+          printf 'WORKER_API_TOKEN=%s\n' "${WORKER_API_TOKEN}" > /tmp/4short-worker-api-token.env
           chmod 0600 ~/.ssh/id_ed25519
+          chmod 0600 /tmp/4short-worker-api-token.env
 
       - name: Upload release
         env:
           WORKER_HOST: ${{ secrets.WORKER_HOST }}
         run: |
           scp -o BatchMode=yes \
-            "/tmp/4short-worker-${GITHUB_SHA}.tar.gz" \
-            "deploy@${WORKER_HOST}:/tmp/4short-worker-${GITHUB_SHA}.tar.gz"
+            "/tmp/4short-worker-${GITHUB_SHA}.tar.gz" "/tmp/4short-worker-api-token.env" \
+            "deploy@${WORKER_HOST}:/tmp/"
 
       - name: Activate release
         env:
@@ -68,3 +72,9 @@ jobs:
         run: |
           ssh -o BatchMode=yes "deploy@${WORKER_HOST}" \
             "sudo /usr/local/sbin/4short-worker-deploy '${GITHUB_SHA}' '/tmp/4short-worker-${GITHUB_SHA}.tar.gz'"
+
+      - name: Remove staged secret
+        if: always()
+        env:
+          WORKER_HOST: ${{ secrets.WORKER_HOST }}
+        run: ssh -o BatchMode=yes "deploy@${WORKER_HOST}" "rm -f /tmp/4short-worker-api-token.env" || true
