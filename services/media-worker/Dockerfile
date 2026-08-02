@@ -5,11 +5,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ffmpeg ca-certificates tini \
+    && apt-get install -y --no-install-recommends ffmpeg ca-certificates libgomp1 tini \
     && rm -rf /var/lib/apt/lists/*
 
 RUN useradd --system --uid 10001 --create-home --home-dir /home/worker worker \
-    && mkdir -p /var/lib/4short/jobs \
+    && mkdir -p /var/lib/4short/jobs /var/lib/4short/models \
     && chown -R worker:worker /var/lib/4short
 
 WORKDIR /app
@@ -19,6 +19,6 @@ COPY services/media-worker/src ./src
 RUN pip install --no-deps .
 
 USER worker
-VOLUME ["/var/lib/4short/jobs"]
+VOLUME ["/var/lib/4short/jobs", "/var/lib/4short/models"]
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["fourshort-worker"]

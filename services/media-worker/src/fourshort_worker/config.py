@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     control_api_url: str = "http://127.0.0.1:4100"
     worker_api_token: str
     worker_id: str = "worker-local-1"
-    worker_mode: str = "4gb"
+    worker_mode: str = "12gb"
     scratch_root: Path = Path("/var/lib/4short/jobs")
     minimum_scratch_free_bytes: int = 8 * 1024**3
     poll_seconds: float = 2.0
@@ -31,10 +31,17 @@ class Settings(BaseSettings):
 
     yandex_cloud_folder_id: str | None = None
     yandex_cloud_api_key: str | None = None
-    stt_provider: str = "yandex_speechkit"
+    stt_provider: str = "faster_whisper"
     stt_base_url: str | None = None
     stt_api_key: str | None = None
-    stt_model: str | None = None
+    stt_model: str = "large-v3-turbo"
+    stt_device: str = "cpu"
+    stt_compute_type: str = "int8"
+    stt_cpu_threads: int = 8
+    stt_num_workers: int = 1
+    stt_beam_size: int = 5
+    stt_vad_filter: bool = True
+    stt_model_cache: Path = Path("/var/lib/4short/models")
 
     llm_provider: str = "openrouter"
     openrouter_api_key: str | None = None
@@ -48,7 +55,13 @@ class Settings(BaseSettings):
 
     @property
     def memory_limit_bytes(self) -> int:
-        return int(1.4 * 1024**3) if self.worker_mode == "2gb" else int(3 * 1024**3)
+        limits = {
+            "2gb": 1.4,
+            "4gb": 3.0,
+            "8gb": 6.5,
+            "12gb": 10.0,
+        }
+        return int(limits.get(self.worker_mode, 3.0) * 1024**3)
 
     @property
     def allowed_llm_models(self) -> set[str]:

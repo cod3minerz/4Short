@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from functools import lru_cache
 from pathlib import Path
 import json
 import time
@@ -131,6 +132,107 @@ class OpenAICompatibleStt(SpeechToTextProvider):
         return {"response": response.json()}
 
 
+@lru_cache(maxsize=2)
+def _load_faster_whisper_model(
+    model_name: str,
+    device: str,
+    compute_type: str,
+    cpu_threads: int,
+    num_workers: int,
+    download_root: str,
+):
+    # Imported lazily so lightweight jobs and unit tests do not load the
+    # CTranslate2 runtime or allocate model memory.
+    from faster_whisper import WhisperModel
+
+    return WhisperModel(
+        model_name,
+        device=device,
+        compute_type=compute_type,
+        cpu_threads=cpu_threads,
+        num_workers=num_workers,
+        download_root=download_root,
+    )
+
+
+def _serialize_faster_whisper(segments, info) -> dict:
+    serialized_segments: list[dict] = []
+    serialized_words: list[dict] = []
+    text_parts: list[str] = []
+
+    for index, segment in enumerate(segments):
+        text = str(segment.text).strip()
+        text_parts.append(text)
+        serialized_segments.append({
+            "id": index,
+            "start": float(segment.start),
+            "end": float(segment.end),
+            "text": text,
+        })
+        for word in segment.words or []:
+            if word.start is None or word.end is None:
+                continue
+            serialized_words.append({
+                "word": str(word.word).strip(),
+                "start": float(word.start),
+                "end": float(word.end),
+                "probability": float(word.probability),
+            })
+
+    return {
+        "task": "transcribe",
+        "language": info.language,
+        "language_probability": float(info.language_probability),
+        "duration": float(info.duration),
+        "text": " ".join(part for part in text_parts if part),
+        "segments": serialized_segments,
+        "words": serialized_words,
+    }
+
+
+class FasterWhisperStt(SpeechToTextProvider):
+    name = "faster_whisper_large_v3_turbo"
+
+    def __init__(self, settings: Settings):
+        self.settings = settings
+        self.client = httpx.Client(timeout=httpx.Timeout(4 * 60 * 60, connect=30))
+
+    def transcribe(self, audio_url: str, language: str, job_dir: Path) -> dict:
+        audio_path = job_dir / "whisper-audio.mp3"
+        try:
+            with self.client.stream("GET", audio_url) as source:
+                source.raise_for_status()
+                with audio_path.open("wb") as target:
+                    for chunk in source.iter_bytes(1024 * 1024):
+                        target.write(chunk)
+        except (httpx.HTTPError, OSError) as error:
+            raise JobError("STT_AUDIO_DOWNLOAD_FAILED", "Could not load audio for local transcription", retryable=True) from error
+
+        self.settings.stt_model_cache.mkdir(parents=True, exist_ok=True)
+        try:
+            model = _load_faster_whisper_model(
+                self.settings.stt_model,
+                self.settings.stt_device,
+                self.settings.stt_compute_type,
+                self.settings.stt_cpu_threads,
+                self.settings.stt_num_workers,
+                str(self.settings.stt_model_cache),
+            )
+            segments, info = model.transcribe(
+                str(audio_path),
+                language=None if language == "auto" else language,
+                beam_size=self.settings.stt_beam_size,
+                word_timestamps=True,
+                vad_filter=self.settings.stt_vad_filter,
+                condition_on_previous_text=True,
+            )
+            return {"response": _serialize_faster_whisper(segments, info)}
+        except JobError:
+            raise
+        except Exception as error:
+            raise JobError("STT_FAILED", "Local Faster-Whisper transcription failed", retryable=True) from error
+
+
 class OpenRouterLlm(JsonLlmProvider):
     name = "openrouter"
 
@@ -240,6 +342,8 @@ class YandexGpt(JsonLlmProvider):
 
 
 def create_stt_provider(settings: Settings) -> SpeechToTextProvider:
+    if settings.stt_provider == "faster_whisper":
+        return FasterWhisperStt(settings)
     if settings.stt_provider == "yandex_speechkit":
         return YandexSpeechKit(settings)
     if settings.stt_provider == "compatible":

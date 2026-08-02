@@ -1,0 +1,35 @@
+name: 4short-worker
+
+services:
+  media-worker:
+    env_file:
+      - /etc/4short/media-worker.env
+    build:
+      context: .
+      dockerfile: services/media-worker/Dockerfile
+    image: 4short/media-worker:${FOURSHORT_IMAGE_TAG:-local}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=512m,mode=1777
+    volumes:
+      - /var/lib/4short/jobs:/var/lib/4short/jobs
+      - /var/lib/4short/models:/var/lib/4short/models
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 10g
+    cpus: 7.5
+    pids_limit: 768
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import psutil,sys;sys.exit(0 if any('fourshort-worker' in ' '.join(p.info.get('cmdline') or []) for p in psutil.process_iter(['cmdline'])) else 1)
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 45s

@@ -59,10 +59,13 @@ jobs:
             infra/worker/bin/4short-worker-provision \
             root@"${WORKER_HOST}":/tmp/4short-worker-provision
           sshpass -e scp -o StrictHostKeyChecking=yes \
+            infra/worker/bin/4short-worker-deploy \
+            root@"${WORKER_HOST}":/tmp/4short-worker-deploy
+          sshpass -e scp -o StrictHostKeyChecking=yes \
             /tmp/worker-deploy.pub \
             root@"${WORKER_HOST}":/tmp/worker-deploy.pub
           sshpass -e ssh -o StrictHostKeyChecking=yes root@"${WORKER_HOST}" \
-            "chmod 0700 /tmp/4short-worker-provision && /tmp/4short-worker-provision bootstrap /tmp/worker-deploy.pub"
+            "chmod 0700 /tmp/4short-worker-provision && /tmp/4short-worker-provision bootstrap /tmp/worker-deploy.pub /tmp/4short-worker-deploy"
 
       - name: Verify deploy key before lock-down
         env:

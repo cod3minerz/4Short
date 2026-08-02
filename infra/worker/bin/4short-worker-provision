@@ -41,6 +41,7 @@ bootstrap() {
   require_root
 
   public_key_path="${2:-}"
+  deployer_path="${3:-}"
   if [[ ! -s "${public_key_path}" ]]; then
     echo "Expected a non-empty deploy public key file." >&2
     exit 2
@@ -65,6 +66,13 @@ bootstrap() {
   install -d -m 0750 -o 10001 -g 10001 /var/lib/4short /var/lib/4short/jobs
 
   install -m 0750 -o root -g root "$0" /usr/local/sbin/4short-worker-provision
+  if [[ -n "${deployer_path}" ]]; then
+    if [[ ! -s "${deployer_path}" ]]; then
+      echo "Worker deployer path is not readable." >&2
+      exit 2
+    fi
+    install -m 0750 -o root -g root "${deployer_path}" /usr/local/sbin/4short-worker-deploy
+  fi
 
   cat > /etc/sudoers.d/4short-worker-deploy <<'EOF'
 Defaults:deploy !requiretty
@@ -177,7 +185,7 @@ case "${action}" in
   verify) verify ;;
   finalize) finalize ;;
   *)
-    echo "Usage: $0 {bootstrap <deploy-public-key-file>|verify|finalize}" >&2
+    echo "Usage: $0 {bootstrap <deploy-public-key-file> [worker-deployer-file]|verify|finalize}" >&2
     exit 2
     ;;
 esac

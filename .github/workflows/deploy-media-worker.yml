@@ -1,0 +1,70 @@
+name: Deploy media worker
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - compose.worker.yml
+      - services/media-worker/**
+      - infra/worker/**
+      - .github/workflows/deploy-media-worker.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: media-worker-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: ${{ vars.MEDIA_WORKER_DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate deployment configuration
+        env:
+          WORKER_HOST: ${{ secrets.WORKER_HOST }}
+          WORKER_DEPLOY_PRIVATE_KEY: ${{ secrets.WORKER_DEPLOY_PRIVATE_KEY }}
+          WORKER_DEPLOY_KNOWN_HOSTS: ${{ secrets.WORKER_DEPLOY_KNOWN_HOSTS }}
+        run: |
+          missing=0
+          for name in WORKER_HOST WORKER_DEPLOY_PRIVATE_KEY WORKER_DEPLOY_KNOWN_HOSTS; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Production secret ${name} is not configured"
+              missing=1
+            fi
+          done
+          exit "${missing}"
+
+      - name: Prepare release archive
+        run: git archive --format=tar.gz --output="/tmp/4short-worker-${GITHUB_SHA}.tar.gz" "${GITHUB_SHA}"
+
+      - name: Configure SSH
+        env:
+          WORKER_DEPLOY_PRIVATE_KEY: ${{ secrets.WORKER_DEPLOY_PRIVATE_KEY }}
+          WORKER_DEPLOY_KNOWN_HOSTS: ${{ secrets.WORKER_DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 0700 ~/.ssh
+          printf '%s\n' "${WORKER_DEPLOY_PRIVATE_KEY}" > ~/.ssh/id_ed25519
+          printf '%s\n' "${WORKER_DEPLOY_KNOWN_HOSTS}" > ~/.ssh/known_hosts
+          chmod 0600 ~/.ssh/id_ed25519
+
+      - name: Upload release
+        env:
+          WORKER_HOST: ${{ secrets.WORKER_HOST }}
+        run: |
+          scp -o BatchMode=yes \
+            "/tmp/4short-worker-${GITHUB_SHA}.tar.gz" \
+            "deploy@${WORKER_HOST}:/tmp/4short-worker-${GITHUB_SHA}.tar.gz"
+
+      - name: Activate release
+        env:
+          WORKER_HOST: ${{ secrets.WORKER_HOST }}
+        run: |
+          ssh -o BatchMode=yes "deploy@${WORKER_HOST}" \
+            "sudo /usr/local/sbin/4short-worker-deploy '${GITHUB_SHA}' '/tmp/4short-worker-${GITHUB_SHA}.tar.gz'"
