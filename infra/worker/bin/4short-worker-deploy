@@ -59,7 +59,16 @@ printf '%s\n' "${image_tag}" > .worker-image-tag
 chmod 0640 .worker-image-tag
 
 FOURSHORT_IMAGE_TAG="${image_tag}" docker compose -f compose.worker.yml config --quiet
-FOURSHORT_IMAGE_TAG="${image_tag}" docker compose -f compose.worker.yml build media-worker
+build_succeeded=false
+for attempt in 1 2 3 4; do
+  if FOURSHORT_IMAGE_TAG="${image_tag}" docker compose -f compose.worker.yml build media-worker; then
+    build_succeeded=true
+    break
+  fi
+  echo "Worker image build attempt ${attempt} failed; retrying." >&2
+  sleep $((attempt * 10))
+done
+[[ "${build_succeeded}" == "true" ]]
 
 if grep -Eq '^STT_PROVIDER=faster_whisper$' /etc/4short/media-worker.env; then
   FOURSHORT_IMAGE_TAG="${image_tag}" docker compose -f compose.worker.yml run --rm --no-deps \
