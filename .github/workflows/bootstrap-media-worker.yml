@@ -1,0 +1,81 @@
+name: Bootstrap media worker
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate one-time bootstrap secrets
+        env:
+          WORKER_HOST: ${{ secrets.WORKER_HOST }}
+          WORKER_ROOT_PASSWORD: ${{ secrets.WORKER_ROOT_PASSWORD }}
+          WORKER_DEPLOY_PUBLIC_KEY: ${{ secrets.WORKER_DEPLOY_PUBLIC_KEY }}
+          WORKER_DEPLOY_PRIVATE_KEY: ${{ secrets.WORKER_DEPLOY_PRIVATE_KEY }}
+        run: |
+          missing=0
+          for name in WORKER_HOST WORKER_ROOT_PASSWORD WORKER_DEPLOY_PUBLIC_KEY WORKER_DEPLOY_PRIVATE_KEY; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Bootstrap secret ${name} is not configured"
+              missing=1
+            fi
+          done
+          exit "${missing}"
+
+      - name: Prepare SSH material
+        env:
+          WORKER_HOST: ${{ secrets.WORKER_HOST }}
+          WORKER_DEPLOY_PUBLIC_KEY: ${{ secrets.WORKER_DEPLOY_PUBLIC_KEY }}
+          WORKER_DEPLOY_PRIVATE_KEY: ${{ secrets.WORKER_DEPLOY_PRIVATE_KEY }}
+        run: |
+          install -d -m 0700 ~/.ssh
+          printf '%s\n' "${WORKER_DEPLOY_PUBLIC_KEY}" > /tmp/worker-deploy.pub
+          printf '%s\n' "${WORKER_DEPLOY_PRIVATE_KEY}" > ~/.ssh/id_ed25519
+          chmod 0600 ~/.ssh/id_ed25519
+          for attempt in 1 2 3 4 5; do
+            if ssh-keyscan -T 10 -H "${WORKER_HOST}" > ~/.ssh/known_hosts 2>/dev/null; then
+              break
+            fi
+            sleep $((attempt * 2))
+          done
+          test -s ~/.ssh/known_hosts
+
+      - name: Install deploy key and base packages
+        env:
+          WORKER_HOST: ${{ secrets.WORKER_HOST }}
+          SSHPASS: ${{ secrets.WORKER_ROOT_PASSWORD }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass
+          sshpass -e scp -o StrictHostKeyChecking=yes \
+            infra/worker/bin/4short-worker-provision \
+            root@"${WORKER_HOST}":/tmp/4short-worker-provision
+          sshpass -e scp -o StrictHostKeyChecking=yes \
+            /tmp/worker-deploy.pub \
+            root@"${WORKER_HOST}":/tmp/worker-deploy.pub
+          sshpass -e ssh -o StrictHostKeyChecking=yes root@"${WORKER_HOST}" \
+            "chmod 0700 /tmp/4short-worker-provision && /tmp/4short-worker-provision bootstrap /tmp/worker-deploy.pub"
+
+      - name: Verify deploy key before lock-down
+        env:
+          WORKER_HOST: ${{ secrets.WORKER_HOST }}
+        run: |
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@"${WORKER_HOST}" \
+            "sudo /usr/local/sbin/4short-worker-provision verify"
+
+      - name: Disable root and password SSH
+        env:
+          WORKER_HOST: ${{ secrets.WORKER_HOST }}
+        run: |
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@"${WORKER_HOST}" \
+            "sudo /usr/local/sbin/4short-worker-provision finalize"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@"${WORKER_HOST}" \
+            "sudo /usr/local/sbin/4short-worker-provision verify"

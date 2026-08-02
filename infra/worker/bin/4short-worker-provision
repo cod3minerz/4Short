@@ -1,0 +1,183 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+umask 027
+
+action="${1:-}"
+deploy_user="deploy"
+deploy_home="/home/${deploy_user}"
+ssh_drop_in="/etc/ssh/sshd_config.d/00-4short-worker.conf"
+
+require_root() {
+  if [[ "${EUID}" -ne 0 ]]; then
+    echo "This command must run as root." >&2
+    exit 1
+  fi
+}
+
+install_docker() {
+  if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+    return
+  fi
+
+  install -d -m 0755 /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+    | gpg --dearmor --yes -o /etc/apt/keyrings/docker.gpg
+  chmod 0644 /etc/apt/keyrings/docker.gpg
+
+  # shellcheck disable=SC1091
+  . /etc/os-release
+  printf '%s\n' \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu ${VERSION_CODENAME} stable" \
+    > /etc/apt/sources.list.d/docker.list
+
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  systemctl enable --now docker
+}
+
+bootstrap() {
+  require_root
+
+  public_key_path="${2:-}"
+  if [[ ! -s "${public_key_path}" ]]; then
+    echo "Expected a non-empty deploy public key file." >&2
+    exit 2
+  fi
+
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    ca-certificates curl fail2ban git gnupg jq rsync sudo ufw unattended-upgrades
+
+  if ! id "${deploy_user}" >/dev/null 2>&1; then
+    useradd --create-home --home-dir "${deploy_home}" --shell /bin/bash "${deploy_user}"
+  fi
+
+  install -d -m 0700 -o "${deploy_user}" -g "${deploy_user}" "${deploy_home}/.ssh"
+  install -m 0600 -o "${deploy_user}" -g "${deploy_user}" \
+    "${public_key_path}" "${deploy_home}/.ssh/authorized_keys"
+
+  install_docker
+
+  install -d -m 0750 -o root -g "${deploy_user}" /opt/4short /opt/4short/releases
+  install -d -m 0750 -o root -g "${deploy_user}" /etc/4short
+  install -d -m 0750 -o 10001 -g 10001 /var/lib/4short /var/lib/4short/jobs
+
+  install -m 0750 -o root -g root "$0" /usr/local/sbin/4short-worker-provision
+
+  cat > /etc/sudoers.d/4short-worker-deploy <<'EOF'
+Defaults:deploy !requiretty
+deploy ALL=(root) NOPASSWD: /usr/local/sbin/4short-worker-provision verify
+deploy ALL=(root) NOPASSWD: /usr/local/sbin/4short-worker-provision finalize
+deploy ALL=(root) NOPASSWD: /usr/local/sbin/4short-worker-deploy *
+EOF
+  chmod 0440 /etc/sudoers.d/4short-worker-deploy
+  visudo -cf /etc/sudoers.d/4short-worker-deploy >/dev/null
+
+  cat > /etc/docker/daemon.json <<'EOF'
+{
+  "live-restore": true,
+  "log-driver": "local",
+  "log-opts": {
+    "max-size": "20m",
+    "max-file": "5"
+  },
+  "storage-driver": "overlay2"
+}
+EOF
+  systemctl restart docker
+
+  cat > /etc/fail2ban/jail.d/4short-worker.local <<'EOF'
+[sshd]
+enabled = true
+backend = systemd
+maxretry = 4
+findtime = 10m
+bantime = 1h
+bantime.increment = true
+EOF
+
+  cat > /etc/apt/apt.conf.d/20auto-upgrades <<'EOF'
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+APT::Periodic::AutocleanInterval "7";
+EOF
+
+  cat > /etc/sysctl.d/99-4short-worker.conf <<'EOF'
+kernel.dmesg_restrict = 1
+kernel.kptr_restrict = 2
+kernel.unprivileged_bpf_disabled = 1
+fs.protected_fifos = 2
+fs.protected_hardlinks = 1
+fs.protected_regular = 2
+fs.protected_symlinks = 1
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+net.ipv4.tcp_syncookies = 1
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+EOF
+  sysctl --system >/dev/null
+
+  timedatectl set-timezone UTC
+  echo "Bootstrap complete. Key access must be verified before finalize."
+}
+
+verify() {
+  require_root
+  id "${deploy_user}" >/dev/null
+  test -s "${deploy_home}/.ssh/authorized_keys"
+  test "$(stat -c '%a' "${deploy_home}/.ssh/authorized_keys")" = "600"
+  docker info >/dev/null
+  docker compose version >/dev/null
+  test -d /opt/4short/releases
+  test -d /var/lib/4short/jobs
+  echo "Worker bootstrap verified."
+}
+
+finalize() {
+  require_root
+  verify >/dev/null
+
+  cat > "${ssh_drop_in}" <<'EOF'
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+AuthenticationMethods publickey
+AllowUsers deploy
+X11Forwarding no
+AllowAgentForwarding no
+AllowTcpForwarding no
+PermitTunnel no
+MaxAuthTries 3
+LoginGraceTime 30
+ClientAliveInterval 120
+ClientAliveCountMax 2
+EOF
+
+  sshd -t
+
+  ufw default deny incoming
+  ufw default allow outgoing
+  ufw limit 22/tcp comment '4Short deploy SSH'
+  ufw --force enable
+
+  systemctl enable --now fail2ban unattended-upgrades
+  systemctl reload ssh
+
+  echo "Worker hardening complete. Only key-based deploy SSH is allowed."
+}
+
+case "${action}" in
+  bootstrap) bootstrap "$@" ;;
+  verify) verify ;;
+  finalize) finalize ;;
+  *)
+    echo "Usage: $0 {bootstrap <deploy-public-key-file>|verify|finalize}" >&2
+    exit 2
+    ;;
+esac
