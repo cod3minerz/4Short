@@ -12,6 +12,11 @@ services:
       HF_HUB_CACHE: /var/lib/4short/models/huggingface/hub
       HF_HUB_DISABLE_XET: "1"
       XDG_CACHE_HOME: /var/lib/4short/models/cache
+    # Both Timeweb hosts are attached to the same private network. Keep the
+    # public hostname for TLS/SNI, but send service-to-service traffic directly
+    # to the control plane instead of hairpinning through the public Internet.
+    extra_hosts:
+      - "api.4short.ru:192.168.0.4"
     build:
       context: .
       dockerfile: services/media-worker/Dockerfile

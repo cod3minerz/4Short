@@ -21,7 +21,7 @@ import {
 } from "../services/queue.js";
 import { advancePipeline } from "../services/pipeline.js";
 
-function requireWorker(request: FastifyRequest) {
+async function requireWorker(request: FastifyRequest) {
   const token = request.headers["x-worker-token"];
   if (token !== getEnv().WORKER_API_TOKEN) {
     throw request.server.httpErrors.unauthorized("Invalid worker token");
@@ -52,6 +52,7 @@ export async function jobRoutes(app: FastifyInstance) {
 
   app.post("/v1/internal/workers/register", { preHandler: requireWorker }, async (request) => {
     const body = workerRegistrationSchema.parse(request.body);
+    request.log.debug({ workerId: body.workerId }, "worker registration started");
     const [worker] = await app.db.insert(workerLeases).values({
       workerId: body.workerId,
       version: body.version,
@@ -67,6 +68,7 @@ export async function jobRoutes(app: FastifyInstance) {
         lastHeartbeatAt: new Date(),
       },
     }).returning();
+    request.log.debug({ workerId: body.workerId }, "worker registration completed");
     return worker;
   });
 

@@ -96,6 +96,11 @@ jobs:
             --resolve "api.4short.ru:443:${CONTROL_PUBLIC_IP}" \
             --write-out 'http=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \
             --output /dev/null https://api.4short.ru/health/live || true
+          echo "== API through Timeweb private network =="
+          curl --ipv4 --silent --show-error --max-time 10 \
+            --resolve 'api.4short.ru:443:192.168.0.4' \
+            --write-out 'http=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \
+            --output /dev/null https://api.4short.ru/health/live || true
           echo "== database readiness from worker =="
           curl --ipv4 --silent --show-error --max-time 10 \
             --write-out '\nhttp=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \

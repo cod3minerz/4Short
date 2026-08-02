@@ -24,6 +24,7 @@ export async function buildApp() {
       redact: {
         paths: [
           "req.headers.authorization",
+          "req.headers.x-worker-token",
           "req.headers.cookie",
           "req.body.url",
           "req.body.query",
