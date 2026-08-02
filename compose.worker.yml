@@ -4,6 +4,11 @@ services:
   media-worker:
     env_file:
       - /etc/4short/media-worker.env
+    environment:
+      HF_HOME: /var/lib/4short/models/huggingface
+      HF_HUB_CACHE: /var/lib/4short/models/huggingface/hub
+      HF_HUB_DISABLE_XET: "1"
+      XDG_CACHE_HOME: /var/lib/4short/models/cache
     build:
       context: .
       dockerfile: services/media-worker/Dockerfile
