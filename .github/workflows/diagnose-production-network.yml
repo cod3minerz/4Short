@@ -25,8 +25,10 @@ jobs:
       - name: Inspect control-plane network
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          WORKER_API_TOKEN: ${{ secrets.WORKER_API_TOKEN }}
         run: |
-          ssh -o BatchMode=yes -o ConnectTimeout=10 "deploy@${DEPLOY_HOST}" 'bash -se' <<'REMOTE'
+          ssh -o BatchMode=yes -o ConnectTimeout=10 "deploy@${DEPLOY_HOST}" \
+            "WORKER_API_TOKEN='${WORKER_API_TOKEN}' bash -se" <<'REMOTE'
           set -eu
           echo "== host addresses =="
           hostname -I
@@ -40,6 +42,20 @@ jobs:
           curl --silent --show-error --fail --max-time 8 \
             --write-out 'http=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \
             --output /dev/null https://api.4short.ru/health/live
+          echo "== local authenticated registration =="
+          curl --silent --show-error --max-time 15 \
+            --header "X-Worker-Token: ${WORKER_API_TOKEN}" \
+            --header 'Content-Type: application/json' \
+            --data '{"workerId":"control-local-diagnostic","version":"diagnostic","capabilities":{"classes":["cpu_heavy"]},"metadata":{"source":"github-actions"}}' \
+            --write-out '\nhttp=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \
+            http://127.0.0.1:4100/v1/internal/workers/register || true
+          echo "== public authenticated registration from control host =="
+          curl --silent --show-error --max-time 15 \
+            --header "X-Worker-Token: ${WORKER_API_TOKEN}" \
+            --header 'Content-Type: application/json' \
+            --data '{"workerId":"control-public-diagnostic","version":"diagnostic","capabilities":{"classes":["cpu_heavy"]},"metadata":{"source":"github-actions"}}' \
+            --write-out '\nhttp=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \
+            https://api.4short.ru/v1/internal/workers/register || true
           REMOTE
 
   media-worker:
