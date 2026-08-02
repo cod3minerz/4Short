@@ -24,6 +24,10 @@ if [[ ! -s /etc/4short/media-worker.env ]]; then
   exit 2
 fi
 
+# Bind mounts may be created by Docker as root before the first container
+# starts. Reassert the non-root worker ownership on every release.
+install -d -m 0750 -o 10001 -g 10001 /var/lib/4short/jobs /var/lib/4short/models
+
 release_dir="${release_root}/${release_sha}"
 image_tag="${release_sha:0:12}"
 previous_release=""
