@@ -1,0 +1,82 @@
+name: Diagnose production network
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  control-plane:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - name: Configure SSH
+        env:
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          DEPLOY_SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
+        run: |
+          install -d -m 0700 ~/.ssh
+          install -m 0600 /dev/null ~/.ssh/id_ed25519
+          printf '%s\n' "${DEPLOY_SSH_PRIVATE_KEY}" > ~/.ssh/id_ed25519
+          printf '%s\n' "${DEPLOY_SSH_KNOWN_HOSTS}" > ~/.ssh/known_hosts
+
+      - name: Inspect control-plane network
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          ssh -o BatchMode=yes -o ConnectTimeout=10 "deploy@${DEPLOY_HOST}" 'bash -se' <<'REMOTE'
+          set -eu
+          echo "== host addresses =="
+          hostname -I
+          ip -4 -brief address show scope global
+          echo "== api DNS =="
+          getent ahostsv4 api.4short.ru || true
+          echo "== local API =="
+          curl --silent --show-error --fail --max-time 5 http://127.0.0.1:4100/health/live
+          echo
+          echo "== public API from control host =="
+          curl --silent --show-error --fail --max-time 8 \
+            --write-out 'http=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \
+            --output /dev/null https://api.4short.ru/health/live
+          REMOTE
+
+  media-worker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: production
+    steps:
+      - name: Configure SSH
+        env:
+          WORKER_DEPLOY_PRIVATE_KEY: ${{ secrets.WORKER_DEPLOY_PRIVATE_KEY }}
+          WORKER_DEPLOY_KNOWN_HOSTS: ${{ secrets.WORKER_DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 0700 ~/.ssh
+          install -m 0600 /dev/null ~/.ssh/id_ed25519
+          printf '%s\n' "${WORKER_DEPLOY_PRIVATE_KEY}" > ~/.ssh/id_ed25519
+          printf '%s\n' "${WORKER_DEPLOY_KNOWN_HOSTS}" > ~/.ssh/known_hosts
+
+      - name: Inspect worker network
+        env:
+          WORKER_HOST: ${{ secrets.WORKER_HOST }}
+          CONTROL_PUBLIC_IP: 147.45.99.153
+        run: |
+          ssh -o BatchMode=yes -o ConnectTimeout=10 "deploy@${WORKER_HOST}" \
+            "CONTROL_PUBLIC_IP='${CONTROL_PUBLIC_IP}' bash -se" <<'REMOTE'
+          set -eu
+          echo "== host addresses =="
+          hostname -I
+          ip -4 -brief address show scope global
+          echo "== api DNS =="
+          getent ahostsv4 api.4short.ru || true
+          echo "== API through normal DNS =="
+          curl --ipv4 --silent --show-error --max-time 10 \
+            --write-out 'http=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \
+            --output /dev/null https://api.4short.ru/health/live || true
+          echo "== API pinned to control public IPv4 =="
+          curl --ipv4 --silent --show-error --max-time 10 \
+            --resolve "api.4short.ru:443:${CONTROL_PUBLIC_IP}" \
+            --write-out 'http=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \
+            --output /dev/null https://api.4short.ru/health/live || true
+          REMOTE
