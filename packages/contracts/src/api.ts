@@ -207,6 +207,13 @@ export const workerClaimSchema = z.object({
   leaseSeconds: z.number().int().min(30).max(600).default(120),
 });
 
+export const workerRegistrationSchema = z.object({
+  workerId: z.string().min(1).max(120),
+  version: z.string().min(1).max(80),
+  capabilities: z.record(z.string(), z.unknown()),
+  metadata: z.record(z.string(), z.unknown()).default({}),
+});
+
 export const workerHeartbeatSchema = z.object({
   workerId: z.string().min(1).max(120),
   leaseSeconds: z.number().int().min(30).max(600).default(120),

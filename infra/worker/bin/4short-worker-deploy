@@ -74,11 +74,9 @@ for attempt in 1 2 3 4; do
 done
 [[ "${build_succeeded}" == "true" ]]
 
-if grep -Eq '^STT_PROVIDER=faster_whisper$' /etc/4short/media-worker.env; then
-  FOURSHORT_IMAGE_TAG="${image_tag}" docker compose -f compose.worker.yml run --rm --no-deps \
-    --entrypoint python media-worker -c \
-    "from faster_whisper import WhisperModel; WhisperModel('large-v3-turbo', device='cpu', compute_type='int8', cpu_threads=8, num_workers=1, download_root='/var/lib/4short/models')"
-fi
+FOURSHORT_IMAGE_TAG="${image_tag}" docker compose -f compose.worker.yml run --rm --no-deps \
+  --entrypoint python media-worker -c \
+  "from fourshort_worker.config import Settings; from faster_whisper import WhisperModel; s=Settings(); WhisperModel(s.stt_model, device=s.stt_device, compute_type=s.stt_compute_type, cpu_threads=s.stt_cpu_threads, num_workers=s.stt_num_workers, download_root=str(s.stt_model_cache))"
 
 FOURSHORT_IMAGE_TAG="${image_tag}" docker compose -f compose.worker.yml up -d --no-build media-worker
 

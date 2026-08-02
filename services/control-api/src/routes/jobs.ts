@@ -6,8 +6,9 @@ import {
   jobFailureSchema,
   workerClaimSchema,
   workerHeartbeatSchema,
+  workerRegistrationSchema,
 } from "../../../../packages/contracts/src/index.js";
-import { jobEvents, jobs } from "../../../../db/schema.js";
+import { jobEvents, jobs, workerLeases } from "../../../../db/schema.js";
 import { getEnv } from "../env.js";
 import { getIdempotencyKey } from "../lib/http.js";
 import {
@@ -47,6 +48,26 @@ export async function jobRoutes(app: FastifyInstance) {
       set: { updatedAt: new Date() },
     }).returning();
     return reply.code(201).send(job);
+  });
+
+  app.post("/v1/internal/workers/register", { preHandler: requireWorker }, async (request) => {
+    const body = workerRegistrationSchema.parse(request.body);
+    const [worker] = await app.db.insert(workerLeases).values({
+      workerId: body.workerId,
+      version: body.version,
+      capabilities: body.capabilities,
+      metadata: body.metadata,
+      lastHeartbeatAt: new Date(),
+    }).onConflictDoUpdate({
+      target: workerLeases.workerId,
+      set: {
+        version: body.version,
+        capabilities: body.capabilities,
+        metadata: body.metadata,
+        lastHeartbeatAt: new Date(),
+      },
+    }).returning();
+    return worker;
   });
 
   app.post("/v1/internal/jobs/claim", { preHandler: requireWorker }, async (request, reply) => {

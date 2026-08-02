@@ -13,6 +13,7 @@ class Job:
     project_id: str | None
     clip_id: str | None
     type: str
+    job_class: str
     payload: dict
     attempt_count: int
 
@@ -24,10 +25,10 @@ class Job:
             project_id=value.get("projectId"),
             clip_id=value.get("clipId"),
             type=value["type"],
+            job_class=value["class"],
             payload=value["payload"],
             attempt_count=value["attemptCount"],
         )
-
 
 class ControlApi:
     def __init__(self, settings: Settings):
@@ -37,6 +38,15 @@ class ControlApi:
             headers={"X-Worker-Token": settings.worker_api_token},
             timeout=httpx.Timeout(30, connect=10),
         )
+
+    def register(self, capabilities: dict, metadata: dict) -> None:
+        response = self.client.post("/v1/internal/workers/register", json={
+            "workerId": self.settings.worker_id,
+            "version": self.settings.worker_version,
+            "capabilities": capabilities,
+            "metadata": metadata,
+        })
+        response.raise_for_status()
 
     def claim(self, classes: list[str]) -> Job | None:
         response = self.client.post("/v1/internal/jobs/claim", json={

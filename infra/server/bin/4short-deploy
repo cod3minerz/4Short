@@ -70,21 +70,15 @@ FOURSHORT_IMAGE_TAG="${image_tag}" \
   docker compose -f compose.production.yml up -d --no-build
 
 for _ in $(seq 1 60); do
-  web_state="$(docker inspect --format='{{.State.Health.Status}}' 4short-web-1 2>/dev/null || true)"
   api_state="$(docker inspect --format='{{.State.Health.Status}}' 4short-control-api-1 2>/dev/null || true)"
-  worker_state="$(docker inspect --format='{{.State.Health.Status}}' 4short-media-worker-1 2>/dev/null || true)"
-
-  if [[ "${web_state}" == "healthy" && "${api_state}" == "healthy" && "${worker_state}" == "healthy" ]]; then
+  if [[ "${api_state}" == "healthy" ]]; then
     break
   fi
 
   sleep 2
 done
 
-[[ "${web_state}" == "healthy" ]]
 [[ "${api_state}" == "healthy" ]]
-[[ "${worker_state}" == "healthy" ]]
-curl --fail --silent --show-error http://127.0.0.1:3000/ >/dev/null
 curl --fail --silent --show-error http://127.0.0.1:4100/health/ready >/dev/null
 
 ln -sfn "${release_dir}" "${current_link}"

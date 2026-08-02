@@ -8,11 +8,15 @@ class Settings(BaseSettings):
     control_api_url: str = "http://127.0.0.1:4100"
     worker_api_token: str
     worker_id: str = "worker-local-1"
+    worker_version: str = "0.2.0"
     worker_mode: str = "12gb"
     scratch_root: Path = Path("/var/lib/4short/jobs")
+    health_file: Path = Path("/tmp/4short-worker-ready")
     minimum_scratch_free_bytes: int = 8 * 1024**3
     poll_seconds: float = 2.0
     lease_seconds: int = 120
+    heartbeat_seconds: int = 30
+    registration_seconds: int = 30
     ffmpeg_path: str = "ffmpeg"
     ffprobe_path: str = "ffprobe"
     ytdlp_path: str = "yt-dlp"
@@ -29,11 +33,6 @@ class Settings(BaseSettings):
     s3_raw_prefix: str = "raw"
     s3_derived_prefix: str = "derived"
 
-    yandex_cloud_folder_id: str | None = None
-    yandex_cloud_api_key: str | None = None
-    stt_provider: str = "faster_whisper"
-    stt_base_url: str | None = None
-    stt_api_key: str | None = None
     stt_model: str = "large-v3-turbo"
     stt_device: str = "cpu"
     stt_compute_type: str = "int8"
@@ -62,6 +61,10 @@ class Settings(BaseSettings):
             "12gb": 10.0,
         }
         return int(limits.get(self.worker_mode, 3.0) * 1024**3)
+
+    @property
+    def effective_heartbeat_seconds(self) -> int:
+        return max(5, min(self.heartbeat_seconds, self.lease_seconds // 3))
 
     @property
     def allowed_llm_models(self) -> set[str]:

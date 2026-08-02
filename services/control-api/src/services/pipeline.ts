@@ -145,7 +145,7 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
       workspaceId: completedJob.workspaceId,
       projectId: completedJob.projectId,
       type: "speech_to_text",
-      class: "provider",
+      class: "cpu_heavy",
       payload: {
         audio: result.audio,
         language: "auto",
@@ -159,20 +159,22 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
   }
 
   if (completedJob.type === "speech_to_text") {
+    const sttResponse = result.response as Record<string, unknown>;
     const [transcript] = await db.insert(transcripts).values({
       sourceId: sourceRow.source.id,
       provider: String(result.provider ?? "unknown"),
-      language: String(result.language ?? "auto"),
-      originalPayload: result.response as Record<string, unknown>,
+      language: String(sttResponse.language ?? result.language ?? "auto"),
+      originalPayload: sttResponse,
     }).onConflictDoUpdate({
       target: transcripts.sourceId,
       set: {
         provider: String(result.provider ?? "unknown"),
-        originalPayload: result.response as Record<string, unknown>,
+        language: String(sttResponse.language ?? result.language ?? "auto"),
+        originalPayload: sttResponse,
         updatedAt: new Date(),
       },
     }).returning();
-    const parsedSegments = parseSttResponse(result.response);
+    const parsedSegments = parseSttResponse(sttResponse);
     if (parsedSegments) await writeTranscriptSegments(db, transcript.id, parsedSegments);
     const reservationId = completedJob.payload.reservationId;
     if (typeof reservationId === "string") await commitReservation(db, reservationId);

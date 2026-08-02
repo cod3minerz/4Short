@@ -4,7 +4,6 @@ from abc import ABC, abstractmethod
 from functools import lru_cache
 from pathlib import Path
 import json
-import time
 import httpx
 
 from .config import Settings
@@ -40,96 +39,6 @@ class JsonLlmProvider(ABC):
     @abstractmethod
     def complete_json(self, model: str, system: str, prompt: str, max_tokens: int = 4000) -> dict:
         raise NotImplementedError
-
-
-class YandexSpeechKit(SpeechToTextProvider):
-    name = "yandex_speechkit_v3"
-
-    def __init__(self, settings: Settings):
-        self.settings = settings
-        self.client = httpx.Client(timeout=60)
-
-    def _submit(self, audio_url: str, language: str = "auto") -> str:
-        if not self.settings.yandex_cloud_api_key:
-            raise JobError("STT_NOT_CONFIGURED", "SpeechKit credentials are missing", retryable=False)
-        language_restriction = {"restrictionType": "WHITELIST", "languageCode": [language]}
-        if language == "auto":
-            language_restriction = {"restrictionType": "WHITELIST", "languageCode": ["ru-RU", "en-US"]}
-        response = self.client.post(
-            "https://stt.api.cloud.yandex.net/stt/v3/recognizeFileAsync",
-            headers={"Authorization": f"Api-Key {self.settings.yandex_cloud_api_key}"},
-            json={
-                "uri": audio_url,
-                "recognitionModel": {
-                    "model": "general",
-                    "audioFormat": {"containerAudio": {"containerAudioType": "MP3"}},
-                    "languageRestriction": language_restriction,
-                    "audioProcessingType": "FULL_DATA",
-                },
-            },
-        )
-        if response.status_code >= 500:
-            raise JobError("STT_PROVIDER_UNAVAILABLE", "SpeechKit is unavailable", retryable=True)
-        response.raise_for_status()
-        return response.json()["id"]
-
-    def _wait(self, operation_id: str, timeout_seconds: int = 4 * 60 * 60) -> dict:
-        deadline = time.monotonic() + timeout_seconds
-        while time.monotonic() < deadline:
-            response = self.client.get(
-                "https://operation.api.cloud.yandex.net/operations/" + operation_id,
-                headers={"Authorization": f"Api-Key {self.settings.yandex_cloud_api_key}"},
-            )
-            response.raise_for_status()
-            payload = response.json()
-            if payload.get("done"):
-                if payload.get("error"):
-                    raise JobError("STT_FAILED", "SpeechKit recognition failed", retryable=False, details=payload["error"])
-                return {"operationId": operation_id, "response": payload.get("response", {})}
-            time.sleep(5)
-        raise JobError("STT_TIMEOUT", "SpeechKit recognition timed out", retryable=True)
-
-    def transcribe(self, audio_url: str, language: str, job_dir: Path) -> dict:
-        del job_dir
-        return self._wait(self._submit(audio_url, language))
-
-
-class OpenAICompatibleStt(SpeechToTextProvider):
-    """
-    Adapter for non-OpenAI providers exposing the common multipart transcription
-    contract. The configured model is still checked by our explicit allowlist.
-    """
-
-    name = "compatible_stt"
-
-    def __init__(self, settings: Settings):
-        self.settings = settings
-        self.client = httpx.Client(timeout=httpx.Timeout(4 * 60 * 60, connect=30))
-
-    def transcribe(self, audio_url: str, language: str, job_dir: Path) -> dict:
-        if not self.settings.stt_api_key or not self.settings.stt_base_url or not self.settings.stt_model:
-            raise JobError("STT_NOT_CONFIGURED", "External STT adapter is missing URL, key or model", retryable=False)
-        audio_path = job_dir / "provider-audio.mp3"
-        with self.client.stream("GET", audio_url) as source:
-            source.raise_for_status()
-            with audio_path.open("wb") as target:
-                for chunk in source.iter_bytes(1024 * 1024):
-                    target.write(chunk)
-        data = {"model": self.settings.stt_model, "response_format": "verbose_json"}
-        if language != "auto":
-            data["language"] = language
-        with audio_path.open("rb") as audio:
-            response = self.client.post(
-                self.settings.stt_base_url.rstrip("/") + "/audio/transcriptions",
-                headers={"Authorization": f"Bearer {self.settings.stt_api_key}"},
-                data=data,
-                files={"file": ("audio.mp3", audio, "audio/mpeg")},
-            )
-        if response.status_code >= 500 or response.status_code == 429:
-            raise JobError("STT_PROVIDER_UNAVAILABLE", "External STT provider is unavailable", retryable=True)
-        if response.status_code >= 400:
-            raise JobError("STT_FAILED", "External STT provider rejected audio", retryable=False)
-        return {"response": response.json()}
 
 
 @lru_cache(maxsize=2)
@@ -313,49 +222,9 @@ class DeepSeekLlm(JsonLlmProvider):
         return _json_payload(payload["choices"][0]["message"]["content"], self.name)
 
 
-class YandexGpt(JsonLlmProvider):
-    name = "yandexgpt"
-
-    def __init__(self, settings: Settings):
-        self.settings = settings
-        self.client = httpx.Client(timeout=120)
-
-    def complete_json(self, model: str, system: str, prompt: str, max_tokens: int = 4000) -> dict:
-        if not self.settings.yandex_cloud_api_key or not self.settings.yandex_cloud_folder_id:
-            raise JobError("LLM_NOT_CONFIGURED", "YandexGPT credentials are missing", retryable=False)
-        response = self.client.post(
-            "https://llm.api.cloud.yandex.net/foundationModels/v1/completion",
-            headers={
-                "Authorization": f"Api-Key {self.settings.yandex_cloud_api_key}",
-                "x-folder-id": self.settings.yandex_cloud_folder_id,
-            },
-            json={
-                "modelUri": f"gpt://{self.settings.yandex_cloud_folder_id}/{model}",
-                "completionOptions": {"stream": False, "temperature": 0.15, "maxTokens": str(max_tokens)},
-                "messages": [{"role": "system", "text": system}, {"role": "user", "text": prompt}],
-            },
-        )
-        if response.status_code >= 500:
-            raise JobError("LLM_PROVIDER_UNAVAILABLE", "YandexGPT is unavailable", retryable=True)
-        response.raise_for_status()
-        return _json_payload(response.json()["result"]["alternatives"][0]["message"]["text"], self.name)
-
-
-def create_stt_provider(settings: Settings) -> SpeechToTextProvider:
-    if settings.stt_provider == "faster_whisper":
-        return FasterWhisperStt(settings)
-    if settings.stt_provider == "yandex_speechkit":
-        return YandexSpeechKit(settings)
-    if settings.stt_provider == "compatible":
-        return OpenAICompatibleStt(settings)
-    raise JobError("STT_PROVIDER_DENIED", f"Unknown STT provider: {settings.stt_provider}", retryable=False)
-
-
 def create_llm_provider(settings: Settings) -> JsonLlmProvider:
     if settings.llm_provider == "openrouter":
         return OpenRouterLlm(settings)
     if settings.llm_provider == "deepseek":
         return DeepSeekLlm(settings)
-    if settings.llm_provider == "yandex":
-        return YandexGpt(settings)
     raise JobError("LLM_PROVIDER_DENIED", f"Unknown LLM provider: {settings.llm_provider}", retryable=False)

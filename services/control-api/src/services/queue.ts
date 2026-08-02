@@ -1,6 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 import type { Database } from "../../../../db/index.js";
-import { jobAttempts, jobEvents, jobs } from "../../../../db/schema.js";
+import { jobAttempts, jobEvents, jobs, workerLeases } from "../../../../db/schema.js";
 
 type JobClass = "io" | "provider" | "cpu_light" | "cpu_heavy";
 
@@ -37,20 +37,20 @@ export async function claimNextJob(input: {
         for update of j skip locked
         limit 1
       )
-      update jobs
-      set
-        status = 'leased',
-        lease_owner = ${input.workerId},
-        lease_expires_at = now() + (${input.leaseSeconds} * interval '1 second'),
-        heartbeat_at = now(),
-        started_at = coalesce(started_at, now()),
-        attempt_count = attempt_count + 1,
-        updated_at = now()
-      where id in (select id from candidate)
-      returning *
+      select id from candidate
     `);
-    const job = result[0] as typeof jobs.$inferSelect | undefined;
-    if (!job) return null;
+    const candidateId = result[0]?.id;
+    if (typeof candidateId !== "string") return null;
+
+    const [job] = await tx.update(jobs).set({
+      status: "leased",
+      leaseOwner: input.workerId,
+      leaseExpiresAt: new Date(Date.now() + input.leaseSeconds * 1000),
+      heartbeatAt: new Date(),
+      startedAt: sql`coalesce(${jobs.startedAt}, now())`,
+      attemptCount: sql`${jobs.attemptCount} + 1`,
+      updatedAt: new Date(),
+    }).where(eq(jobs.id, candidateId)).returning();
 
     await tx.insert(jobAttempts).values({
       jobId: job.id,
@@ -91,6 +91,9 @@ export async function heartbeatJob(input: {
     ))
     .returning();
   if (!updated) return null;
+  await input.db.update(workerLeases)
+    .set({ lastHeartbeatAt: new Date() })
+    .where(eq(workerLeases.workerId, input.workerId));
   if (input.progress) {
     await input.db.insert(jobEvents).values({
       jobId: updated.id,
@@ -206,18 +209,46 @@ export async function failJob(input: {
 }
 
 export async function requeueExpiredLeases(db: Database) {
-  const expired = await db.execute(sql`
-    update jobs
-    set
-      status = case when attempt_count < max_attempts then 'queued'::job_status else 'failed'::job_status end,
-      available_at = now(),
-      lease_owner = null,
-      lease_expires_at = null,
-      heartbeat_at = null,
-      error = jsonb_build_object('code', 'LEASE_EXPIRED', 'message', 'Worker heartbeat expired'),
-      updated_at = now()
-    where status = 'leased' and lease_expires_at < now()
-    returning id, workspace_id, status
-  `);
-  return expired;
+  return db.transaction(async (tx) => {
+    const expired = await tx.execute(sql`
+      select id
+      from jobs
+      where status = 'leased' and lease_expires_at < now()
+      for update skip locked
+    `);
+    const updatedJobs: Array<typeof jobs.$inferSelect> = [];
+    for (const row of expired) {
+      if (typeof row.id !== "string") continue;
+      const [current] = await tx.select().from(jobs).where(eq(jobs.id, row.id)).limit(1);
+      if (!current) continue;
+      const retry = current.attemptCount < current.maxAttempts;
+      const error = { code: "LEASE_EXPIRED", message: "Worker heartbeat expired" };
+      const [updated] = await tx.update(jobs).set({
+        status: retry ? "queued" : "failed",
+        availableAt: new Date(),
+        leaseOwner: null,
+        leaseExpiresAt: null,
+        heartbeatAt: null,
+        completedAt: retry ? null : new Date(),
+        error,
+        updatedAt: new Date(),
+      }).where(eq(jobs.id, current.id)).returning();
+      await tx.update(jobAttempts).set({
+        status: retry ? "retrying" : "failed",
+        error,
+        finishedAt: new Date(),
+      }).where(and(
+        eq(jobAttempts.jobId, current.id),
+        eq(jobAttempts.attempt, current.attemptCount),
+      ));
+      await tx.insert(jobEvents).values({
+        jobId: current.id,
+        workspaceId: current.workspaceId,
+        type: retry ? "job.retry_scheduled" : "job.failed",
+        payload: { error, reason: "lease_expired" },
+      });
+      updatedJobs.push(updated);
+    }
+    return updatedJobs;
+  });
 }

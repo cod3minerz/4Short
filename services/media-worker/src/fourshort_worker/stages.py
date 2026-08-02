@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import hashlib
+import json
 import subprocess
 import time
 
@@ -9,7 +10,15 @@ from .config import Settings
 from .control_api import Job
 from .errors import JobError
 from .media import extract_audio, probe_media, validate_render
-from .providers import create_llm_provider, create_stt_provider
+from .moments import (
+    chunk_transcript,
+    compact_transcript,
+    deterministic_candidates,
+    normalize_candidates,
+    settings_json,
+    transcript_text,
+)
+from .providers import FasterWhisperStt, create_llm_provider
 from .render import render_clip
 from .storage import Storage
 from .subtitles import write_ass
@@ -149,27 +158,50 @@ class StageRunner:
     def speech_to_text(self, job: Job, job_dir: Path) -> dict:
         audio = job.payload["audio"]
         url = self.storage.signed_get(audio["bucket"], audio["key"], expires=4 * 60 * 60)
-        provider = create_stt_provider(self.settings)
+        provider = FasterWhisperStt(self.settings)
         result = provider.transcribe(url, job.payload.get("language", "auto"), job_dir)
         return {"provider": provider.name, **result}
 
     def find_moments(self, job: Job) -> dict:
         transcript = job.payload["transcript"]
         settings = job.payload["settings"]
+        segments = compact_transcript(transcript)
+        deterministic = deterministic_candidates(segments, settings)
+        if deterministic is not None:
+            return {"candidates": deterministic, "provider": "deterministic", "models": {}}
         system = (
             "Ты редактор коротких видео. Верни только JSON с массивом candidates. "
-            "Каждый кандидат: startMs, endMs, title, topic, explanation, score. "
-            "Фрагмент должен быть самостоятельным, завершённым и не обещать просмотры."
+            "Каждый кандидат содержит startMs, endMs, title, topic, explanation, score от 0 до 100. "
+            "Используй только таймкоды из транскрипта. Фрагмент должен быть самостоятельным, "
+            "завершённым и не обещать просмотры."
         )
-        prompt = f"Настройки:\n{settings}\n\nТранскрипт с таймкодами:\n{transcript}"
         provider = create_llm_provider(self.settings)
         candidate_model = self.settings.llm_candidate_model
         rerank_model = self.settings.llm_rerank_model
-        lite = provider.complete_json(candidate_model, system, prompt)
-        rerank_prompt = f"Удалите дубли и обеспечьте разнообразие. Кандидаты:\n{lite}"
+        candidates: list[dict] = []
+        for chunk in chunk_transcript(segments):
+            prompt = (
+                f"Настройки: {settings_json(settings)}\n\n"
+                f"Транскрипт с таймкодами в миллисекундах:\n{transcript_text(chunk)}"
+            )
+            response = provider.complete_json(candidate_model, system, prompt)
+            if isinstance(response.get("candidates"), list):
+                candidates.extend(response["candidates"])
+        if not candidates:
+            raise JobError("MOMENTS_NOT_FOUND", "The model returned no usable moment candidates", retryable=True)
+        rerank_prompt = (
+            f"Настройки: {settings_json(settings)}\n"
+            "Удалите дубли, сохраните сильнейшие фрагменты и разнообразие тем. "
+            f"Кандидаты: {json.dumps(candidates[:200], ensure_ascii=False, separators=(',', ':'))}"
+        )
         ranked = provider.complete_json(rerank_model, system, rerank_prompt)
+        normalized = normalize_candidates(ranked.get("candidates", candidates), segments, settings)
+        if not normalized:
+            normalized = normalize_candidates(candidates, segments, settings)
+        if not normalized:
+            raise JobError("MOMENTS_INVALID", "The model returned invalid moment ranges", retryable=True)
         return {
-            **ranked,
+            "candidates": normalized,
             "provider": provider.name,
             "models": {"candidate": candidate_model, "rerank": rerank_model},
         }

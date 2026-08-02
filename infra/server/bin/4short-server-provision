@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+umask 027
+
+action="${1:-}"
+deploy_user="deploy"
+deploy_home="/home/${deploy_user}"
+ssh_drop_in="/etc/ssh/sshd_config.d/00-4short-control.conf"
+
+require_root() {
+  if [[ "${EUID}" -ne 0 ]]; then
+    echo "This command must run as root." >&2
+    exit 1
+  fi
+}
+
+validate_caddy() (
+  set -a
+  # This file is installed by bootstrap and contains only deployment-owned
+  # Caddy placeholders such as API_DOMAIN and ACME_EMAIL.
+  # shellcheck disable=SC1091
+  . /etc/caddy/4short.env
+  set +a
+  caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+)
+
+install_docker() {
+  if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+    return
+  fi
+  install -d -m 0755 /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+    | gpg --dearmor --yes -o /etc/apt/keyrings/docker.gpg
+  chmod 0644 /etc/apt/keyrings/docker.gpg
+  # shellcheck disable=SC1091
+  . /etc/os-release
+  printf '%s\n' \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu ${VERSION_CODENAME} stable" \
+    > /etc/apt/sources.list.d/docker.list
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  systemctl enable --now docker
+}
+
+bootstrap() {
+  require_root
+  public_key_path="${2:-}"
+  deployer_path="${3:-}"
+  caddyfile_path="${4:-}"
+  caddy_env_path="${5:-}"
+  control_env_path="${6:-}"
+  database_ca_path="${7:-}"
+  for file in "${public_key_path}" "${deployer_path}" "${caddyfile_path}" \
+    "${caddy_env_path}" "${control_env_path}" "${database_ca_path}"; do
+    if [[ ! -s "${file}" ]]; then
+      echo "Required bootstrap file is missing: ${file}" >&2
+      exit 2
+    fi
+  done
+
+  apt-get update
+  DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    age ca-certificates caddy curl fail2ban git gnupg jq postgresql-client \
+    python3-boto3 rsync sudo ufw unattended-upgrades
+  install_docker
+
+  if ! id "${deploy_user}" >/dev/null 2>&1; then
+    useradd --create-home --home-dir "${deploy_home}" --shell /bin/bash "${deploy_user}"
+  fi
+  install -d -m 0700 -o "${deploy_user}" -g "${deploy_user}" "${deploy_home}/.ssh"
+  install -m 0600 -o "${deploy_user}" -g "${deploy_user}" \
+    "${public_key_path}" "${deploy_home}/.ssh/authorized_keys"
+
+  install -d -m 0750 -o root -g "${deploy_user}" /opt/4short /opt/4short/releases
+  install -d -m 0750 -o root -g root /etc/4short
+  install -d -m 0700 -o root -g root /var/lib/4short-backups
+  install -m 0750 -o root -g root "$0" /usr/local/sbin/4short-server-provision
+  install -m 0750 -o root -g root "${deployer_path}" /usr/local/sbin/4short-deploy
+  install -m 0600 -o root -g root "${control_env_path}" /etc/4short/control-api.env
+  install -m 0644 -o root -g root "${database_ca_path}" /etc/ssl/certs/timeweb-cloud-root.crt
+  install -m 0644 -o root -g root "${caddyfile_path}" /etc/caddy/Caddyfile
+  install -m 0640 -o root -g caddy "${caddy_env_path}" /etc/caddy/4short.env
+
+  install -d -m 0755 /etc/systemd/system/caddy.service.d
+  cat > /etc/systemd/system/caddy.service.d/4short.conf <<'EOF'
+[Service]
+EnvironmentFile=/etc/caddy/4short.env
+EOF
+  systemctl daemon-reload
+
+  cat > /etc/sudoers.d/4short-control-deploy <<'EOF'
+Defaults:deploy !requiretty
+deploy ALL=(root) NOPASSWD: /usr/local/sbin/4short-server-provision verify
+deploy ALL=(root) NOPASSWD: /usr/local/sbin/4short-server-provision finalize
+deploy ALL=(root) NOPASSWD: /usr/local/sbin/4short-deploy *
+EOF
+  chmod 0440 /etc/sudoers.d/4short-control-deploy
+  visudo -cf /etc/sudoers.d/4short-control-deploy >/dev/null
+
+  cat > /etc/docker/daemon.json <<'EOF'
+{
+  "live-restore": true,
+  "userland-proxy": false,
+  "no-new-privileges": true,
+  "log-driver": "local",
+  "log-opts": {"max-size": "10m", "max-file": "3"},
+  "storage-driver": "overlay2"
+}
+EOF
+  systemctl restart docker
+
+  cat > /etc/fail2ban/jail.d/4short-control.local <<'EOF'
+[sshd]
+enabled = true
+backend = systemd
+maxretry = 4
+findtime = 10m
+bantime = 1h
+bantime.increment = true
+EOF
+  cat > /etc/apt/apt.conf.d/20auto-upgrades <<'EOF'
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+APT::Periodic::AutocleanInterval "7";
+EOF
+  cat > /etc/sysctl.d/99-4short-control.conf <<'EOF'
+kernel.dmesg_restrict = 1
+kernel.kptr_restrict = 2
+kernel.unprivileged_bpf_disabled = 1
+fs.protected_fifos = 2
+fs.protected_hardlinks = 1
+fs.protected_regular = 2
+fs.protected_symlinks = 1
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+net.ipv4.tcp_syncookies = 1
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+EOF
+  sysctl --system >/dev/null
+
+  validate_caddy
+  systemctl enable --now caddy docker fail2ban unattended-upgrades
+  timedatectl set-timezone UTC
+  echo "Control server bootstrap complete. Verify key access before finalize."
+}
+
+verify() {
+  require_root
+  id "${deploy_user}" >/dev/null
+  test -s "${deploy_home}/.ssh/authorized_keys"
+  test "$(stat -c '%a' "${deploy_home}/.ssh/authorized_keys")" = "600"
+  test -s /etc/4short/control-api.env
+  test -s /etc/ssl/certs/timeweb-cloud-root.crt
+  test -s /etc/caddy/4short.env
+  test -s /etc/systemd/system/caddy.service.d/4short.conf
+  docker info >/dev/null
+  docker compose version >/dev/null
+  validate_caddy >/dev/null
+  echo "Control server bootstrap verified."
+}
+
+finalize() {
+  require_root
+  verify >/dev/null
+  cat > "${ssh_drop_in}" <<'EOF'
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+AuthenticationMethods publickey
+AllowUsers deploy
+X11Forwarding no
+AllowAgentForwarding no
+AllowTcpForwarding no
+PermitTunnel no
+MaxAuthTries 3
+LoginGraceTime 30
+ClientAliveInterval 120
+ClientAliveCountMax 2
+EOF
+  sshd -t
+  ufw default deny incoming
+  ufw default allow outgoing
+  ufw limit 22/tcp comment '4Short deploy SSH'
+  ufw allow 80/tcp comment 'Caddy HTTP ACME'
+  ufw allow 443/tcp comment '4Short API HTTPS'
+  ufw --force enable
+  systemctl enable --now fail2ban unattended-upgrades caddy
+  systemctl reload ssh
+  systemctl reload caddy
+  echo "Control server hardening complete."
+}
+
+case "${action}" in
+  bootstrap) bootstrap "$@" ;;
+  verify) verify ;;
+  finalize) finalize ;;
+  *)
+    echo "Usage: $0 {bootstrap <public-key> <deployer> <Caddyfile> <caddy-env> <control-env> <database-ca>|verify|finalize}" >&2
+    exit 2
+    ;;
+esac

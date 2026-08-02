@@ -15,14 +15,9 @@ type ParsedSegment = {
  * The STT response is stored verbatim on `transcripts.originalPayload`
  * (opaque jsonb) and, until now, nothing ever decomposed it into
  * `transcript_segments` rows — meaning the transcript panel, word-level
- * editing and subtitle timing all silently had zero real data for every
- * connected project (see `backend-capability-map`). Only the OpenAI-Whisper
- * `verbose_json` shape (used by `OpenAICompatibleStt` in the worker) is
- * parsed here — that shape is stable and well-documented. Yandex
- * SpeechKit v3's async-recognition response (`YandexSpeechKit`) has a
- * materially different, more deeply-nested shape (per-channel/per-chunk
- * alternatives) that would need verifying against a live response before
- * it's safe to parse; returns `null` rather than guess.
+ * editing and subtitle timing had no real data. The worker now has one
+ * canonical Faster-Whisper response shape, stored verbatim and decomposed
+ * here into deterministic segment rows.
  */
 export function parseSttResponse(response: unknown): ParsedSegment[] | null {
   if (!response || typeof response !== "object") return null;

@@ -1,0 +1,104 @@
+name: Bootstrap control plane
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate one-time bootstrap secrets
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_ROOT_PASSWORD: ${{ secrets.DEPLOY_ROOT_PASSWORD }}
+          DEPLOY_SSH_PUBLIC_KEY: ${{ secrets.DEPLOY_SSH_PUBLIC_KEY }}
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          CONTROL_API_ENV_FILE: ${{ secrets.CONTROL_API_ENV_FILE }}
+          DATABASE_SSL_ROOT_CERT: ${{ secrets.DATABASE_SSL_ROOT_CERT }}
+          CADDY_ENV_FILE: ${{ secrets.CADDY_ENV_FILE }}
+        run: |
+          missing=0
+          for name in DEPLOY_HOST DEPLOY_ROOT_PASSWORD DEPLOY_SSH_PUBLIC_KEY \
+            DEPLOY_SSH_PRIVATE_KEY CONTROL_API_ENV_FILE DATABASE_SSL_ROOT_CERT CADDY_ENV_FILE; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Bootstrap secret ${name} is not configured"
+              missing=1
+            fi
+          done
+          exit "${missing}"
+
+      - name: Prepare bootstrap material
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_SSH_PUBLIC_KEY: ${{ secrets.DEPLOY_SSH_PUBLIC_KEY }}
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+          CONTROL_API_ENV_FILE: ${{ secrets.CONTROL_API_ENV_FILE }}
+          DATABASE_SSL_ROOT_CERT: ${{ secrets.DATABASE_SSL_ROOT_CERT }}
+          CADDY_ENV_FILE: ${{ secrets.CADDY_ENV_FILE }}
+          WORKER_API_TOKEN: ${{ secrets.WORKER_API_TOKEN }}
+        run: |
+          install -d -m 0700 ~/.ssh
+          printf '%s\n' "${DEPLOY_SSH_PRIVATE_KEY}" > ~/.ssh/id_ed25519
+          printf '%s\n' "${DEPLOY_SSH_PUBLIC_KEY}" > /tmp/deploy.pub
+          printf '%s\n' "${DATABASE_SSL_ROOT_CERT}" > /tmp/database-root.crt
+          printf '%s\n' "${CADDY_ENV_FILE}" > /tmp/caddy.env
+          printf '%s\n' "${CONTROL_API_ENV_FILE}" > /tmp/control-api.env
+          printf 'WORKER_API_TOKEN=%s\n' "${WORKER_API_TOKEN}" >> /tmp/control-api.env
+          chmod 0600 ~/.ssh/id_ed25519 /tmp/control-api.env /tmp/database-root.crt
+          for attempt in 1 2 3 4 5; do
+            if ssh-keyscan -T 10 -H "${DEPLOY_HOST}" > ~/.ssh/known_hosts 2>/dev/null; then
+              break
+            fi
+            sleep $((attempt * 2))
+          done
+          test -s ~/.ssh/known_hosts
+
+      - name: Install control plane
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          SSHPASS: ${{ secrets.DEPLOY_ROOT_PASSWORD }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass
+          sshpass -e scp -o StrictHostKeyChecking=yes \
+            infra/server/bin/4short-server-provision root@"${DEPLOY_HOST}":/tmp/4short-server-provision
+          sshpass -e scp -o StrictHostKeyChecking=yes \
+            infra/server/bin/4short-deploy root@"${DEPLOY_HOST}":/tmp/4short-deploy
+          sshpass -e scp -o StrictHostKeyChecking=yes \
+            infra/server/caddy/Caddyfile.example root@"${DEPLOY_HOST}":/tmp/Caddyfile
+          sshpass -e scp -o StrictHostKeyChecking=yes \
+            /tmp/deploy.pub /tmp/caddy.env /tmp/control-api.env /tmp/database-root.crt \
+            root@"${DEPLOY_HOST}":/tmp/
+          sshpass -e ssh -o StrictHostKeyChecking=yes root@"${DEPLOY_HOST}" \
+            "chmod 0700 /tmp/4short-server-provision && /tmp/4short-server-provision bootstrap /tmp/deploy.pub /tmp/4short-deploy /tmp/Caddyfile /tmp/caddy.env /tmp/control-api.env /tmp/database-root.crt"
+
+      - name: Verify deploy key before lock-down
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@"${DEPLOY_HOST}" \
+            "sudo /usr/local/sbin/4short-server-provision verify"
+
+      - name: Disable root and password SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@"${DEPLOY_HOST}" \
+            "sudo /usr/local/sbin/4short-server-provision finalize"
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes deploy@"${DEPLOY_HOST}" \
+            "sudo /usr/local/sbin/4short-server-provision verify"
+
+      - name: Export verified host keys
+        uses: actions/upload-artifact@v4
+        with:
+          name: control-plane-known-hosts
+          path: ~/.ssh/known_hosts
+          if-no-files-found: error
+          retention-days: 1

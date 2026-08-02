@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { parseSttResponse } from "../../services/control-api/src/services/transcript.js";
 
-test("parses the OpenAI-Whisper verbose_json shape into ordered segments", () => {
+test("parses the canonical Faster-Whisper response into ordered segments", () => {
   const segments = parseSttResponse({
     task: "transcribe",
     language: "russian",
@@ -44,8 +44,6 @@ test("buckets top-level word timings into the segment whose range they fall in",
 });
 
 test("returns null for an unrecognized shape rather than guessing at field names", () => {
-  // Yandex SpeechKit v3's async-recognition result — deliberately not parsed
-  // (see the comment on parseSttResponse for why).
   assert.equal(parseSttResponse({ operationId: "abc", response: { chunks: [] } }), null);
   assert.equal(parseSttResponse(null), null);
   assert.equal(parseSttResponse({}), null);
