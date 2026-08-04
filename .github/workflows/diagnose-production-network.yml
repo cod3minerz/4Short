@@ -38,10 +38,14 @@ jobs:
           echo "== local API =="
           curl --silent --show-error --fail --max-time 5 http://127.0.0.1:4100/health/live
           echo
+          echo "== Caddy service and certificates =="
+          sudo systemctl --no-pager --full status caddy || true
+          sudo caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile || true
+          sudo journalctl -u caddy --no-pager -n 160 || true
           echo "== public API from control host =="
-          curl --silent --show-error --fail --max-time 8 \
+          curl --silent --show-error --max-time 8 \
             --write-out 'http=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \
-            --output /dev/null https://api.hashpix.ru/health/live
+            --output /dev/null https://api.hashpix.ru/health/live || true
           echo "== local authenticated registration =="
           curl --silent --show-error --max-time 15 \
             --header "X-Worker-Token: ${WORKER_API_TOKEN}" \
