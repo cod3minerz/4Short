@@ -31,7 +31,7 @@ test("server-renders the Hashpix landing page and its primary action", async () 
   const html = await response.text();
   assert.match(html, /<html lang="ru">/);
   assert.match(html, /<title>Hashpix — AI-клипы из длинных видео \| Hashpix<\/title>/);
-  assert.match(html, /<span>Одно видео\.<\/span><span>До 10 клипов, которые могут выстрелить\.<\/span>/);
+  assert.match(html, /<span>Одно видео\.<\/span><span>До 10 коротких клипов\.<\/span>/);
   assert.match(html, /hero-source-form__shell/);
   assert.match(html, /Вставьте ссылку на/);
   assert.match(html, /Создать клипы/);

@@ -201,7 +201,7 @@ export function DarkLanding() {
               </div>
               <p>Присоединяйтесь к <strong>13 000</strong> креаторов</p>
             </div>
-            <h1><span>Одно видео.</span><span>До 10 клипов, которые могут выстрелить.</span></h1>
+            <h1><span>Одно видео.</span><span>До 10 коротких клипов.</span></h1>
             <p className="landing-lead">Hashpix находит сильные моменты, собирает вертикальные ролики и оставляет вам финальную правку.</p>
 
             <form className="hero-source-form" onSubmit={submit} noValidate>

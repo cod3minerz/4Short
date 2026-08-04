@@ -608,12 +608,17 @@ body:has(.dark-landing) { background: #000; color: var(--ds-text); }
   .landing-login { display: none; }
   .landing-button--small { display: none; }
   .landing-hero { padding-top: 68px; }
-  .landing-hero h1 { font-size: clamp(41px, 12.5vw, 56px); }
+  .landing-hero__copy { min-width: 0; }
+  .landing-hero h1 { width: 100%; max-width: 100%; font-size: clamp(39px, 10.8vw, 50px); }
   .landing-hero h1 span { white-space: normal; }
   .hero-social-proof { margin-bottom: 19px; }
-  .hero-source-form { flex-wrap: wrap; }
+  .hero-social-proof p,
+  .hero-social-proof strong { white-space: nowrap; }
+  .hero-source-form { width: 100%; min-width: 0; flex-wrap: wrap; }
   .hero-source-form__shell { width: 100%; flex-basis: 100%; min-height: 64px; padding-left: 15px; border-radius: 999px; }
-  .hero-source-form__placeholder { left: 15px; right: 170px; gap: 4px; font-size: 11px; }
+  .hero-source-form__placeholder { left: 15px; right: 170px; gap: 4px; font-size: 12px; }
+  .hero-source-form__placeholder > span:first-child { display: none; }
+  .hero-source-form__placeholder::before { content: "Ссылка:"; color: rgba(255,255,255,.48); }
   .hero-source-form__platform { gap: 4px; }
   .hero-source-form__submit { min-height: 54px; padding-inline: 15px; font-size: 13px; }
   .hero-source-form__upload { min-height: 54px; padding-inline: 17px; }
