@@ -1,30 +1,22 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import {
   ArrowLeft,
   Check,
   ChevronDown,
-  Clapperboard,
   Crop,
-  Droplet,
   Eye,
-  Film,
-  ImagePlus,
   LoaderCircle,
-  Music2,
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
   Pause,
   Play,
-  Quote,
   Redo2,
   Save,
   Search,
   Sparkles,
-  Stamp,
   Subtitles,
   Type,
   Undo2,
@@ -69,12 +61,12 @@ import {
 import { layoutFromApi, layoutOptions, layoutToApi } from "../lib/layout-options";
 import { toEditorWords, type EditorWord } from "../lib/transcript";
 import { ColorField } from "./ui/ColorField";
+import { ActionButton, IconButton } from "./ui/ActionButton";
 import { Dialog } from "./ui/Dialog";
-import { LockedField } from "./ui/LockedField";
 import { OptionCard } from "./ui/OptionCard";
-import { PanelSection } from "./ui/PanelSection";
 import { RangeTimeline } from "./ui/RangeTimeline";
 import { SampleList } from "./ui/SampleList";
+import { SelectableRow } from "./ui/SelectableRow";
 import { Select } from "./ui/Select";
 import { SubtitlePreviewOverlay } from "./ui/SubtitlePreviewOverlay";
 import { Switch } from "./ui/Switch";
@@ -89,7 +81,8 @@ import {
 import type { ClipEditorState, SubtitlePreset } from "../types";
 
 type ApplyScope = "clip" | "project" | "style" | "new_style";
-type EditorPanel = "text" | "properties";
+type EditorPanel = "text" | "tools" | "properties";
+type InspectorSection = "clip" | "frame" | "captions" | "title";
 type SourceReviewSequence = {
   documentHash: string;
   outputDurationUs: number;
@@ -97,6 +90,50 @@ type SourceReviewSequence = {
   previewMode: "single_media" | "dual_media_crossfade";
 };
 type SourceReviewComposition = Extract<ApiEditorManifest["composition"], { status: "ready" }>;
+
+/**
+ * One registry feeds both editor rails. Keeping it here avoids mobile and
+ * desktop controls drifting into two different sets of available tools.
+ */
+const editorSections = [
+  { id: "clip", icon: WandSparkles, label: "Клип" },
+  { id: "frame", icon: Crop, label: "Кадр" },
+  { id: "captions", icon: Subtitles, label: "Субтитры" },
+  { id: "title", icon: Type, label: "Заголовок" },
+] as const satisfies ReadonlyArray<{ id: InspectorSection; icon: typeof WandSparkles; label: string }>;
+
+function EditorSectionTools({
+  active,
+  onChange,
+  compact = false,
+}: {
+  active: InspectorSection;
+  onChange: (section: InspectorSection) => void;
+  compact?: boolean;
+}) {
+  return editorSections.map(({ id, icon: Icon, label }) => compact ? (
+    <IconButton
+      key={id}
+      aria-label={label}
+      tooltip={label}
+      aria-pressed={active === id}
+      className={active === id ? "is-active" : undefined}
+      onPress={() => onChange(id)}
+    >
+      <Icon size={17} />
+    </IconButton>
+  ) : (
+    <ActionButton
+      key={id}
+      tone="secondary"
+      className={active === id ? "is-active" : undefined}
+      onPress={() => onChange(id)}
+    >
+      <Icon size={17} />
+      {label}
+    </ActionButton>
+  ));
+}
 
 function isRetryableEditorTransportFailure(error: unknown) {
   // A 409/4xx response is a real product conflict or invalid command, not an
@@ -204,6 +241,7 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
   const [mobilePanel, setMobilePanel] = useState<EditorPanel | "preview">("preview");
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
+  const [inspectorSection, setInspectorSection] = useState<InspectorSection>("clip");
   const [uiHidden, setUiHidden] = useState(false);
   const [zoom, setZoom] = useState(75);
   const [safeZonesVisible, setSafeZonesVisible] = useState(true);
@@ -1038,16 +1076,16 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
           </small>
         </div>
         <nav aria-label="История и сохранение">
-          <button type="button" disabled={!past.length} aria-label="Отменить" onClick={undo}><Undo2 size={18} /></button>
-          <button type="button" disabled={!future.length} aria-label="Повторить" onClick={redo}><Redo2 size={18} /></button>
-          <Button variant="tertiary" aria-label="Применить изменения" onPress={() => setScopeOpen(true)}>
+          <IconButton aria-label="Отменить" tooltip="Отменить" isDisabled={!past.length} onPress={undo}><Undo2 size={18} /></IconButton>
+          <IconButton aria-label="Повторить" tooltip="Повторить" isDisabled={!future.length} onPress={redo}><Redo2 size={18} /></IconButton>
+          <ActionButton tone="quiet" aria-label="Применить изменения" onPress={() => setScopeOpen(true)}>
             Применить
             <ChevronDown size={15} />
-          </Button>
-          <Button aria-label="Обновить клип" isDisabled={busy} onPress={runRerender}>
+          </ActionButton>
+          <ActionButton aria-label="Обновить клип" isDisabled={busy} onPress={runRerender}>
             {busy ? <LoaderCircle className="is-spinning" size={17} /> : <Sparkles size={17} />}
             Обновить клип
-          </Button>
+          </ActionButton>
         </nav>
       </header>
 
@@ -1055,12 +1093,12 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
         <div className="clip-editor__notice" role="status">
           <Check size={16} />
           <span>{notice}</span>
-          <button type="button" aria-label="Скрыть сообщение" onClick={() => setNotice("")}><X size={16} /></button>
+          <IconButton aria-label="Скрыть сообщение" tooltip="Закрыть" onPress={() => setNotice("")}><X size={16} /></IconButton>
         </div>
       ) : null}
 
       <div className="clip-editor__mobile-tabs" role="tablist" aria-label="Панели редактора" onKeyDown={handleTablistKeyDown}>
-        {(["text", "properties"] as const).map((panel) => (
+        {(["text", "tools", "properties"] as const).map((panel) => (
           <button
             type="button"
             role="tab"
@@ -1070,7 +1108,7 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
             onClick={() => setMobilePanel(panel)}
             key={panel}
           >
-            {panel === "text" ? "Транскрипт" : "Свойства"}
+            {panel === "text" ? "Текст" : panel === "tools" ? "Инструменты" : "Свойства"}
           </button>
         ))}
       </div>
@@ -1079,9 +1117,9 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
         <aside className={`clip-transcript-panel ${leftOpen ? "" : "is-collapsed"}`}>
           <header>
             <strong className="clip-transcript-panel__title">Транскрипт</strong>
-            <button type="button" aria-label={leftOpen ? "Свернуть левую панель" : "Развернуть левую панель"} onClick={() => setLeftOpen((value) => !value)}>
+            <IconButton aria-label={leftOpen ? "Свернуть левую панель" : "Развернуть левую панель"} tooltip={leftOpen ? "Свернуть панель" : "Развернуть панель"} onPress={() => setLeftOpen((value) => !value)}>
               {leftOpen ? <PanelLeftClose size={17} /> : <PanelLeftOpen size={17} />}
-            </button>
+            </IconButton>
           </header>
           <label className="clip-transcript-search">
             <Search size={15} />
@@ -1119,14 +1157,14 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
               </label>
             ) : <p>Выберите слово для точечной правки.</p>}
             <div>
-              <button type="button" disabled={!selectedWord} onClick={() => setBoundaryFromWord("start")}>Начало</button>
-              <button type="button" disabled={!selectedWord} onClick={() => setBoundaryFromWord("end")}>Конец</button>
+              <ActionButton tone="secondary" isDisabled={!selectedWord} onPress={() => setBoundaryFromWord("start")}>Начало</ActionButton>
+              <ActionButton tone="secondary" isDisabled={!selectedWord} onPress={() => setBoundaryFromWord("end")}>Конец</ActionButton>
             </div>
-            <button
-              type="button"
-              disabled={!selectedWord}
+            <ActionButton
+              tone="secondary"
+              isDisabled={!selectedWord}
               aria-pressed={selectedWord ? hiddenWords.includes(selectedWord) : false}
-              onClick={() => {
+              onPress={() => {
                 if (!selectedWord) return;
                 commitTranscript({ hiddenWords: hiddenWords.includes(selectedWord) ? hiddenWords.filter((id) => id !== selectedWord) : [...hiddenWords, selectedWord] });
                 setDirty(true);
@@ -1134,12 +1172,12 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
               }}
             >
               {selectedWord && hiddenWords.includes(selectedWord) ? "Вернуть в субтитры" : "Скрыть из субтитров"}
-            </button>
-            <button
-              type="button"
-              disabled={!selectedWord}
+            </ActionButton>
+            <ActionButton
+              tone="secondary"
+              isDisabled={!selectedWord}
               aria-pressed={selectedWord ? cutWords.includes(selectedWord) : false}
-              onClick={() => {
+              onPress={() => {
                 if (!selectedWord) return;
                 commitTranscript({ cutWords: cutWords.includes(selectedWord) ? cutWords.filter((id) => id !== selectedWord) : [...cutWords, selectedWord] });
                 setDirty(true);
@@ -1147,20 +1185,33 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
               }}
             >
               {selectedWord && cutWords.includes(selectedWord) ? "Вернуть звук" : "Вырезать со звуком"}
-            </button>
+            </ActionButton>
           </div>
+        </aside>
+
+        <aside className="clip-mobile-tools" aria-label="Инструменты клипа">
+          <div>
+            <EditorSectionTools
+              active={inspectorSection}
+              onChange={(section) => {
+                setInspectorSection(section);
+                setMobilePanel("properties");
+              }}
+            />
+          </div>
+          <p>Выберите часть клипа — её настройки откроются здесь же.</p>
         </aside>
 
         <section className="clip-preview-stage">
           {!leftOpen ? (
-            <button className="clip-panel-restore is-left" type="button" aria-label="Развернуть левую панель" onClick={() => setLeftOpen(true)}>
+            <IconButton className="clip-panel-restore is-left" aria-label="Развернуть левую панель" tooltip="Развернуть текст" onPress={() => setLeftOpen(true)}>
               <PanelLeftOpen size={17} />
-            </button>
+            </IconButton>
           ) : null}
           {!rightOpen ? (
-            <button className="clip-panel-restore is-right" type="button" aria-label="Развернуть панель свойств" onClick={() => setRightOpen(true)}>
+            <IconButton className="clip-panel-restore is-right" aria-label="Развернуть панель свойств" tooltip="Развернуть свойства" onPress={() => setRightOpen(true)}>
               <PanelRightOpen size={17} />
-            </button>
+            </IconButton>
           ) : null}
           <div
             className={`clip-phone-preview preset-${state.subtitlePreset} layout-${state.layout} ${hasCompositionPreview ? "has-composition-preview" : ""}`}
@@ -1228,15 +1279,15 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
             ) : null}
             {playbackUrl ? <p className="clip-phone-preview__rendered">Финальный рендер</p> : null}
             {safeZonesVisible && !sourceReviewUrl && !playbackUrl ? <div className="clip-phone-preview__safe-zone" /> : null}
-            {(playbackUrl || sourceReviewUrl) ? <button className="clip-phone-preview__play" type="button" aria-label={playing ? "Пауза" : "Воспроизвести"} onClick={() => setPlaying((value) => !value)}>
+            {(playbackUrl || sourceReviewUrl) ? <IconButton className="clip-phone-preview__play" tone="light" aria-label={playing ? "Пауза" : "Воспроизвести"} tooltip={playing ? "Пауза" : "Воспроизвести"} onPress={() => setPlaying((value) => !value)}>
               {playing ? <Pause fill="currentColor" size={20} /> : <Play fill="currentColor" size={20} />}
-            </button> : null}
+            </IconButton> : null}
           </div>
           <div className="clip-trim">
             <div className="clip-transport">
-              <button type="button" aria-label={playing ? "Пауза" : "Воспроизвести"} onClick={() => setPlaying((value) => !value)}>
+              <IconButton aria-label={playing ? "Пауза" : "Воспроизвести"} tooltip={playing ? "Пауза" : "Воспроизвести"} onPress={() => setPlaying((value) => !value)}>
                 {playing ? <Pause fill="currentColor" size={15} /> : <Play fill="currentColor" size={15} />}
-              </button>
+              </IconButton>
               <span>{formatClock(currentTime)}</span>
               <strong>{Math.round(timelineEnd - timelineStart)} сек.</strong>
               <span>{formatClock(timelineEnd)}</span>
@@ -1263,53 +1314,65 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
 
         <aside className={`clip-inspector ${rightOpen ? "" : "is-collapsed"}`}>
           <header>
-            <strong>Настройки клипа</strong>
-            <button type="button" aria-label="Свернуть свойства" onClick={() => setRightOpen(false)}><PanelRightClose size={17} /></button>
+            <strong>{editorSections.find(({ id }) => id === inspectorSection)?.label}</strong>
+            <IconButton aria-label="Свернуть свойства" tooltip="Свернуть панель" onPress={() => setRightOpen(false)}><PanelRightClose size={17} /></IconButton>
           </header>
 
-          <div className="clip-inspector__body">
-            <PanelSection icon={<WandSparkles size={17} />} title="Клип">
+          <div className="clip-inspector__content">
+            <nav className="clip-inspector__rail" aria-label="Инструменты клипа">
+              <EditorSectionTools active={inspectorSection} onChange={setInspectorSection} compact />
+            </nav>
+
+            <div className="clip-inspector__body">
+              {inspectorSection === "clip" ? (
+                <section className="clip-inspector__section" aria-label="Общие настройки клипа">
               <label className="clip-field"><span>Название</span><input value={state.title} onChange={(event) => commit({ title: event.target.value })} /></label>
               <div className="clip-switch-row"><span>Удалять длинные паузы</span><Switch checked={state.silenceRemoval} aria-label="Удалять паузы" onCheckedChange={(value) => commit({ silenceRemoval: value })} /></div>
-              <LockedField label="Нормализовать звук" reason="Нет в конвейере рендера — пока недоступно" />
-            </PanelSection>
+              <div className="clip-inspector__group">
+                <span className="clip-inspector__group-label">Экспорт</span>
+                <div className="option-card-grid clip-option-grid--two">
+                  <OptionCard title="720p" selected={state.exportHeight === 1280} onSelect={() => commit({ exportHeight: 1280 })} />
+                  <OptionCard title="1080p" selected={state.exportHeight === 1920} onSelect={() => commit({ exportHeight: 1920 })} />
+                </div>
+                <p className="clip-help-text">MP4, SRT и VTT создаются вместе.</p>
+              </div>
+              <div className="clip-inspector__group">
+                <span className="clip-inspector__group-label">Для публикации</span>
+                <label className="clip-field"><span>Заголовок</span><input value={state.socialTitle} onChange={(event) => commit({ socialTitle: event.target.value })} /></label>
+                <label className="clip-field"><span>Описание</span><textarea rows={4} value={state.socialDescription} onChange={(event) => commit({ socialDescription: event.target.value })} /></label>
+              </div>
+                </section>
+              ) : null}
 
-            <PanelSection icon={<Crop size={17} />} title="Формат кадра">
+              {inspectorSection === "frame" ? (
+                <section className="clip-inspector__section" aria-label="Настройки кадра">
               <div className="option-card-grid">
-                {layoutOptions.map(({ id, label, hint, icon: Icon, rendersToday }) => (
-                  rendersToday ? (
-                    <OptionCard
-                      key={id}
-                      icon={<Icon size={17} />}
-                      title={label}
-                      selected={state.layout === id}
-                      tooltip={hint}
-                      onSelect={() => commit({ layout: id })}
-                    />
-                  ) : (
-                    <LockedField key={id} icon={<Icon size={16} />} label={label} reason="Нужен трекинг лица — скоро" />
-                  )
+                {layoutOptions.filter(({ rendersToday }) => rendersToday).map(({ id, label, hint, icon: Icon }) => (
+                  <OptionCard
+                    key={id}
+                    icon={<Icon size={17} />}
+                    title={label}
+                    selected={state.layout === id}
+                    tooltip={hint}
+                    onSelect={() => commit({ layout: id })}
+                  />
                 ))}
               </div>
-              <LockedField
-                label="Спикер в кадре"
-                reason="Нужен трекинг лица — скоро"
-              />
-              <button
+              <ActionButton
                 className="clip-upload-asset"
-                type="button"
+                tone="secondary"
                 aria-pressed={safeZonesVisible}
-                onClick={() => setSafeZonesVisible((value) => !value)}
+                onPress={() => setSafeZonesVisible((value) => !value)}
               >
                 <Eye size={16} /> {safeZonesVisible ? "Скрыть safe zones" : "Показать safe zones"}
-              </button>
-            </PanelSection>
+              </ActionButton>
+              <p className="clip-help-text">Доступные режимы показаны без трекинга лиц. Более сложные композиции появятся только после подключения HVE-анализа.</p>
+                </section>
+              ) : null}
 
-            <PanelSection
-              icon={<Subtitles size={17} />}
-              title="Субтитры"
-              headerControl={<Switch checked={state.captionsEnabled} aria-label="Показывать субтитры" onCheckedChange={(value) => commit({ captionsEnabled: value })} />}
-            >
+              {inspectorSection === "captions" ? (
+                <section className="clip-inspector__section" aria-label="Настройки субтитров">
+              <div className="clip-switch-row"><span>Показывать субтитры</span><Switch checked={state.captionsEnabled} aria-label="Показывать субтитры" onCheckedChange={(value) => commit({ captionsEnabled: value })} /></div>
               <SampleList
                 aria-label="Стиль субтитров"
                 value={state.subtitlePreset}
@@ -1324,7 +1387,7 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
                       text="Abc"
                       preset={preset.id}
                       animate={false}
-                      color="#ffffff"
+                      color="var(--hp-text)"
                       activeColor={state.activeColor}
                     />
                   ),
@@ -1357,14 +1420,12 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
                 <ColorField label="Основной" value={state.primaryColor} onChange={(value) => commit({ primaryColor: value })} />
                 <ColorField label="Активный" value={state.activeColor} onChange={(value) => commit({ activeColor: value })} />
               </div>
-            </PanelSection>
+                </section>
+              ) : null}
 
-            <PanelSection
-              icon={<Type size={17} />}
-              title="Заголовок"
-              defaultExpanded={false}
-              headerControl={<Switch checked={state.titleEnabled} aria-label="Показывать заголовок" onCheckedChange={(value) => commit({ titleEnabled: value })} />}
-            >
+              {inspectorSection === "title" ? (
+                <section className="clip-inspector__section" aria-label="Настройки заголовка">
+              <div className="clip-switch-row"><span>Показывать заголовок</span><Switch checked={state.titleEnabled} aria-label="Показывать заголовок" onCheckedChange={(value) => commit({ titleEnabled: value })} /></div>
               <label className="clip-field"><span>Текст</span><textarea rows={3} value={state.title} onChange={(event) => commit({ title: event.target.value })} /></label>
               <label className="clip-field">
                 <span>Позиция</span>
@@ -1376,54 +1437,8 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
                   options={positionOptions}
                 />
               </label>
-            </PanelSection>
-
-            <PanelSection
-              icon={<ImagePlus size={17} />}
-              title="Баннер"
-              defaultExpanded={false}
-              headerControl={hveDraft
-                ? <span className="clip-panel-status">Скоро</span>
-                : <Switch checked={state.bannerEnabled} aria-label="Показывать баннер" onCheckedChange={(value) => commit({ bannerEnabled: value })} />}
-            >
-              {hveDraft
-                ? <LockedField label="Баннер" reason="Версионированные asset-слои ещё не подключены к HVE-редактору." />
-                : <p className="clip-help-text">Изображение и его положение задаются в стиле — так они одинаковы во всех клипах проекта.</p>}
-            </PanelSection>
-
-            <PanelSection
-              icon={<Stamp size={17} />}
-              title="Логотип"
-              defaultExpanded={false}
-              headerControl={hveDraft
-                ? <span className="clip-panel-status">Скоро</span>
-                : <Switch checked={state.logoEnabled} aria-label="Показывать логотип" onCheckedChange={(value) => commit({ logoEnabled: value })} />}
-            >
-              {hveDraft
-                ? <LockedField label="Логотип" reason="Версионированные asset-слои ещё не подключены к HVE-редактору." />
-                : <p className="clip-help-text">Изображение и его положение задаются в стиле — так они одинаковы во всех клипах проекта.</p>}
-            </PanelSection>
-
-            <PanelSection icon={<Sparkles size={17} />} title="Качество рендера" defaultExpanded={false}>
-              <div className="option-card-grid clip-option-grid--two">
-                <OptionCard title="720p" selected={state.exportHeight === 1280} onSelect={() => commit({ exportHeight: 1280 })} />
-                <OptionCard title="1080p" selected={state.exportHeight === 1920} onSelect={() => commit({ exportHeight: 1920 })} />
-              </div>
-              <LockedField label="2K / 4K" reason="Скоро" />
-              <p className="clip-help-text">MP4, SRT и VTT создаются вместе.</p>
-            </PanelSection>
-
-            <PanelSection icon={<Quote size={17} />} title="Для соцсетей" defaultExpanded={false}>
-              <label className="clip-field"><span>Заголовок публикации</span><input value={state.socialTitle} onChange={(event) => commit({ socialTitle: event.target.value })} /></label>
-              <label className="clip-field"><span>Описание</span><textarea rows={4} value={state.socialDescription} onChange={(event) => commit({ socialDescription: event.target.value })} /></label>
-            </PanelSection>
-
-            <div className="clip-locked-stack">
-              <LockedField icon={<Quote size={16} />} label="Хук" reason="Скоро" />
-              <LockedField icon={<Clapperboard size={16} />} label="AI B-roll" reason="Скоро" />
-              <LockedField icon={<Music2 size={16} />} label="AI музыка" reason="Скоро" />
-              <LockedField icon={<Droplet size={16} />} label="Свой водяной знак" reason="Скоро" />
-              <LockedField icon={<Film size={16} />} label="Своё аутро" reason="Скоро" />
+                </section>
+              ) : null}
             </div>
           </div>
         </aside>
@@ -1436,10 +1451,10 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
         description="Явная область изменений"
         footer={
           <>
-            <Button variant="outline" onPress={() => setScopeOpen(false)}>Отменить</Button>
-            <Button isDisabled={busy} onPress={saveVersion}>
+            <ActionButton tone="secondary" onPress={() => setScopeOpen(false)}>Отменить</ActionButton>
+            <ActionButton isDisabled={busy} onPress={saveVersion}>
               {busy ? <LoaderCircle className="is-spinning" size={17} /> : <Save size={17} />}Сохранить версию
-            </Button>
+            </ActionButton>
           </>
         }
       >
@@ -1450,10 +1465,13 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
             ["style", "Обновить стиль", "Создать новую неизменяемую версию текущего стиля."],
             ["new_style", "Сохранить новым стилем", "Оставить исходный стиль без изменений."],
           ] as const).map(([id, title, text]) => (
-            <button type="button" className={scope === id ? "is-selected" : ""} onClick={() => setScope(id)} key={id}>
-              <span>{scope === id ? <Check size={15} /> : null}</span>
-              <div><strong>{title}</strong><small>{text}</small></div>
-            </button>
+            <SelectableRow
+              key={id}
+              title={title}
+              description={text}
+              selected={scope === id}
+              onPress={() => setScope(id)}
+            />
           ))}
         </div>
         {scope === "new_style" ? (

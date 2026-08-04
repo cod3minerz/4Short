@@ -5,11 +5,11 @@ import {
   CircleHelp,
   FolderOpen,
   Scissors,
-  Gem,
   LogOut,
   Palette,
   ReceiptText,
   UserRound,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -136,7 +136,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               href="/dashboard/billing"
               aria-label={availableMinutes === null ? "Баланс загружается" : `${availableMinutes} кредитов доступно`}
             >
-              <Gem size={15} />
+              <span className="dash-topbar__balance-icon" aria-hidden="true"><Zap size={14} fill="currentColor" strokeWidth={2.25} /></span>
               <span>{availableMinutes === null ? "…" : availableMinutes}</span>
             </Link>
             <details className="dash-profile-menu" ref={profileMenuRef}>

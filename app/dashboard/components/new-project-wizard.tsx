@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Input, TextArea } from "@heroui/react";
+import { Input, TextArea } from "@heroui/react";
 import {
   ArrowRight,
   Check,
@@ -8,7 +8,7 @@ import {
   Clapperboard,
   FileUp,
   Frame,
-  Gem,
+  Zap,
   History,
   Link2,
   Palette,
@@ -47,6 +47,7 @@ import { MediaThumb } from "./ui/MediaThumb";
 import { OptionCard } from "./ui/OptionCard";
 import { ProcessingCard } from "./ui/ProcessingCard";
 import { RangeTimeline } from "./ui/RangeTimeline";
+import { ActionButton } from "./ui/ActionButton";
 import { SegmentedControl } from "./ui/SegmentedControl";
 import { Select } from "./ui/Select";
 import { Stepper } from "./ui/Stepper";
@@ -498,9 +499,9 @@ export function NewProjectWizard({
                         onChange={(event) => { setUrl(event.target.value); setError(""); }}
                         onKeyDown={(event) => { if (event.key === "Enter") void verifyUrl(); }}
                       />
-                      <Button isPending={verifying} onPress={() => void verifyUrl()}>
+                      <ActionButton isPending={verifying} onPress={() => void verifyUrl()}>
                         {verifying ? "Проверяем…" : "Проверить"}
-                      </Button>
+                      </ActionButton>
                     </div>
                     <ul className="wizard-platform-row" aria-label="Поддерживаемые площадки">
                       {SUPPORTED_PLATFORMS.map((platform) => (
@@ -675,10 +676,10 @@ export function NewProjectWizard({
             )}
 
             <div className="wizard-footer wizard-footer--source">
-              <Button isDisabled={!sourceReady} onPress={() => setStep(2)}>
+              <ActionButton isDisabled={!sourceReady} onPress={() => setStep(2)}>
                 Продолжить
                 <ArrowRight size={18} />
-              </Button>
+              </ActionButton>
             </div>
           </section>
         ) : null}
@@ -816,7 +817,7 @@ export function NewProjectWizard({
               <div className="wizard-cost__row">
                 <span>Спишем за обработку</span>
                 <strong>
-                  <Gem size={16} />
+                  <Zap size={16} fill="currentColor" />
                   {estimatedCost === null ? "по факту длительности" : `${estimatedCost} кред.`}
                 </strong>
               </div>
@@ -915,10 +916,10 @@ export function NewProjectWizard({
 
             <div className="wizard-footer">
               <button className="wizard-back" type="button" onClick={() => setStep(1)}>Назад</button>
-              <Button onPress={() => setStep(3)}>
+              <ActionButton onPress={() => setStep(3)}>
                 Выбрать оформление
                 <ArrowRight size={18} />
-              </Button>
+              </ActionButton>
             </div>
           </section>
         ) : null}
@@ -1063,7 +1064,7 @@ export function NewProjectWizard({
                 <div className="wizard-summary__charge">
                   <span>Списание</span>
                   <strong>
-                    <Gem size={16} />
+                    <Zap size={16} fill="currentColor" />
                     {sourceType === "existing"
                       ? "0 — исходник уже оплачен"
                       : estimatedCost === null
@@ -1072,7 +1073,7 @@ export function NewProjectWizard({
                   </strong>
                   <small>Один исходник оплачивается один раз. Поиск, правки и ререндер — без нового списания.</small>
                 </div>
-                <Button
+                <ActionButton
                   fullWidth
                   size="lg"
                   isDisabled={notEnoughCredits}
@@ -1080,7 +1081,7 @@ export function NewProjectWizard({
                 >
                   Найти моменты
                   <ArrowRight size={18} />
-                </Button>
+                </ActionButton>
                 {launchError ? <span className="dash-field-error" role="alert">{launchError}</span> : null}
               </aside>
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, TextArea } from "@heroui/react";
+import { TextArea } from "@heroui/react";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -41,6 +41,7 @@ import { trackApp } from "../lib/track-app";
 import { useProjectProcessing } from "../lib/use-project-processing";
 import { useDashboardStore } from "../store";
 import type { ClipResult, MomentCandidate } from "../types";
+import { ActionButton, IconButton } from "./ui/ActionButton";
 import { Drawer } from "./ui/Drawer";
 import { LockedField } from "./ui/LockedField";
 import { ProcessingCard } from "./ui/ProcessingCard";
@@ -495,25 +496,25 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
           </div>
         </div>
         <div className="project-header__actions">
-          <Button variant="outline" onPress={() => setTranscriptOpen(true)}>
+          <ActionButton tone="secondary" onPress={() => setTranscriptOpen(true)}>
             <FileText size={18} />
             Транскрипт
-          </Button>
-          <Button variant="outline" onPress={() => setSettingsOpen(true)}>
+          </ActionButton>
+          <ActionButton tone="secondary" onPress={() => setSettingsOpen(true)}>
             <Settings2 size={18} />
             Параметры
-          </Button>
+          </ActionButton>
           {tab === "moments" ? (
-            <Button isDisabled={!selected.length || busy} onPress={startRender}>
+            <ActionButton isDisabled={!selected.length || busy} onPress={startRender}>
               {busy ? <LoaderCircle className="is-spinning" size={18} /> : <Sparkles size={18} />}
               Создать клипы · {selected.length}
-            </Button>
+            </ActionButton>
           ) : (
             <span className="dash-action-with-hint">
-              <Button isDisabled variant="outline">
+              <ActionButton isDisabled tone="secondary">
                 <FileArchive size={18} />
                 Скачать ZIP
-              </Button>
+              </ActionButton>
               <small>Пакетная выгрузка появится вместе с архивацией проектов</small>
             </span>
           )}
@@ -523,7 +524,7 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
       {notice ? (
         <div className="project-notice" role="status">
           <span>{notice}</span>
-          <button type="button" aria-label="Скрыть сообщение" onClick={() => setNotice("")}><X size={17} /></button>
+          <IconButton aria-label="Скрыть сообщение" tooltip="Закрыть" onPress={() => setNotice("")}><X size={17} /></IconButton>
         </div>
       ) : null}
 
@@ -570,7 +571,7 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
             <Sparkles size={26} />
             <h3>Моменты не найдены</h3>
             <p>Не удалось выделить законченные мысли в этом видео. Попробуйте уточнить запрос.</p>
-            <Button onPress={() => setSettingsOpen(true)}>Найти иначе</Button>
+            <ActionButton onPress={() => setSettingsOpen(true)}>Найти иначе</ActionButton>
           </div>
         )
       ) : tab === "moments" ? (
@@ -582,10 +583,10 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                 <h2>Выберите, что превратить в клипы</h2>
                 <p>Границы, кадр и текст каждого момента можно исправить до рендера.</p>
               </div>
-              <button type="button" onClick={() => setSettingsOpen(true)}>
+              <ActionButton tone="secondary" onPress={() => setSettingsOpen(true)}>
                 <RotateCcw size={16} />
                 Найти иначе
-              </button>
+              </ActionButton>
             </div>
 
             {items.map((moment, index) => (
@@ -651,10 +652,10 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                 label="Кадр момента"
                 reason="Свой формат для отдельного момента — пока недоступно, используется формат проекта"
               />
-              <button className="moment-inspector__edit" type="button" onClick={() => setTranscriptOpen(true)}>
+              <ActionButton className="moment-inspector__edit" tone="secondary" onPress={() => setTranscriptOpen(true)}>
                 Изменить границы по тексту
                 <ChevronRight size={17} />
-              </button>
+              </ActionButton>
             </div>
           </aside>
         </div>
@@ -667,10 +668,10 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
               <p>Откройте клип, исправьте текст, кадр или оформление и перерендерите только его.</p>
             </div>
             <span className="dash-action-with-hint">
-              <Button isDisabled variant="outline">
+              <ActionButton isDisabled tone="secondary">
                 <FileArchive size={18} />
                 Скачать готовые ZIP
-              </Button>
+              </ActionButton>
               <small>Пакетная выгрузка появится вместе с архивацией проектов</small>
             </span>
           </div>
@@ -690,16 +691,16 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                   <h3>{clip.title}</h3>
                   <p>{clip.topic} · версия {clip.version || "готовится"}</p>
                   <div className="result-clip__actions">
-                    <Button
+                    <ActionButton
                       isDisabled={clip.status !== "ready" || downloadingClipId === clip.id}
-                      variant="outline"
+                      tone="secondary"
                       onPress={() => void downloadClip(clip.id, clip.title)}
                     >
                       {downloadingClipId === clip.id
                         ? <LoaderCircle className="is-spinning" size={17} />
                         : <Download size={17} />}
                       MP4
-                    </Button>
+                    </ActionButton>
                     <Link
                       href={`/dashboard/projects/${projectId}/clips/${clip.id}`}
                       onClick={() => trackApp("clip_editor_open", { projectId, clipId: clip.id })}
@@ -715,7 +716,7 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
               <Sparkles size={26} />
               <h3>Сначала выберите моменты</h3>
               <p>После запуска здесь будут отдельно появляться готовые клипы.</p>
-              <Button onPress={() => setTab("moments")}>Вернуться к моментам</Button>
+              <ActionButton onPress={() => setTab("moments")}>Вернуться к моментам</ActionButton>
             </div>
           )}
         </section>
@@ -729,14 +730,14 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
         className="transcript-drawer"
         footer={
           <>
-            <Button variant="outline" onPress={() => setEditingTranscript((value) => !value)}>
+            <ActionButton tone="secondary" onPress={() => setEditingTranscript((value) => !value)}>
               <Pencil size={17} />
               {editingTranscript ? "Закрыть правку" : "Исправить текст"}
-            </Button>
-            <Button isDisabled={busy || !boundaryStart || !boundaryEnd} onPress={() => void applyBoundaries()}>
+            </ActionButton>
+            <ActionButton isDisabled={busy || !boundaryStart || !boundaryEnd} onPress={() => void applyBoundaries()}>
               {busy ? <LoaderCircle className="is-spinning" size={17} /> : null}
               Применить границы
-            </Button>
+            </ActionButton>
           </>
         }
       >
@@ -756,8 +757,8 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                   onChange={(event) => setTranscriptDraft(event.target.value)}
                 />
                 <div>
-                  <Button variant="outline" onPress={() => setEditingTranscript(false)}>Отменить</Button>
-                  <Button isDisabled={busy} onPress={saveTranscriptRevision}>{busy ? <LoaderCircle className="is-spinning" size={17} /> : null}Сохранить версию</Button>
+                  <ActionButton tone="secondary" onPress={() => setEditingTranscript(false)}>Отменить</ActionButton>
+                  <ActionButton isDisabled={busy} onPress={saveTranscriptRevision}>{busy ? <LoaderCircle className="is-spinning" size={17} /> : null}Сохранить версию</ActionButton>
                 </div>
               </div>
             ) : canUseApi && !filteredTranscript.length && !search ? (
@@ -800,14 +801,14 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
         className="project-settings-drawer"
         footer={
           <>
-            <Button isDisabled={busy} variant="outline" onPress={recompute}>
+            <ActionButton isDisabled={busy} tone="secondary" onPress={recompute}>
               {busy ? <LoaderCircle className="is-spinning" size={17} /> : <RotateCcw size={17} />}
               Найти ещё
-            </Button>
-            <Button isDisabled={busy} onPress={() => void applyStyle()}>
+            </ActionButton>
+            <ActionButton isDisabled={busy} onPress={() => void applyStyle()}>
               {busy ? <LoaderCircle className="is-spinning" size={17} /> : null}
               Применить стиль
-            </Button>
+            </ActionButton>
           </>
         }
       >

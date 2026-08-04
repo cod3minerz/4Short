@@ -10,67 +10,105 @@
  * from the app-wide oklch custom properties in app/globals.css.
  */
 
-/*
- * Both dashboard roots must declare the tokens: the clip editor renders in
- * .editor-focus-shell, not .dash-shell, so scoping them to .dash-shell alone
- * left every --dash-* unresolved there (backgrounds and borders silently
- * vanished). Paint properties stay on each root's own rule below.
- */
+/* Canonical Hashpix product tokens. They live on :root so portals (Dialog,
+   Drawer and Tooltip) inherit the exact same contract as the application. */
+:root {
+  --hp-canvas: #08090C;
+  --hp-surface: #101116;
+  --hp-surface-raised: #161820;
+  --hp-surface-subtle: #1B1E27;
+  --hp-media: #050609;
+  --hp-line: #2A2E38;
+  --hp-line-strong: #404653;
+  --hp-text: #F7F8FB;
+  --hp-text-muted: #AAB1BE;
+  --hp-text-subtle: #7E8796;
+  --hp-brand: #3153FF;
+  --hp-brand-hover: #4968FF;
+  --hp-brand-pressed: #253DDB;
+  --hp-action-light: #F7F8FB;
+  --hp-action-light-hover: #E9ECF2;
+  --hp-action-light-pressed: #DDE1E8;
+  --hp-success: #32C982;
+  --hp-warning: #E8B34C;
+  --hp-danger: #F06B73;
+  --hp-control-sm: 32px;
+  --hp-control-md: 36px;
+  --hp-control-lg: 40px;
+  --hp-radius-action: 999px;
+  --hp-radius-field: 14px;
+  --hp-radius-overlay: 16px;
+  --hp-radius-panel: 20px;
+  --hp-radius-workspace: 24px;
+  --hp-space-1: 4px;
+  --hp-space-2: 8px;
+  --hp-space-3: 12px;
+  --hp-space-4: 16px;
+  --hp-space-5: 24px;
+  --hp-space-6: 32px;
+  --hp-space-7: 48px;
+  --hp-motion-interactive: 160ms ease;
+  --hp-motion-overlay: 120ms ease;
+  --hp-focus-ring: color-mix(in oklch, var(--hp-brand) 78%, white);
+}
+
+/* The two roots consume the canonical token layer. `--dash-*` are transition
+   aliases for legacy selectors only; new UI must consume semantic --hp-* roles. */
 .dash-shell,
 .editor-focus-shell {
-  --ink: #fff;
-  --white: #fff;
+  --ink: var(--hp-text);
+  --white: var(--hp-text);
   --dash-text-micro: 10px;
   --dash-text-xs: 12px;
   --dash-text-sm: 13px;
   --dash-text-md: 14px;
   --dash-text-lg: 16px;
   color: var(--ds-text);
-  --dash-bg: #09090a;
-  --dash-surface: #111112;
-  --dash-surface-subtle: #171718;
-  --dash-surface-muted: #242427;
-  --dash-media: #0d0d0f;
-  --dash-border: #2c2c2f;
-  --dash-border-strong: #4a4a4f;
-  --dash-text-muted: rgba(255, 255, 255, .56);
-  --dash-accent-soft: rgba(255, 255, 255, .16);
-  --dash-accent-faint: rgba(255, 255, 255, .06);
-  --dash-control-sm: 32px;
-  --dash-control-md: 36px;
-  --dash-control-lg: 40px;
+  --dash-bg: var(--hp-canvas);
+  --dash-surface: var(--hp-surface);
+  --dash-surface-subtle: var(--hp-surface-raised);
+  --dash-surface-muted: var(--hp-surface-subtle);
+  --dash-media: var(--hp-media);
+  --dash-border: var(--hp-line);
+  --dash-border-strong: var(--hp-line-strong);
+  --dash-text-muted: var(--hp-text-muted);
+  --dash-accent-soft: color-mix(in oklch, var(--hp-brand) 28%, transparent);
+  --dash-accent-faint: color-mix(in oklch, var(--hp-brand) 12%, transparent);
+  --dash-control-sm: var(--hp-control-sm);
+  --dash-control-md: var(--hp-control-md);
+  --dash-control-lg: var(--hp-control-lg);
   --dash-mobile-nav-clearance: 74px;
-  --dash-radius-control: 10px;
-  --dash-radius-card: 16px;
+  --dash-radius-control: var(--hp-radius-field);
+  --dash-radius-card: var(--hp-radius-panel);
   /* Radius scale. Replaces 20+ one-off pixel values that had no relationship
      to each other; --dash-radius-control/-card stay as semantic aliases. */
   --dash-radius-xs: 8px;
-  --dash-radius-sm: 10px;
-  --dash-radius-md: 12px;
-  --dash-radius-lg: 16px;
-  --dash-radius-xl: 22px;
-  --dash-radius-pill: 999px;
+  --dash-radius-sm: var(--hp-radius-field);
+  --dash-radius-md: var(--hp-radius-overlay);
+  --dash-radius-lg: var(--hp-radius-panel);
+  --dash-radius-xl: var(--hp-radius-workspace);
+  --dash-radius-pill: var(--hp-radius-action);
 
   /*
    * Colour families the hardcode audit found repeated across the file with
    * dozens of near-identical one-off values. Declared once here so the sweep
    * below can collapse them.
    */
-  --dash-accent-ink: #fff;
-  --dash-accent-tint: rgba(255, 255, 255, .28);
-  --dash-accent-wash: rgba(255, 255, 255, .06);
-  --dash-ink-soft: #fff;
-  --dash-ink-muted: rgba(255, 255, 255, .84);
-  --dash-text-soft: rgba(255, 255, 255, .72);
-  --dash-text-dim: rgba(255, 255, 255, .62);
-  --dash-text-faint: rgba(255, 255, 255, .46);
-  --dash-success-ink: #6ee7a3;
-  --dash-success-surface: rgba(34, 197, 94, .13);
-  --dash-danger-ink: #ff9494;
-  --dash-danger-surface: rgba(239, 68, 68, .12);
-  --dash-danger-border: rgba(239, 68, 68, .34);
-  --dash-warning-ink: #f4c76c;
-  --dash-warning-surface: rgba(245, 158, 11, .12);
+  --dash-accent-ink: var(--hp-brand);
+  --dash-accent-tint: color-mix(in oklch, var(--hp-brand) 30%, transparent);
+  --dash-accent-wash: color-mix(in oklch, var(--hp-brand) 12%, transparent);
+  --dash-ink-soft: var(--hp-text);
+  --dash-ink-muted: color-mix(in oklch, var(--hp-text) 84%, transparent);
+  --dash-text-soft: color-mix(in oklch, var(--hp-text) 72%, transparent);
+  --dash-text-dim: color-mix(in oklch, var(--hp-text) 62%, transparent);
+  --dash-text-faint: var(--hp-text-subtle);
+  --dash-success-ink: var(--hp-success);
+  --dash-success-surface: color-mix(in oklch, var(--hp-success) 13%, transparent);
+  --dash-danger-ink: var(--hp-danger);
+  --dash-danger-surface: color-mix(in oklch, var(--hp-danger) 12%, transparent);
+  --dash-danger-border: color-mix(in oklch, var(--hp-danger) 34%, transparent);
+  --dash-warning-ink: var(--hp-warning);
+  --dash-warning-surface: color-mix(in oklch, var(--hp-warning) 12%, transparent);
   --dash-brand-youtube: #ff0033; /* YouTube brand red — not a semantic token */
 
   /*
@@ -97,19 +135,19 @@
   --default-foreground: var(--ds-text);
   --border: var(--dash-border);
   --separator: var(--dash-border);
-  --accent: #fff;
-  --accent-strong: #fff;
-  --accent-foreground: #000;
+  --accent: var(--hp-brand);
+  --accent-strong: var(--hp-brand-hover);
+  --accent-foreground: var(--hp-text);
   --field-background: var(--dash-surface);
   --field-foreground: var(--ds-text);
   --field-border: var(--dash-border);
   --field-placeholder: var(--dash-text-muted);
-  --focus: #fff;
-  --success: #22a06b;
+  --focus: var(--hp-focus-ring);
+  --success: var(--hp-success);
   --success-foreground: var(--white);
-  --warning: #e2a324;
-  --warning-foreground: var(--ink);
-  --danger: #d94b4b;
+  --warning: var(--hp-warning);
+  --warning-foreground: var(--hp-canvas);
+  --danger: var(--hp-danger);
   --danger-foreground: var(--white);
 
   min-height: 100dvh;
@@ -176,7 +214,7 @@
 .wizard .button {
   min-height: 36px;
   padding-inline: 14px;
-  border-radius: var(--dash-radius-sm);
+  border-radius: var(--hp-radius-action);
   font-size: 13px;
   font-weight: 720;
   box-shadow: none;
@@ -216,11 +254,11 @@
   min-height: 32px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding-inline: 11px;
+  gap: 7px;
+  padding: 3px 10px 3px 4px;
   border: 1px solid var(--dash-border);
-  border-radius: var(--dash-radius-sm);
-  background: rgba(255, 255, 255, .76);
+  border-radius: var(--hp-radius-action);
+  background: var(--dash-surface-raised);
   color: var(--dash-text-soft);
   font-size: 12px;
   font-weight: 680;
@@ -230,6 +268,16 @@
   color: var(--ink);
   font-size: 13px;
   font-weight: 800;
+}
+
+.dash-topbar__balance-icon {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--hp-radius-action);
+  background: var(--hp-brand);
+  color: var(--hp-text);
 }
 
 .dash-profile-menu {
@@ -250,7 +298,7 @@
 }
 
 .dash-profile-menu summary::-webkit-details-marker { display: none; }
-.dash-profile-menu summary:hover { background: rgba(255, 255, 255, .68); }
+.dash-profile-menu summary:hover { background: var(--dash-accent-wash); }
 
 .dash-profile-menu__avatar {
   width: 28px;
@@ -1989,7 +2037,7 @@
 }
 
 .clip-editor__header > div > a,
-.clip-editor__header nav > button:not(.button) {
+.clip-editor__header nav > .hp-action {
   width: 32px;
   height: 32px;
   display: grid;
@@ -2000,7 +2048,7 @@
 }
 
 .clip-editor__header > div > a:hover,
-.clip-editor__header nav > button:not(.button):hover { background: var(--dash-surface-subtle); }
+.clip-editor__header nav > .hp-action:hover { background: var(--dash-surface-subtle); }
 
 .clip-editor__header input {
   width: min(36vw, 360px);
@@ -2023,7 +2071,7 @@
 }
 
 .clip-editor__header nav { display: flex; align-items: center; gap: 4px; }
-.clip-editor__header .button { min-height: 32px; padding-inline: 11px; border-radius: var(--dash-radius-xs); font-size: 11px; box-shadow: none; transform: none !important; }
+.clip-editor__header .button { min-height: var(--hp-control-sm); padding-inline: 11px; border-radius: var(--hp-radius-action); font-size: 11px; box-shadow: none; transform: none !important; }
 .clip-editor__header .button--primary { background: var(--accent); color: white; }
 
 .clip-editor__notice {
@@ -2079,18 +2127,8 @@
 }
 
 .clip-inspector > header strong { font-size: 12px; }
-.clip-transcript-panel > header > button,
-.clip-inspector > header > button {
-  width: 30px;
-  height: 30px;
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: var(--dash-radius-xs);
-  background: transparent;
-}
-.clip-transcript-panel > header > button:hover,
-.clip-inspector > header > button:hover { background: var(--dash-surface-subtle); }
+.clip-transcript-panel > header > .hp-action,
+.clip-inspector > header > .hp-action { flex: 0 0 auto; }
 
 .clip-transcript-panel__title { font-size: 12px; }
 
@@ -2175,15 +2213,8 @@
   font-size: 11px;
 }
 .clip-word-actions > div { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-.clip-word-actions button {
-  min-height: 30px;
-  padding-inline: 8px;
-  border: 1px solid var(--dash-border);
-  border-radius: var(--dash-radius-xs);
-  background: var(--dash-surface);
-  font-size: 10px;
-}
-.clip-word-actions > button:last-child { color: #a73838; }
+.clip-word-actions .hp-action { min-height: var(--hp-control-sm); padding-inline: 8px; font-size: 10px; }
+.clip-word-actions > .hp-action:last-child { color: var(--hp-danger); }
 
 .clip-preview-stage {
   position: relative;
@@ -2314,11 +2345,7 @@
   width: 34px;
   height: 34px;
   aspect-ratio: 1;
-  border: 0;
-  border-radius: 50%;
-  background: rgba(255,255,255,.92);
-  color: var(--ink);
-  cursor: pointer;
+  border-radius: var(--hp-radius-action);
 }
 
 .clip-trim {
@@ -2339,7 +2366,7 @@
   color: var(--dash-text-muted);
   font-size: 9px;
 }
-.clip-transport > button { width: 26px; height: 26px; display: grid; place-items: center; border: 0; border-radius: var(--dash-radius-xs); background: var(--dash-surface-subtle); }
+.clip-transport > .hp-action { width: 26px; height: 26px; min-height: 26px; }
 .clip-transport strong { color: var(--ink); font-size: 9px; text-align: center; }
 .clip-transport > label { display: grid; grid-template-columns: 14px 1fr auto; align-items: center; gap: 5px; }
 .clip-transport input { width: 100%; }
@@ -2352,11 +2379,7 @@
   top: 10px;
   width: 30px;
   height: 30px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--dash-border);
-  border-radius: var(--dash-radius-xs);
-  background: var(--dash-surface);
+  min-height: 30px;
 }
 .clip-panel-restore.is-left { left: 10px; }
 .clip-panel-restore.is-right { right: 10px; }
@@ -2366,22 +2389,72 @@
   padding: 0 12px 18px;
   overflow-y: auto;
 }
+
+/* The inspector is a contextual tool, not a permanent vertical stack of
+   settings. The rail changes the current editing target while retaining a
+   stable, compact properties surface. */
+.clip-inspector__content {
+  display: grid;
+  grid-template-columns: var(--hp-control-lg) minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+}
+
+.clip-inspector__rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hp-space-1, 4px);
+  align-items: center;
+  padding: var(--hp-space-2, 8px) var(--hp-space-1, 4px);
+  border-right: 1px solid var(--hp-line);
+  background: var(--hp-surface);
+}
+
+.clip-inspector__rail .hp-action {
+  color: var(--hp-text-subtle);
+}
+
+.clip-inspector__rail .hp-action:hover,
+.clip-inspector__rail .hp-action.is-active {
+  background: var(--dash-accent-wash);
+  color: var(--hp-text);
+}
+
+.clip-inspector__rail .hp-action.is-active {
+  color: var(--hp-brand-hover);
+}
+
+.clip-inspector__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hp-space-2, 8px);
+  padding-top: var(--hp-space-3, 12px);
+}
+
+.clip-inspector__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hp-space-1, 4px);
+  padding-top: var(--hp-space-3, 12px);
+  border-top: 1px solid var(--hp-line);
+}
+
+.clip-inspector__group-label {
+  color: var(--hp-text-subtle);
+  font-size: var(--dash-text-micro);
+  font-weight: 720;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
 .clip-option-grid { gap: 6px; grid-template-columns: repeat(2, 1fr); }
-.clip-option-grid button {
+.clip-option-grid .option-card {
   min-height: 38px;
   padding: 7px;
   border-radius: var(--dash-radius-xs);
   font-size: 10px;
 }
 /* Sections that have nothing to configure yet — see no-dead-ui skill. */
-.clip-locked-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 14px 0;
-  border-top: 1px solid var(--dash-border);
-}
-
 /* Compact subtitle-preset sample inside SampleList — the full overlay is
    built for the phone-preview's absolute positioning context; here it needs
    to sit inline inside a small swatch instead. */
@@ -2393,7 +2466,7 @@
   font-size: 11px;
   text-shadow: none;
 }
-.clip-option-grid button.is-selected { border-color: var(--dash-accent-tint); background: var(--dash-accent-faint); box-shadow: none; }
+.clip-option-grid .option-card.is-selected { border-color: var(--dash-accent-tint); background: var(--dash-accent-faint); box-shadow: none; }
 .clip-switch-row { min-height: 42px; padding: 8px 0; border: 0; border-bottom: 1px solid var(--dash-surface-muted); }
 .clip-switch-row > span { font-size: 11px; }
 .clip-field { gap: 5px; margin-top: 10px; font-size: 10px; }
@@ -2409,6 +2482,7 @@
 }
 
 .clip-editor__mobile-tabs { display: none; }
+.clip-mobile-tools { display: none; }
 
 .clip-editor.is-ui-hidden {
   grid-template-rows: 0 minmax(0, 1fr);
@@ -2423,26 +2497,27 @@
   gap: 6px;
 }
 
-.clip-scope-options > button {
+.hp-selectable-row {
   min-height: 54px;
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: var(--hp-space-2);
+  width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--dash-border);
-  border-radius: var(--dash-radius-xs);
-  background: var(--dash-surface);
+  border: 1px solid var(--hp-line);
+  border-radius: var(--hp-radius-field);
+  background: var(--hp-surface);
+  color: var(--hp-text);
   text-align: left;
-  cursor: pointer;
+  transition: border-color var(--hp-motion-interactive), background var(--hp-motion-interactive);
 }
-
-.clip-scope-options > button > span {
-  flex: 0 0 16px;
-  display: flex;
-  justify-content: center;
-  padding-top: 2px;
-  color: var(--accent);
-}
+.hp-selectable-row:hover { border-color: var(--hp-line-strong); background: var(--hp-surface-raised); }
+.hp-selectable-row:focus-visible { outline: 2px solid var(--hp-brand); outline-offset: 2px; }
+.hp-selectable-row.is-selected { border-color: var(--hp-brand); background: color-mix(in srgb, var(--hp-brand) 12%, var(--hp-surface)); }
+.hp-selectable-row__leading { flex: 0 0 16px; display: grid; place-items: center; padding-top: 2px; color: var(--hp-brand); }
+.hp-selectable-row__copy { display: grid; gap: 2px; min-width: 0; }
+.hp-selectable-row__copy strong { font-size: 12px; }
+.hp-selectable-row__copy small { color: var(--hp-text-muted); font-size: 11px; line-height: 1.35; }
 
 .clip-scope-options > button > div {
   display: flex;
@@ -3398,7 +3473,7 @@
   gap: 10px;
   margin: 16px clamp(24px, 4vw, 54px) 0;
   padding: 12px 15px;
-  border: 1px solid #bfe6f3;
+  border: 1px solid var(--hp-line-strong);
   border-radius: var(--dash-radius-lg);
   background: var(--dash-accent-wash);
   color: var(--dash-accent-ink);
@@ -3410,13 +3485,8 @@
   flex: 1;
 }
 
-.project-notice button,
-.clip-editor__notice button {
-  padding: 4px;
-  border: 0;
-  background: transparent;
-  color: inherit;
-}
+.project-notice .hp-action,
+.clip-editor__notice .hp-action { flex: 0 0 auto; color: inherit; }
 
 .moment-list__head p {
   max-width: 620px;
@@ -3714,9 +3784,9 @@
    * users could not save a version or undo a change. There is enough header
    * width for all four controls at this breakpoint; shrink instead of hide.
    */
-  .clip-editor__header .button { min-height: 30px; padding-inline: 9px; font-size: 10px; }
-  .clip-editor__header .button--tertiary svg:last-child { display: none; }
-  .clip-editor__header .button--primary svg { display: none; }
+  .clip-editor__header :is(.button, .hp-action) { min-height: 30px; padding-inline: 9px; font-size: 10px; }
+  .clip-editor__header .hp-action--quiet svg:last-child { display: none; }
+  .clip-editor__header .hp-action--brand svg { display: none; }
   .clip-editor__workspace,
   .clip-editor.is-left-collapsed .clip-editor__workspace,
   .clip-editor.is-right-collapsed .clip-editor__workspace {
@@ -3734,7 +3804,8 @@
     transform: scale(.86);
   }
   .clip-transcript-panel,
-  .clip-inspector {
+  .clip-inspector,
+  .clip-mobile-tools {
     position: fixed;
     z-index: 70;
     inset: auto 0 48px;
@@ -3746,16 +3817,38 @@
     box-shadow: 0 -12px 32px rgba(20,28,38,.12);
   }
   .clip-editor__workspace.mobile-panel-text .clip-transcript-panel,
-  .clip-editor__workspace.mobile-panel-properties .clip-inspector {
+  .clip-editor__workspace.mobile-panel-properties .clip-inspector,
+  .clip-editor__workspace.mobile-panel-tools .clip-mobile-tools {
     visibility: visible !important;
   }
+  .clip-mobile-tools {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: var(--hp-space-4);
+    padding: var(--hp-space-5);
+    color: var(--hp-text-muted);
+    text-align: center;
+  }
+  .clip-mobile-tools > div {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: min(100%, 360px);
+    gap: var(--hp-space-2);
+  }
+  .clip-mobile-tools .hp-action {
+    justify-content: flex-start;
+    min-height: var(--hp-control-lg);
+  }
+  .clip-mobile-tools .hp-action.is-active { border-color: var(--hp-brand); background: var(--dash-accent-wash); }
+  .clip-mobile-tools > p { max-width: 300px; margin: 0; font-size: var(--dash-text-xs); }
   .clip-editor__mobile-tabs {
     position: fixed;
     z-index: 90;
     inset: auto 0 0;
     height: 48px;
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     padding: 4px;
     border-top: 1px solid var(--dash-border);
     background: rgba(255,255,255,.97);
@@ -3768,6 +3861,8 @@
     font-size: 10px;
   }
   .clip-editor__mobile-tabs button.is-active { background: var(--dash-surface-subtle); color: var(--ink); }
+  .clip-inspector__rail { display: none; }
+  .clip-inspector__content { grid-template-columns: minmax(0, 1fr); }
   .clip-panel-restore { display: none !important; }
   .clip-trim { width: 100%; }
   .clip-transport { grid-template-columns: 28px auto 1fr auto 16px; }
@@ -4219,13 +4314,9 @@
    * on a phone was "Обновить клип" (a re-render), not an actual save. They
    * fit at 28px each once the title field's min-width is trimmed below.
    */
-  .clip-editor__header nav > button:not(.button) {
+  .clip-editor__header nav > .hp-action--icon {
     width: 40px;
     height: 40px;
-  }
-
-  .clip-editor__header nav .button--outline {
-    display: none;
   }
 
   .clip-editor__header input {
@@ -4234,13 +4325,13 @@
     min-height: 40px;
   }
 
-  .clip-editor__header nav .button {
+  .clip-editor__header nav :is(.button, .hp-action) {
     min-width: 44px;
     padding-inline: 11px;
     font-size: 0;
   }
 
-  .clip-editor__header nav .button svg {
+  .clip-editor__header nav :is(.button, .hp-action) svg {
     width: 19px;
     height: 19px;
   }
@@ -4252,11 +4343,11 @@
    * leave the button with nothing to show at all — bring the chevron back
    * as its icon.
    */
-  .clip-editor__header nav .button--tertiary svg:last-child {
+  .clip-editor__header nav .hp-action--quiet svg:last-child {
     display: inline-block !important;
   }
 
-  .clip-editor__header nav .button--primary svg {
+  .clip-editor__header nav .hp-action--brand svg {
     display: inline-block !important;
   }
 
@@ -4370,14 +4461,14 @@
   .clip-editor__header { gap: 2px; padding-inline: 6px; }
   .clip-editor__header > div { gap: 3px; }
   .clip-editor__header > div > a,
-  .clip-editor__header nav > button:not(.button) {
+  .clip-editor__header nav > .hp-action--icon {
     width: 40px;
     height: 40px;
   }
   .clip-editor__header > div { grid-template-columns: 40px minmax(0, 1fr); }
   .clip-editor__header input { width: 52px; }
   .clip-editor__header nav { gap: 2px; }
-  .clip-editor__header nav .button { min-width: 40px; min-height: 40px; padding-inline: 8px; }
+  .clip-editor__header nav :is(.button, .hp-action) { min-width: 40px; min-height: 40px; padding-inline: 8px; }
 }
 
 
@@ -5343,6 +5434,20 @@
 .clip-editor__notice,
 .clip-trim,
 .clip-editor__mobile-tabs { background: var(--dash-surface); color: var(--ds-text); }
+.clip-preview-stage { background: var(--hp-media); }
+.clip-trim { border-color: var(--hp-line); }
+.clip-editor__header > div > a,
+.clip-editor__header nav > .hp-action,
+.clip-transcript-panel > header > .hp-action,
+.clip-inspector > header > .hp-action,
+.clip-panel-restore,
+.clip-transport > .hp-action { color: var(--hp-text-muted); }
+.clip-editor__header > div > a:hover,
+.clip-editor__header nav > .hp-action:hover,
+.clip-transcript-panel > header > .hp-action:hover,
+.clip-inspector > header > .hp-action:hover,
+.clip-panel-restore:hover,
+.clip-transport > .hp-action:hover { background: var(--hp-surface-raised); color: var(--hp-text); }
 .clip-editor__notice { border-color: var(--dash-border); box-shadow: 0 10px 28px rgba(0,0,0,.36); }
 .clip-phone-preview__play,
 .moment-preview > button,
@@ -5351,38 +5456,128 @@
 /* HeroUI portals mount on <body>, outside .dash-shell. Give dialogs and
    drawers their own complete token scope instead of falling back to white. */
 :where([data-slot="modal-backdrop"], [data-slot="drawer-backdrop"]) {
-  --dash-surface: #111112;
-  --dash-surface-subtle: #171718;
-  --dash-surface-muted: #242427;
-  --dash-border: #2c2c2f;
-  --dash-text-muted: rgba(255,255,255,.56);
-  --dash-text: #fff;
-  background: rgba(0, 0, 0, .66) !important;
+  --dash-surface: var(--hp-surface);
+  --dash-surface-subtle: var(--hp-surface-raised);
+  --dash-surface-muted: var(--hp-surface-subtle);
+  --dash-border: var(--hp-line);
+  --dash-text-muted: var(--hp-text-muted);
+  --dash-text: var(--hp-text);
+  background: color-mix(in srgb, var(--hp-canvas) 72%, transparent) !important;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
 
 :where([data-slot="modal-dialog"], .dash-drawer-dialog) {
-  border: 1px solid #2c2c2f !important;
-  border-radius: 16px;
-  background: rgba(17,17,18,.96) !important;
-  color: #fff !important;
-  box-shadow: 0 24px 80px rgba(0,0,0,.5);
+  border: 1px solid var(--hp-line) !important;
+  border-radius: var(--hp-radius-overlay);
+  background: color-mix(in srgb, var(--hp-surface) 96%, transparent) !important;
+  color: var(--hp-text) !important;
+  box-shadow: 0 var(--hp-space-5) 80px color-mix(in srgb, var(--hp-canvas) 50%, transparent);
 }
 
-:where([data-slot="modal-header"], [data-slot="modal-footer"], [data-slot="drawer-header"], [data-slot="drawer-footer"]) { border-color: #2c2c2f !important; }
-:where([data-slot="modal-heading"], [data-slot="drawer-heading"]) { color: #fff; }
-:where([data-slot="modal-body"], [data-slot="drawer-body"], .dash-drawer-dialog) { color: rgba(255,255,255,.78); }
-:where([data-slot="modal-close-trigger"], [data-slot="drawer-close-trigger"]) { background: #242427 !important; color: #fff !important; }
+:where([data-slot="modal-header"], [data-slot="modal-footer"], [data-slot="drawer-header"], [data-slot="drawer-footer"]) { border-color: var(--hp-line) !important; }
+:where([data-slot="modal-heading"], [data-slot="drawer-heading"]) { color: var(--hp-text); }
+:where([data-slot="modal-body"], [data-slot="drawer-body"], .dash-drawer-dialog) { color: var(--hp-text-muted); }
+:where([data-slot="modal-close-trigger"], [data-slot="drawer-close-trigger"]) { background: var(--hp-surface-subtle) !important; color: var(--hp-text) !important; }
 
 :where([data-slot="modal-dialog"], .dash-drawer-dialog) .button {
-  border-radius: 999px;
-  border-color: #2c2c2f;
-  background: var(--ds-text);
-  color: var(--ds-canvas);
+  border-radius: var(--hp-radius-action);
+  border-color: var(--hp-line);
+  background: var(--hp-text);
+  color: var(--hp-canvas);
 }
-:where([data-slot="modal-dialog"], .dash-drawer-dialog) .button--outline { background: transparent; color: #fff; }
-:where([data-slot="modal-dialog"], .dash-drawer-dialog) .button--danger { border-color: rgba(239,68,68,.35); background: #ff9494; color: #250708; }
+:where([data-slot="modal-dialog"], .dash-drawer-dialog) .button--outline { background: transparent; color: var(--hp-text); }
+:where([data-slot="modal-dialog"], .dash-drawer-dialog) .button--danger { border-color: color-mix(in srgb, var(--hp-danger) 35%, transparent); background: var(--hp-danger); color: var(--hp-canvas); }
+
+/* Canonical reusable actions. The type component owns press semantics; this
+   stylesheet owns visual state. No page gets to redefine its own hover model. */
+.hp-action {
+  min-height: var(--hp-control-md);
+  border: 1px solid transparent;
+  border-radius: var(--hp-radius-action);
+  padding-inline: 14px;
+  box-shadow: none;
+  font-size: var(--dash-text-sm);
+  font-weight: 720;
+  transition: background-color var(--hp-motion-interactive), border-color var(--hp-motion-interactive), color var(--hp-motion-interactive);
+}
+
+.hp-action[data-focus-visible] { outline: 2px solid var(--hp-focus-ring); outline-offset: 2px; }
+.hp-action[data-disabled] { cursor: not-allowed; opacity: .48; }
+.hp-action--brand { background: var(--hp-brand); color: var(--hp-text); }
+.hp-action--brand[data-hovered] { background: var(--hp-brand-hover); }
+.hp-action--brand[data-pressed] { background: var(--hp-brand-pressed); }
+.hp-action--light { background: var(--hp-action-light); color: var(--hp-canvas); }
+.hp-action--light[data-hovered] { background: var(--hp-action-light-hover); }
+.hp-action--light[data-pressed] { background: var(--hp-action-light-pressed); }
+.hp-action--secondary { border-color: var(--hp-line); background: var(--hp-surface-raised); color: var(--hp-text); }
+.hp-action--secondary[data-hovered] { border-color: var(--hp-line-strong); background: var(--hp-surface-subtle); }
+.hp-action--secondary[data-pressed] { background: var(--hp-surface); }
+.hp-action--danger { background: var(--hp-danger); color: var(--hp-canvas); }
+.hp-action--quiet { background: transparent; color: var(--hp-text-muted); }
+.hp-action--quiet[data-hovered] { background: var(--dash-accent-wash); color: var(--hp-text); }
+.hp-action--icon { position: relative; width: var(--hp-control-md); min-width: var(--hp-control-md); padding-inline: 0; }
+.hp-action--icon[data-tooltip]::after {
+  position: absolute;
+  z-index: 60;
+  top: 50%;
+  left: calc(100% + var(--hp-space-2));
+  width: max-content;
+  max-width: 180px;
+  transform: translateY(-50%);
+  padding: var(--hp-space-1) var(--hp-space-2);
+  border: 1px solid var(--hp-line);
+  border-radius: var(--hp-radius-field);
+  background: var(--hp-surface-raised);
+  color: var(--hp-text);
+  content: attr(data-tooltip);
+  font-size: var(--dash-text-micro);
+  line-height: 1.2;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--hp-motion-overlay);
+}
+.hp-action--icon[data-tooltip]:is([data-hovered], [data-focus-visible])::after { opacity: 1; }
+
+/* Page layouts may position a primitive, but they cannot invent another
+   visual family. These rules preserve the page anatomy while consuming the
+   canonical action / field geometry and state contract. */
+.project-row__delete.hp-action {
+  width: var(--hp-control-sm);
+  min-width: var(--hp-control-sm);
+  min-height: var(--hp-control-sm);
+  padding: 0;
+  color: var(--hp-text-muted);
+}
+.project-row__delete.hp-action[data-hovered] { background: var(--dash-danger-surface); color: var(--hp-danger); }
+.style-library-add.hp-action {
+  justify-content: flex-start;
+  min-height: 74px;
+  padding: 14px;
+  border-style: dashed;
+  border-color: var(--hp-line-strong);
+  border-radius: var(--hp-radius-overlay);
+  background: transparent;
+  color: var(--hp-text);
+  text-align: left;
+}
+.style-library-add.hp-action[data-hovered] { background: var(--hp-surface-raised); }
+.style-editor__duplicate.hp-action,
+.moment-list__head > .hp-action {
+  gap: 7px;
+  min-height: var(--hp-control-md);
+  padding-inline: 13px;
+  font-size: var(--dash-text-sm);
+}
+.moment-inspector__edit.hp-action {
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hp-action { transition: none; }
+}
 
 @media (max-width: 900px) {
   .dash-mobile-nav,

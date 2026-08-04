@@ -1,9 +1,11 @@
 ---
 name: dashboard-ux-flows
-description: Target UX flows and verification checklist for the 4Short dashboard (4-step wizard, processing screen, clip editor with always-visible right panel). Use whenever building or reviewing any dashboard user flow, to check it against the approved sequence and the per-page production-readiness checklist before calling it done.
+description: Target UX flows and verification checklist for the Hashpix dashboard and its HVE clip editor. Use whenever building or reviewing any dashboard user flow, to check it against the approved sequence and the per-page production-readiness checklist before calling it done.
 ---
 
-# 4Short dashboard UX flows
+# Hashpix dashboard UX flows
+
+This is a legacy flow guide. Its visual and component rules defer to `hashpix-product-ui`; its verification steps defer to `hashpix-page-verification`. Newer product decisions override older statements here.
 
 Reference plan: `~/.claude/plans/users-kirill-downloads-theme-css-lively-ritchie.md` — read it for full context/rationale, the mechanics-doc screenshot analysis, and the backend capability audit before large changes. This skill is the condensed, checkable version. Companion skills: `no-dead-ui`, `backend-capability-map`, `clip-formats`, `subtitle-styles`.
 
@@ -27,7 +29,7 @@ Never invent a step or a sub-feature that requires an AI/model call or a backend
 
 ## Credits/balance
 
-**One number, everywhere.** Source it from `/v1/billing/summary`. Never reintroduce a `planUsed`/`extra` split anywhere. Icon: diamond/gem.
+**One number, everywhere.** Source it from `/v1/billing/summary`. Never reintroduce a `planUsed`/`extra` split anywhere. Icon: a filled blue lightning carrier (`Zap`), never a diamond/gem.
 
 ## Storage and deletion are product state, not dashboard decoration
 
@@ -39,7 +41,7 @@ Never invent a step or a sub-feature that requires an AI/model call or a backend
 
 ## Clip editor — the structural target
 
-Three-pane layout: **left = transcript only** (the client was explicit: no tabs, no "Elements" panel mixed in here — just the transcript, word-level edit/hide/cut). **Center** = real `<video>` + `SubtitlePreviewOverlay` + trim (`RangeTimeline`, bounded by real media duration). **Right = every section always visible, never click-to-reveal.** Direct client quote: "настройки правого меню и функции мы показываем ВСЕГДА а не только при нажатии. мне не нужно нажимать на текст чтобы поменять стиль субтитров." This is a paradigm change from "inspector shows the selected element's properties" to "inspector is a fixed stack of collapsible sections" — build it with `PanelSection`, not a selection-driven conditional render. Sections that don't have a working backend behind them yet (AI B-roll, AI music, Хук, свой водяной знак, своё аутро) render as `LockedField`, never as a clickable-looking dead control.
+Use the HVE focus workspace, not a permanent wall of accordions: **left = transcript and semantic elements**, **center = real video canvas**, **right = compact contextual tool rail and the inspector for the selected executable element**, **bottom = transport plus scene/trim timeline**. Layouts (fit, fill, split, three, four, picture-in-picture, screen share, gameplay) open from a contextual canvas toolbar and are selectable only when the renderer advertises support. Keep immediate common actions visible, but reveal dense per-element configuration only after that element is selected. Locked or unavailable capabilities render as `LockedField`; never present dead controls.
 
 ## Per-page verification checklist (run this before considering any page done)
 

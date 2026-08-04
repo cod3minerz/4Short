@@ -1,4 +1,6 @@
-# Hashpix Dark System
+# Hashpix Dark System — marketing context
+
+> Product UI (dashboard, editor, admin and authentication) is governed by [`hashpix-product-system.md`](./hashpix-product-system.md). This document preserves the separate marketing/landing guidance and must not be used to create a competing product token set.
 
 ## Назначение
 

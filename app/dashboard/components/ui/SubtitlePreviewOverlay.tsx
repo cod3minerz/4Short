@@ -43,7 +43,7 @@ export function SubtitlePreviewOverlay({
   fontFamily,
   fontSize,
   position = "bottom",
-  color = "#ffffff",
+  color = "var(--hp-text)",
   activeColor,
   animate = true,
   activeIndex,

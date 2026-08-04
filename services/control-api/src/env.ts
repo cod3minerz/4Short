@@ -41,9 +41,10 @@ const environmentSchema = z.object({
   // estimate. Without it, title/thumbnail still work (via oEmbed, no key
   // needed) — duration is simply omitted rather than faked.
   YOUTUBE_API_KEY: z.string().optional(),
-  UNISENDER_GO_API_KEY: z.string().optional(),
-  UNISENDER_GO_FROM_EMAIL: z.string().email().optional(),
-  UNISENDER_GO_FROM_NAME: z.string().default("Hashpix"),
+  RESEND_API_KEY: z.string().optional(),
+  RESEND_FROM_EMAIL: z.string().email().default("hello@hashpix.ru"),
+  RESEND_FROM_NAME: z.string().min(1).max(80).default("Hashpix"),
+  RESEND_REPLY_TO: z.string().email().default("hello@hashpix.ru"),
   S3_ENDPOINT: z.string().url().default("https://s3.twcstorage.ru"),
   S3_REGION: z.string().default("ru-1"),
   S3_FORCE_PATH_STYLE: z.stringbool().default(true),

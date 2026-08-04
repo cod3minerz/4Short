@@ -3,7 +3,9 @@ name: dashboard-design-system
 description: Design-system rules for app/dashboard/** (the 4Short platform, not the marketing site). Use whenever building, editing, or reviewing any dashboard/editor UI — tokens, spacing/radius scale, which primitives to use instead of raw HTML, and the anti-hardcoding checklist. Keywords: dashboard, design system, tokens, hardcode, HeroUI, primitives, dash-shell.
 ---
 
-# 4Short dashboard design system
+# Legacy dashboard compatibility guide
+
+The authoritative design system is now `.claude/skills/hashpix-product-ui/SKILL.md` and `docs/design/hashpix-product-system.md`. Read them first. This document records dashboard-specific implementation hazards and legacy primitives only; it must not introduce competing tokens, colours, shapes, or component rules.
 
 Scope: **`app/dashboard/**` only.** The marketing pages (`app/page.tsx`, `app/components/*`, `app/blog/*`) and `app/admin/**` are separate and out of scope for this skill — never edit them under this skill's authority.
 
@@ -17,20 +19,20 @@ The dashboard used to ship with two competing stylesheets (`dashboard.css` + an 
 
 Dashboard headings describe a task; they are not marketing headlines. Keep page H1 at 24–28 px on desktop and mobile, section headings around 17–20 px, and ordinary controls at 14 px. Never repair hierarchy by introducing 35–52 px mobile headings.
 
-## Token architecture
+## Legacy token architecture
 
 - `app/globals.css` `:root` — shared with the **marketing site**. Defines `--accent`, `--ink`, `--muted`, `--line`, `--surface`, `--radius-card`, `--radius-section`, fonts. **Never add dashboard-only tokens here** — anything added to `:root` leaks into the marketing pages.
-- `app/dashboard/dashboard.css` `.dash-shell` rule — the dashboard's own scoped token layer. Two kinds of tokens live here:
+- `app/dashboard/dashboard.css` `.dash-shell` rule currently contains the legacy scoped token layer. During migration it must alias the canonical `--hp-*` token contract rather than define a second visual language. Two kinds of compatibility aliases live here:
   1. `--dash-*` prefixed tokens (`--dash-surface`, `--dash-border`, `--dash-control-{sm,md,lg}`, `--dash-radius-control`, `--dash-radius-card`, `--dash-text-muted`) — the dashboard's internal density/spacing scale.
   2. HeroUI's own unprefixed contract (`--surface`, `--surface-secondary`, `--accent-foreground`, `--field-background`, `--radius`, `--border`, `--success`/`--warning`/`--danger`, etc.) — HeroUI v3 has **no Provider** (that's a v2 pattern — verify against the `heroui-react` skill before assuming otherwise). It themes purely from these CSS custom properties. Every one of them is mapped onto a `--dash-*` token here, so hand-rolled and HeroUI components always render identically. **When you add a new HeroUI component to the dashboard, check this block first** — if it reads a variable that isn't mapped yet, add the mapping here rather than letting it fall back to HeroUI's own default palette.
 
-## The scale (use it, don't invent new values)
+## Migration scale
 
 | Token | Value | Use for |
 |---|---|---|
 | `--dash-control-sm/md/lg` | 32/36/40px | button/input/select heights |
-| `--dash-radius-xs/sm/md/lg/xl` | 8/10/12/16/22px | the whole radius scale |
-| `--dash-radius-pill` | 999px | fully-rounded chips and pills |
+| `--dash-radius-xs/sm/md/lg/xl` | legacy aliases only | replace with semantic `--hp-radius-*` when touching a component |
+| `--dash-radius-pill` | legacy alias | map to `--hp-radius-action` |
 | `--dash-radius-control` / `-card` | aliases of `sm` / `lg` | semantic aliases, prefer these when the meaning is "a control" or "a panel" |
 | `--dash-text-muted` / `-soft` / `-dim` / `-faint` | greys, strongest → lightest (actual order is `soft` > `dim` > `muted` > `faint` by measured contrast — `muted`/`dim` are close enough to be a wash, not a real problem) | secondary text, in decreasing emphasis |
 | `--dash-border` / `--dash-border-strong` | hairlines | borders |
@@ -42,9 +44,9 @@ Dashboard headings describe a task; they are not marketing headlines. Keep page 
 The radius scale replaced 20+ unrelated one-off pixel values. When a design needs a
 radius, pick the nearest step — do not introduce a 21st value.
 
-Primary brand buttons use the accent background with **white foreground**. Keep `--accent-foreground` mapped to white and verify disabled/hover/focus states instead of allowing HeroUI's default dark foreground to leak in. Filter chips and segmented choices retain the same pill/control radius in both selected and unselected states; selection may change colour or border, never the underlying shape.
+Action buttons follow the canonical component contract: primary brand is blue with white foreground; a white action stays neutral on hover and press, never turns blue. Filter chips and segmented choices retain the same shape in every state; selection may change colour or border, never the underlying geometry.
 
-Working pages use one dominant white work surface on the grey application background. Inside it, prefer spacing, headings and hairlines over nested bordered cards. Cards are reserved for genuinely independent objects (projects, presets, media choices), not every group of settings.
+Working pages use the dark canonical canvas and surface levels. Inside a workspace, prefer spacing, headings and hairlines over nested bordered cards. Cards are reserved for genuinely independent objects (projects, presets, media choices), not every group of settings.
 
 **Minor, low-priority note (E-AUDIT pass):** measured WCAG contrast ratio against
 white for the four grey text tokens:
@@ -64,7 +66,7 @@ overstated it as a 2.6:1 failure, so double-check any contrast math here from
 scratch (sanity-check the formula against `contrast('#000000','#ffffff') === 21`)
 before trusting a result — it's easy to get quietly and confidently wrong.
 
-If a spot needs a color/radius/spacing value not on this list, that is a signal to either reuse the nearest token or add a new named token to `.dash-shell` — **never drop in a bare hex/px literal**. `grep -c "#[0-9a-f]\{3,6\}" app/dashboard/dashboard.css` should trend toward zero over time, not grow.
+If a spot needs a color/radius/spacing value not on this list, add a semantic `--hp-*` token to the canonical system — **never drop in a bare hex/px literal**. Legacy `--dash-*` aliases are migration-only and must not grow.
 
 ## HeroUI compound components: use the library's own sub-parts, never a raw element with a matching `slot`
 

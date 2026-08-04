@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import { Check, Copy, Palette, Plus } from "lucide-react";
 import { useState } from "react";
 import { ControlApiError } from "../lib/control-api";
@@ -15,6 +14,7 @@ import {
 } from "../store";
 import type { StylePreset } from "../types";
 import { PageHeading } from "./page-heading";
+import { ActionButton } from "./ui/ActionButton";
 import { ColorField } from "./ui/ColorField";
 import { LockedField } from "./ui/LockedField";
 import { MediaThumb } from "./ui/MediaThumb";
@@ -111,9 +111,9 @@ export function StylesView() {
         title="Стили"
         description="Сохраните оформление один раз и применяйте его ко всем новым проектам."
         actions={
-          <Button onPress={startNewStyle}>
+          <ActionButton onPress={startNewStyle}>
             <Plus size={18} /> Новый стиль
-          </Button>
+          </ActionButton>
         }
       />
 
@@ -146,10 +146,10 @@ export function StylesView() {
               </span>
             </button>
           ))}
-          <button className="style-library-add" type="button" onClick={startNewStyle}>
+          <ActionButton className="style-library-add" tone="secondary" onPress={startNewStyle}>
             <Plus size={20} />
             <span><strong>Создать новый стиль</strong><small>Настройте субтитры, кадр и брендирование</small></span>
-          </button>
+          </ActionButton>
         </section>
 
         <div className="styles-editor-column">
@@ -184,16 +184,16 @@ export function StylesView() {
                 <span className="dash-eyebrow">Редактирование стиля</span>
                 <h2>{active.name}</h2>
               </div>
-              <button
-                type="button"
+              <ActionButton
+                tone="secondary"
                 className="style-editor__duplicate"
-                onClick={() => {
+                onPress={() => {
                   const id = duplicateStyle(active.id);
                   if (id) setActiveOverride(id);
                 }}
               >
                 <Copy size={16} /> Дублировать
-              </button>
+              </ActionButton>
             </header>
 
             <label className="style-field style-editor__name">
@@ -328,8 +328,8 @@ export function StylesView() {
 
         <div className="style-editor__footer">
           {active.id !== defaultStyleId ? (
-            <Button
-              variant="outline"
+            <ActionButton
+              tone="secondary"
               onPress={async () => {
                 setSaveError("");
                 try {
@@ -340,9 +340,9 @@ export function StylesView() {
               }}
             >
               Использовать по умолчанию
-            </Button>
+            </ActionButton>
           ) : <span className="style-saved-state"><Check size={15} /> Стиль по умолчанию</span>}
-          <Button
+          <ActionButton
             isPending={savingStyleId === active.id}
             onPress={async () => {
               setSaveError("");
@@ -357,7 +357,7 @@ export function StylesView() {
             }}
           >
             {saved && !active.dirty ? <><Check size={16} /> Сохранено</> : "Сохранить изменения"}
-          </Button>
+          </ActionButton>
           {saveError ? <p className="dash-field-error" role="alert">{saveError}</p> : null}
         </div>
         </div>

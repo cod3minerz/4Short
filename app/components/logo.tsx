@@ -4,17 +4,18 @@ type LogoProps = {
   className?: string;
   priority?: boolean;
   tone?: "dark" | "light";
+  /** A white mark and wordmark for dark immersive surfaces such as auth. */
+  variant?: "default" | "identity";
 };
 
-/**
- * The supplied brand geometry is rendered unchanged.
- * The light-theme SVG only recolors the original white wordmark.
- */
-export function Logo({ className = "", priority = false, tone = "dark" }: LogoProps) {
+/** The supplied brand geometry is rendered unchanged in every context. */
+export function Logo({ className = "", priority = false, tone = "dark", variant = "default" }: LogoProps) {
   return (
-    <span className={`brand-logo ${className}`.trim()}>
+    <span className={`brand-logo brand-logo--${variant} ${className}`.trim()}>
       <Image
-        src={tone === "dark" ? "/assets/logo-dark.svg" : "/assets/logo-source.svg"}
+        src={variant === "identity"
+          ? "/assets/hashpix-id-full-logo.svg"
+          : tone === "dark" ? "/assets/logo-dark.svg" : "/assets/logo-source.svg"}
         alt="Hashpix"
         width={170}
         height={35}

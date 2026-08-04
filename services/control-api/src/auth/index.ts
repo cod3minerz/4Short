@@ -27,7 +27,21 @@ export const auth = betterAuth({
     usePlural: true,
     transaction: true,
   }),
-  emailAndPassword: { enabled: false },
+  emailAndPassword: {
+    enabled: true,
+    // A password is never enough for a new account: the session is created
+    // only after a short-lived, hashed email OTP has been verified.
+    requireEmailVerification: true,
+    autoSignIn: false,
+    minPasswordLength: 12,
+    maxPasswordLength: 128,
+    revokeSessionsOnPasswordReset: true,
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    sendOnSignIn: true,
+    autoSignInAfterVerification: true,
+  },
   session: {
     expiresIn: 60 * 60 * 24 * 30,
     updateAge: 60 * 60 * 24,
@@ -38,6 +52,8 @@ export const auth = betterAuth({
       otpLength: 6,
       allowedAttempts: 5,
       storeOTP: "hashed",
+      overrideDefaultEmailVerification: true,
+      rateLimit: { window: 60, max: 3 },
       sendVerificationOTP: sendOtpEmail,
     }),
     ...(oauthConfig.length ? [genericOAuth({ config: oauthConfig })] : []),

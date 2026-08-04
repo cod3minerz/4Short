@@ -1,0 +1,4 @@
+interface:
+  display_name: "Hashpix Product UI"
+  short_description: "Build product UI from Hashpix system"
+  default_prompt: "Use $hashpix-product-ui to build this Hashpix interface."

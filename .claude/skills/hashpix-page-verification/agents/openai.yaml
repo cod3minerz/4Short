@@ -1,0 +1,4 @@
+interface:
+  display_name: "Hashpix Page Verification"
+  short_description: "Verify product pages before release"
+  default_prompt: "Use $hashpix-page-verification to verify this Hashpix page."

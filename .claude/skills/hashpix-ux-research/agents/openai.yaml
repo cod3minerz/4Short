@@ -1,0 +1,4 @@
+interface:
+  display_name: "Hashpix UX Research"
+  short_description: "Research complex product UX decisions"
+  default_prompt: "Use $hashpix-ux-research to evaluate this product UX problem."

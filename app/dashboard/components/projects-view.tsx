@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@heroui/react";
 import { FileVideo, HardDrive, Plus, Search, Trash2, Youtube } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -9,6 +8,7 @@ import { handleTablistKeyDown } from "../lib/a11y";
 import { removeProject, useDashboardStore } from "../store";
 import type { Project, ProjectStatus } from "../types";
 import { PageHeading } from "./page-heading";
+import { ActionButton, IconButton } from "./ui/ActionButton";
 import { Dialog } from "./ui/Dialog";
 
 type Filter = "all" | "active" | "review" | "ready" | "failed";
@@ -129,14 +129,15 @@ export function ProjectsView() {
                   <small>{project.clipsFound} моментов</small>
                 </span>
                 <time>{project.updatedAt}</time>
-                <button
+                <IconButton
                   className="project-row__delete"
-                  type="button"
                   aria-label={`Удалить проект «${project.title}»`}
-                  onClick={() => { setDeleteError(""); setProjectToDelete(project); }}
+                  tooltip="Удалить проект"
+                  tone="secondary"
+                  onPress={() => { setDeleteError(""); setProjectToDelete(project); }}
                 >
                   <Trash2 size={16} />
-                </button>
+                </IconButton>
               </article>
             );
           })}
@@ -146,7 +147,7 @@ export function ProjectsView() {
           <Search size={24} />
           <h2>Проекты не найдены</h2>
           <p>Измените запрос или очистите фильтр.</p>
-          <button type="button" onClick={() => { setFilter("all"); setQuery(""); }}>Показать все</button>
+          <ActionButton tone="secondary" onPress={() => { setFilter("all"); setQuery(""); }}>Показать все</ActionButton>
         </div>
       )}
 
@@ -157,9 +158,9 @@ export function ProjectsView() {
         description="Действие нельзя отменить."
         footer={(
           <>
-            <Button variant="outline" isDisabled={deleting} onPress={() => setProjectToDelete(null)}>Отменить</Button>
-            <Button
-              variant="danger"
+            <ActionButton tone="secondary" isDisabled={deleting} onPress={() => setProjectToDelete(null)}>Отменить</ActionButton>
+            <ActionButton
+              tone="danger"
               isPending={deleting}
               onPress={async () => {
                 if (!projectToDelete) return;
@@ -174,7 +175,7 @@ export function ProjectsView() {
                   setDeleting(false);
                 }
               }}
-            >Удалить</Button>
+            >Удалить</ActionButton>
           </>
         )}
       >

@@ -1,41 +1,33 @@
+import { Resend } from "resend";
 import { getEnv } from "../env.js";
+import { buildAuthEmail, type AuthEmailKind } from "./email-template.js";
 
 export async function sendOtpEmail(input: {
   email: string;
   otp: string;
-  type: "sign-in" | "email-verification" | "forget-password" | "change-email";
+  type: AuthEmailKind;
 }) {
   const env = getEnv();
-  if (!env.UNISENDER_GO_API_KEY || !env.UNISENDER_GO_FROM_EMAIL) {
+  if (!env.RESEND_API_KEY) {
     if (env.NODE_ENV === "development") {
-      console.info(`[auth] OTP for ${input.email}: ${input.otp}`);
+      console.warn("[auth] Resend is not configured; transactional email delivery is disabled.");
       return;
     }
     throw new Error("Email provider is not configured");
   }
 
-  const response = await fetch("https://go1.unisender.ru/ru/transactional/api/v1/email/send.json", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-API-KEY": env.UNISENDER_GO_API_KEY,
-    },
-    body: JSON.stringify({
-      message: {
-        recipients: [{ email: input.email }],
-        body: {
-          html: `<p>Код входа в Hashpix:</p><p style="font-size:28px;font-weight:700;letter-spacing:4px">${input.otp}</p><p>Код действует 10 минут.</p>`,
-          plaintext: `Код входа в Hashpix: ${input.otp}. Код действует 10 минут.`,
-        },
-        subject: "Код входа в Hashpix",
-        from_email: env.UNISENDER_GO_FROM_EMAIL,
-        from_name: env.UNISENDER_GO_FROM_NAME,
-      },
-    }),
-    signal: AbortSignal.timeout(10_000),
+  const message = buildAuthEmail(input.type, input.otp);
+  const resend = new Resend(env.RESEND_API_KEY);
+  const { error } = await resend.emails.send({
+    from: `${env.RESEND_FROM_NAME} <${env.RESEND_FROM_EMAIL}>`,
+    to: input.email,
+    replyTo: env.RESEND_REPLY_TO,
+    subject: message.subject,
+    html: message.html,
+    text: message.text,
   });
 
-  if (!response.ok) {
-    throw new Error(`Unisender Go rejected the email: ${response.status}`);
+  if (error) {
+    throw new Error(`Resend rejected the email: ${error.message}`);
   }
 }

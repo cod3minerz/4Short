@@ -582,23 +582,50 @@ export async function ensureWorkspace(name?: string) {
 }
 
 /**
- * better-auth's emailOTP plugin (`services/control-api/src/auth/index.ts`) —
- * the only sign-in method configured (`emailAndPassword` is disabled). Real
- * endpoint paths/body shapes, not guessed: verified against
- * `node_modules/better-auth/dist/plugins/email-otp/routes.mjs`.
+ * Password authentication keeps session tokens in Better Auth's server-side
+ * session store and an HttpOnly cookie. The browser never receives a JWT to
+ * persist in localStorage.
  */
-export async function sendSignInOtp(email: string) {
-  return request<{ success: boolean }>("/v1/auth/email-otp/send-verification-otp", {
+export async function signUpWithPassword(input: { email: string; password: string; name: string }) {
+  return request<{ user?: { id: string; email: string }; token?: string | null }>("/v1/auth/sign-up/email", {
     method: "POST",
-    body: JSON.stringify({ email, type: "sign-in" }),
+    body: JSON.stringify(input),
   });
 }
 
-export async function verifySignInOtp(email: string, otp: string) {
-  return request<{ token: string | null; user: { id: string; email: string; name?: string | null } }>(
-    "/v1/auth/sign-in/email-otp",
+export async function signInWithPassword(input: { email: string; password: string; rememberMe?: boolean }) {
+  return request<{ token?: string | null; user?: { id: string; email: string; name?: string | null } }>(
+    "/v1/auth/sign-in/email",
+    { method: "POST", body: JSON.stringify(input) },
+  );
+}
+
+export async function sendVerificationOtp(email: string, type: "email-verification" | "sign-in" = "email-verification") {
+  return request<{ success: boolean }>("/v1/auth/email-otp/send-verification-otp", {
+    method: "POST",
+    body: JSON.stringify({ email, type }),
+  });
+}
+
+export async function verifyEmailOtp(email: string, otp: string) {
+  return request<{ token?: string | null; user?: { id: string; email: string; name?: string | null } }>(
+    "/v1/auth/email-otp/verify-email",
     { method: "POST", body: JSON.stringify({ email, otp }) },
   );
+}
+
+export async function requestPasswordReset(email: string) {
+  return request<{ success: boolean }>("/v1/auth/email-otp/request-password-reset", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPasswordWithOtp(input: { email: string; otp: string; password: string }) {
+  return request<{ success: boolean }>("/v1/auth/email-otp/reset-password", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 }
 
 /**
