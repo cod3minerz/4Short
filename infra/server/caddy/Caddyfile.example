@@ -3,7 +3,7 @@
 	admin 127.0.0.1:2019
 }
 
-{$API_DOMAIN} {
+{$API_DOMAIN}, {$LEGACY_API_DOMAIN} {
 	encode zstd gzip
 
 	header {
@@ -12,7 +12,7 @@
 		X-Frame-Options "DENY"
 		Referrer-Policy "strict-origin-when-cross-origin"
 		-Powered-By
-		Server "4Short"
+		Server "Hashpix"
 	}
 
 	request_body {

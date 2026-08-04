@@ -3,7 +3,7 @@ import "./globals.css";
 import "./landing.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://4short.ru"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://hashpix.ru"),
   title: { default: "Hashpix — AI-нарезка видео", template: "%s | Hashpix" },
   description: "Превращайте длинные видео в готовые Shorts, Reels, TikTok и VK Клипы.",
   icons: { icon: "/assets/logo-source.svg", shortcut: "/assets/logo-source.svg" },

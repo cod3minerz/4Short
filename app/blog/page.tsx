@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 };
 
 export default function BlogPage() {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://4short.ru";
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://hashpix.ru";
   const blogJsonLd = {
     "@context": "https://schema.org",
     "@type": "Blog",

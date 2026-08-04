@@ -40,6 +40,7 @@ next-env.d.ts
 *.tsbuildinfo
 /dist/
 services/**/dist/
+packages/contracts/dist/
 **/__pycache__/
 *.py[cod]
 *.egg-info/

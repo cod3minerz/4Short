@@ -4,7 +4,7 @@ import { emailOTP } from "better-auth/plugins";
 import { genericOAuth, yandex } from "better-auth/plugins/generic-oauth";
 import { createDb } from "../../../../db/index.js";
 import * as schema from "../../../../db/schema.js";
-import { getEnv } from "../env.js";
+import { getEnv, getTrustedWebOrigins } from "../env.js";
 import { sendOtpEmail } from "./email.js";
 
 const env = getEnv();
@@ -17,7 +17,7 @@ export const auth = betterAuth({
   baseURL: env.API_PUBLIC_URL,
   basePath: "/v1/auth",
   secret: env.BETTER_AUTH_SECRET,
-  trustedOrigins: [env.WEB_ORIGIN],
+  trustedOrigins: getTrustedWebOrigins(env),
   advanced: {
     database: { generateId: "uuid" },
   },

@@ -3,7 +3,7 @@ import rateLimit from "@fastify/rate-limit";
 import sensible from "@fastify/sensible";
 import Fastify from "fastify";
 import { ZodError } from "zod";
-import { getEnv } from "./env.js";
+import { getEnv, getTrustedWebOrigins } from "./env.js";
 import { handleBetterAuth } from "./lib/http.js";
 import { databasePlugin } from "./plugins/database.js";
 import { contextPlugin } from "./plugins/context.js";
@@ -21,6 +21,7 @@ import { brandAssetRoutes } from "./routes/brand-assets.js";
 
 export async function buildApp() {
   const env = getEnv();
+  const trustedOrigins = getTrustedWebOrigins(env);
   const app = Fastify({
     logger: {
       level: env.LOG_LEVEL,
@@ -43,7 +44,11 @@ export async function buildApp() {
   });
 
   await app.register(cors, {
-    origin: env.WEB_ORIGIN,
+    origin: (origin, callback) => {
+      // Requests without Origin are server-to-server/health checks. Browser
+      // credentials are granted only to the explicit canonical/migration list.
+      callback(null, !origin || trustedOrigins.includes(origin));
+    },
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization", "Idempotency-Key", "X-Workspace-Id", "X-Development-User-Id"],
     exposedHeaders: ["Idempotency-Replayed"],

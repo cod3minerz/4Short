@@ -16,7 +16,7 @@ services:
     # public hostname for TLS/SNI, but send service-to-service traffic directly
     # to the control plane instead of hairpinning through the public Internet.
     extra_hosts:
-      - "api.4short.ru:192.168.0.4"
+      - "api.hashpix.ru:192.168.0.4"
     build:
       context: .
       dockerfile: services/media-worker/Dockerfile

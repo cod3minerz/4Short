@@ -30,27 +30,22 @@ test("server-renders the Hashpix landing page and its primary action", async () 
 
   const html = await response.text();
   assert.match(html, /<html lang="ru">/);
-  assert.match(html, /<title>Hashpix — AI-нарезка видео/);
-  assert.match(html, /ОДНО ВИДЕО\./);
-  assert.match(html, /class="hero-title-secondary"/);
-  assert.match(html, /<span>КОНТЕНТ<\/span><span>НА НЕДЕЛИ\.<\/span>/);
-  assert.match(html, /placeholder="Вставьте ссылку на YouTube"/);
-  assert.match(html, /Создать шортсы/);
-  assert.match(html, /СПИКЕР ВСЕГДА ОСТАЁТСЯ В КАДРЕ/);
-  assert.match(html, /СЛОВА СТАНОВЯТСЯ ЧАСТЬЮ ВИДЕО/);
-  assert.match(html, /ДОБАВЛЯЙТЕ ОФФЕРЫ ПРЯМО В РОЛИК/);
-  assert.match(html, /ОБРАБАТЫВАЙТЕ НЕСКОЛЬКО ИСХОДНИКОВ/);
-  assert.match(html, /\/assets\/logo-dark\.svg/);
+  assert.match(html, /<title>Hashpix — AI-клипы из длинных видео \| Hashpix<\/title>/);
+  assert.match(html, /<span>Одно видео\.<\/span><span>До 10 клипов, которые могут выстрелить\.<\/span>/);
+  assert.match(html, /hero-source-form__shell/);
+  assert.match(html, /Вставьте ссылку на/);
+  assert.match(html, /Создать клипы/);
+  assert.match(html, /AI понимает, где в видео начинается самостоятельная мысль\./);
+  assert.match(html, /От исходника до клипа — в одном коротком маршруте\./);
   assert.match(html, /\/assets\/logo-source\.svg/);
-  assert.match(html, /ВЫБЕРИТЕ СВОЙ ОБЪЁМ/);
-  assert.match(html, /ДОБАВЬТЕ МИНУТЫ, НЕ МЕНЯЯ ТАРИФ/);
-  assert.match(html, /ОТВЕТЫ БЕЗ МЕЛКОГО ШРИФТА/);
+  assert.match(html, /Выберите объём, который соответствует вашему ритму\./);
+  assert.match(html, /Вопросы до старта\./);
 });
 
 test("ships SEO metadata and the product story", async () => {
   const html = await (await render()).text();
 
-  assert.match(html, /rel="canonical" href="https:\/\/4short\.ru\/"/);
+  assert.match(html, /rel="canonical" href="https:\/\/hashpix\.ru\/"/);
   assert.match(html, /property="og:title"/);
   assert.match(html, /name="twitter:card"/);
   assert.match(html, /application\/ld\+json/);
@@ -58,29 +53,22 @@ test("ships SEO metadata and the product story", async () => {
   assert.match(html, /FAQPage/);
 
   assert.match(html, /id="features"/);
-  assert.match(html, /ВСЁ, ЧТО НУЖНО ДЛЯ КОРОТКОГО ВИДЕО/);
-  assert.doesNotMatch(html, /scroll-cue/);
+  assert.match(html, /AI понимает, где в видео начинается самостоятельная мысль\./);
+  assert.match(html, /class="dark-landing"/);
 });
 
-test("keeps the approved visual assets and interaction rules in source", async () => {
+test("keeps the approved Hashpix visual assets and interaction rules in source", async () => {
   const [css, logo] = await Promise.all([
-    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
-    readFile(new URL("../public/assets/logo-dark.svg", import.meta.url), "utf8"),
+    readFile(new URL("../app/landing.css", import.meta.url), "utf8"),
+    readFile(new URL("../public/assets/logo-source.svg", import.meta.url), "utf8"),
   ]);
 
-  assert.match(css, /\.hero__shader\s*\{[\s\S]*?position:\s*absolute/);
-  assert.doesNotMatch(css, /url\("\/assets\/hero-landscape\.webp"\)/);
-  assert.match(css, /\.url-form__row:focus-within/);
-  assert.match(css, /\.mobile-drawer \.drawer__dialog/);
-  assert.match(css, /width:\s*100vw\s*!important/);
-  assert.match(css, /\.pricing-shell[\s\S]*?background:\s*transparent/);
-  assert.match(css, /\.product-series__group[\s\S]*?position:\s*sticky/);
-  assert.match(css, /\.product-series__group[\s\S]*?top:\s*88px/);
-  assert.match(css, /\.product-series__group::before[\s\S]*?background:\s*white/);
-  assert.doesNotMatch(css, /\.product-feature__visual::after/);
-  assert.doesNotMatch(css, /\.product-feature__visual\s*\{[^}]*box-shadow/);
-  assert.doesNotMatch(css, /\.scroll-cue\s*\{/);
-  assert.match(logo, /fill="#202b35"/);
+  assert.match(css, /\.landing-hero__shader\s*\{[\s\S]*?position:\s*absolute/);
+  assert.match(css, /\.hero-source-form__shell:focus-within/);
+  assert.match(css, /\.pricing-grid-dark/);
+  assert.match(css, /@media \(max-width: 680px\)/);
+  assert.match(css, /prefers-reduced-motion/);
+  assert.match(logo, /fill="#3153FF"/);
 });
 
 test("serves robots and sitemap routes", async () => {
@@ -91,8 +79,8 @@ test("serves robots and sitemap routes", async () => {
 
   assert.equal(robots.status, 200);
   assert.equal(sitemap.status, 200);
-  assert.match(await robots.text(), /Sitemap:\s*https:\/\/4short\.ru\/sitemap\.xml/i);
-  assert.match(await sitemap.text(), /<loc>https:\/\/4short\.ru\/?<\/loc>/i);
+  assert.match(await robots.text(), /Sitemap:\s*https:\/\/hashpix\.ru\/sitemap\.xml/i);
+  assert.match(await sitemap.text(), /<loc>https:\/\/hashpix\.ru\/?<\/loc>/i);
 });
 
 test("server-renders the blog index and its SEO cluster", async () => {
@@ -104,7 +92,7 @@ test("server-renders the blog index and its SEO cluster", async () => {
   assert.match(html, /Как превратить длинное видео в короткие ролики/);
   assert.match(html, /Как сделать Shorts из видео YouTube/);
   assert.match(html, /Автоматические субтитры для вертикальных видео/);
-  assert.match(html, /rel="canonical" href="https:\/\/4short\.ru\/blog"/);
+  assert.match(html, /rel="canonical" href="https:\/\/hashpix\.ru\/blog"/);
   assert.match(html, /"@type":"Blog"/);
 });
 
@@ -118,7 +106,7 @@ test("server-renders an article with metadata, content and conversion points", a
   assert.match(html, /Вставьте ссылку — не нужно предварительно скачивать файл/);
   assert.match(html, /"@type":"BlogPosting"/);
   assert.match(html, /"@type":"BreadcrumbList"/);
-  assert.match(html, /rel="canonical" href="https:\/\/4short\.ru\/blog\/youtube-to-shorts"/);
+  assert.match(html, /rel="canonical" href="https:\/\/hashpix\.ru\/blog\/youtube-to-shorts"/);
 });
 
 test("lists blog routes in sitemap and serves RSS", async () => {
@@ -129,7 +117,7 @@ test("lists blog routes in sitemap and serves RSS", async () => {
 
   assert.equal(sitemap.status, 200);
   assert.equal(rss.status, 200);
-  assert.match(await sitemap.text(), /https:\/\/4short\.ru\/blog\/ai-video-clipping/);
+  assert.match(await sitemap.text(), /https:\/\/hashpix\.ru\/blog\/ai-video-clipping/);
   assert.match(rss.headers.get("content-type") ?? "", /application\/rss\+xml/);
   assert.match(await rss.text(), /<title>Блог Hashpix<\/title>/);
 });

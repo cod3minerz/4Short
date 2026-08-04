@@ -278,7 +278,7 @@ class OpenRouterLlm(JsonLlmProvider):
                 headers={
                     "Authorization": f"Bearer {self.settings.openrouter_api_key}",
                     "HTTP-Referer": self.settings.control_api_url,
-                    "X-Title": "4Short",
+        "X-Title": "Hashpix",
                 },
                 json={
                     "model": model,

@@ -16,7 +16,7 @@ const guides = [
   { category: "Оплата", title: "Как списываются кредиты", text: "Резерв, списание и автоматический возврат.", href: "/dashboard/billing" },
 ];
 
-const supportEmail = "hello@4short.ru";
+const supportEmail = "hello@hashpix.ru";
 
 export default function HelpPage() {
   const [query, setQuery] = useState("");

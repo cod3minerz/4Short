@@ -34,14 +34,14 @@ jobs:
           hostname -I
           ip -4 -brief address show scope global
           echo "== api DNS =="
-          getent ahostsv4 api.4short.ru || true
+          getent ahostsv4 api.hashpix.ru || true
           echo "== local API =="
           curl --silent --show-error --fail --max-time 5 http://127.0.0.1:4100/health/live
           echo
           echo "== public API from control host =="
           curl --silent --show-error --fail --max-time 8 \
             --write-out 'http=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \
-            --output /dev/null https://api.4short.ru/health/live
+            --output /dev/null https://api.hashpix.ru/health/live
           echo "== local authenticated registration =="
           curl --silent --show-error --max-time 15 \
             --header "X-Worker-Token: ${WORKER_API_TOKEN}" \
@@ -55,7 +55,7 @@ jobs:
             --header 'Content-Type: application/json' \
             --data '{"workerId":"control-public-diagnostic","version":"diagnostic","capabilities":{"engineVersion":"diagnostic","plannerVersion":"diagnostic","rendererVersion":"diagnostic","jobClasses":["cpu_heavy"],"models":{},"memoryBytes":1,"scratchFreeBytes":0,"heavySlots":0,"mediumSlots":0},"metadata":{"source":"github-actions"}}' \
             --write-out '\nhttp=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \
-            https://api.4short.ru/v1/internal/workers/register || true
+            https://api.hashpix.ru/v1/internal/workers/register || true
           REMOTE
 
   media-worker:
@@ -86,30 +86,30 @@ jobs:
           hostname -I
           ip -4 -brief address show scope global
           echo "== api DNS =="
-          getent ahostsv4 api.4short.ru || true
+          getent ahostsv4 api.hashpix.ru || true
           echo "== API through normal DNS =="
           curl --ipv4 --silent --show-error --max-time 10 \
             --write-out 'http=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \
-            --output /dev/null https://api.4short.ru/health/live || true
+            --output /dev/null https://api.hashpix.ru/health/live || true
           echo "== API pinned to control public IPv4 =="
           curl --ipv4 --silent --show-error --max-time 10 \
-            --resolve "api.4short.ru:443:${CONTROL_PUBLIC_IP}" \
+            --resolve "api.hashpix.ru:443:${CONTROL_PUBLIC_IP}" \
             --write-out 'http=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \
-            --output /dev/null https://api.4short.ru/health/live || true
+            --output /dev/null https://api.hashpix.ru/health/live || true
           echo "== API through Timeweb private network =="
           curl --ipv4 --silent --show-error --max-time 10 \
-            --resolve 'api.4short.ru:443:192.168.0.4' \
+            --resolve 'api.hashpix.ru:443:192.168.0.4' \
             --write-out 'http=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \
-            --output /dev/null https://api.4short.ru/health/live || true
+            --output /dev/null https://api.hashpix.ru/health/live || true
           echo "== database readiness from worker =="
           curl --ipv4 --silent --show-error --max-time 10 \
             --write-out '\nhttp=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \
-            https://api.4short.ru/health/ready || true
+            https://api.hashpix.ru/health/ready || true
           echo "== authenticated worker registration =="
           curl --ipv4 --silent --show-error --max-time 15 \
             --header "X-Worker-Token: ${WORKER_API_TOKEN}" \
             --header 'Content-Type: application/json' \
             --data '{"workerId":"network-diagnostic","version":"diagnostic","capabilities":{"engineVersion":"diagnostic","plannerVersion":"diagnostic","rendererVersion":"diagnostic","jobClasses":["cpu_heavy"],"models":{},"memoryBytes":1,"scratchFreeBytes":0,"heavySlots":0,"mediumSlots":0},"metadata":{"source":"github-actions"}}' \
             --write-out '\nhttp=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \
-            https://api.4short.ru/v1/internal/workers/register || true
+            https://api.hashpix.ru/v1/internal/workers/register || true
           REMOTE

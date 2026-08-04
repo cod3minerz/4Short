@@ -1,5 +1,24 @@
 import { z } from "zod";
 
+const trustedOriginsSchema = z.string().default("").transform((value, context) => {
+  const origins = value.split(",").map((item) => item.trim()).filter(Boolean);
+  const normalized: string[] = [];
+
+  for (const origin of origins) {
+    try {
+      normalized.push(new URL(origin).origin);
+    } catch {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `WEB_TRUSTED_ORIGINS contains an invalid URL: ${origin}`,
+      });
+      return z.NEVER;
+    }
+  }
+
+  return [...new Set(normalized)];
+});
+
 const environmentSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(4100),
@@ -9,6 +28,10 @@ const environmentSchema = z.object({
   DATABASE_SSL_ROOT_CERT: z.string().optional(),
   DATABASE_POOL_SIZE: z.coerce.number().int().min(1).max(30).default(10),
   WEB_ORIGIN: z.string().url().default("http://localhost:3000"),
+  // Canonical origin stays in WEB_ORIGIN. This temporary allowlist keeps the
+  // legacy site functional during a public-domain migration without widening
+  // CORS or Better Auth to arbitrary origins.
+  WEB_TRUSTED_ORIGINS: trustedOriginsSchema,
   API_PUBLIC_URL: z.string().url().default("http://localhost:4100"),
   BETTER_AUTH_SECRET: z.string().min(32),
   PLATFORM_ADMIN_EMAILS: z.string().default(""),
@@ -63,4 +86,8 @@ let cached: ControlApiEnv | undefined;
 export function getEnv(): ControlApiEnv {
   cached ??= environmentSchema.parse(process.env);
   return cached;
+}
+
+export function getTrustedWebOrigins(env = getEnv()): string[] {
+  return [...new Set([new URL(env.WEB_ORIGIN).origin, ...env.WEB_TRUSTED_ORIGINS])];
 }

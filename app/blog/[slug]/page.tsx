@@ -70,7 +70,7 @@ export default async function ArticlePage({
   const { metadata: meta, Content } = post;
   const related = getRelatedPosts(meta);
   const adjacent = getAdjacentPosts(slug);
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://4short.ru";
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://hashpix.ru";
 
   const articleJsonLd = {
     "@context": "https://schema.org",

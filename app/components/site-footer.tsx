@@ -22,7 +22,7 @@ export function SiteFooter() {
 
         <div>
           <h3>Контакты</h3>
-          <a href="mailto:hello@4short.ru">hello@4short.ru</a>
+          <a href="mailto:hello@hashpix.ru">hello@hashpix.ru</a>
           <span>Поддержка</span>
           <span>Статус сервиса</span>
         </div>

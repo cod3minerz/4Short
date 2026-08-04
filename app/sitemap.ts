@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { postMetadata } from "./blog/registry";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://4short.ru";
+  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "https://hashpix.ru";
   return [
     {
       url: base,
