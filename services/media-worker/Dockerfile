@@ -24,7 +24,8 @@ RUN mkdir -p /opt/4short/models \
 
 ENV FACE_DETECTOR_FINGERPRINT=321aa5a6afabf7ecc46a3d06bfab2b579dc96eb5c3be7edd365fa04502ad9294
 
-RUN useradd --system --uid 10001 --create-home --home-dir /home/worker worker \
+RUN groupadd --system --gid 10001 worker \
+    && useradd --system --uid 10001 --gid worker --create-home --home-dir /home/worker worker \
     && mkdir -p /var/lib/4short/jobs /var/lib/4short/models /var/lib/4short/reports \
     && chown -R worker:worker /var/lib/4short
 
