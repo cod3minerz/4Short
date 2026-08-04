@@ -64,12 +64,19 @@ class ControlApi:
         return Job.from_api(response.json())
 
     def heartbeat(self, job_id: str, checkpoint: str | None = None, progress: dict | None = None) -> None:
-        response = self.client.post(f"/v1/internal/jobs/{job_id}/heartbeat", json={
+        # ``progress`` is optional in the control API contract.  Do not send a
+        # JSON null when a stage has no measurable unit yet: Zod correctly
+        # distinguishes an omitted optional object from ``null``.  Sending the
+        # latter used to turn a perfectly healthy import into a 500 before any
+        # media work began.
+        payload = {
             "workerId": self.settings.worker_id,
             "leaseSeconds": self.settings.lease_seconds,
             "checkpoint": checkpoint,
-            "progress": progress,
-        })
+        }
+        if progress is not None:
+            payload["progress"] = progress
+        response = self.client.post(f"/v1/internal/jobs/{job_id}/heartbeat", json=payload)
         if response.status_code == 409:
             raise LeaseLostError("Job lease is no longer owned by this worker")
         response.raise_for_status()

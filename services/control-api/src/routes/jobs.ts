@@ -9,7 +9,7 @@ import {
   workerHeartbeatSchema,
   workerRegistrationSchema,
 } from "../../../../packages/contracts/src/index.js";
-import { engineReleases, jobEvents, jobRequirements, jobs, projectPackages, workerLeases } from "../../../../db/schema.js";
+import { engineReleases, jobEvents, jobRequirements, jobs, projectPackages, projects, workerLeases } from "../../../../db/schema.js";
 import { getEnv } from "../env.js";
 import { getIdempotencyKey } from "../lib/http.js";
 import {
@@ -106,7 +106,7 @@ export async function jobRoutes(app: FastifyInstance) {
   app.post("/v1/internal/jobs/:jobId/heartbeat", { preHandler: requireWorker }, async (request) => {
     const body = workerHeartbeatSchema.parse(request.body);
     const { jobId } = request.params as { jobId: string };
-    const job = await heartbeatJob({ db: app.db, jobId, ...body });
+    const job = await heartbeatJob({ db: app.db, jobId, ...body, progress: body.progress ?? undefined });
     if (!job) throw app.httpErrors.conflict("Job lease is no longer owned by this worker");
     return job;
   });
@@ -143,6 +143,17 @@ export async function jobRoutes(app: FastifyInstance) {
         error: body.details ? { code: body.code, message: body.message, details: body.details } : { code: body.code, message: body.message },
         updatedAt: new Date(),
       }).where(eq(projectPackages.jobId, job.id));
+    }
+    // A terminal pipeline failure must be visible as a terminal project
+    // state. Leaving the project in `probing` made the client render a
+    // fictitious indefinitely-running first stage after a worker error.
+    if (job.projectId && job.status === "failed") {
+      await app.db.update(projects).set({
+        status: "failed",
+        errorCode: body.code,
+        errorMessage: body.message,
+        updatedAt: new Date(),
+      }).where(eq(projects.id, job.projectId));
     }
     try {
       await markBrandAssetVerificationFailed(app.db, job, {

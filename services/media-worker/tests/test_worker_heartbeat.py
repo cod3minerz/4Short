@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 
-from fourshort_worker.control_api import Job, LeaseLostError
+from fourshort_worker.control_api import ControlApi, Job, LeaseLostError
 from fourshort_worker import worker as worker_module
 from fourshort_worker.runtime_identity import canonical_runtime_identity, runtime_fingerprint
 from fourshort_worker.worker import LeaseHeartbeat, Worker
@@ -31,6 +31,29 @@ class RegistrationApi:
 
 
 class WorkerHeartbeatTests(unittest.TestCase):
+    def test_control_api_omits_unknown_progress_instead_of_serializing_null(self):
+        requests = []
+
+        class Response:
+            status_code = 200
+
+            def raise_for_status(self):
+                return None
+
+        class Client:
+            def post(self, url, json):
+                requests.append((url, json))
+                return Response()
+
+        api = object.__new__(ControlApi)
+        api.settings = SimpleNamespace(worker_id="worker-test", lease_seconds=120)
+        api.client = Client()
+
+        api.heartbeat("job-1", checkpoint="started")
+
+        self.assertEqual(requests[0][0], "/v1/internal/jobs/job-1/heartbeat")
+        self.assertNotIn("progress", requests[0][1])
+
     def test_active_job_marker_is_atomic_and_cleanup_does_not_erase_newer_job(self):
         with TemporaryDirectory() as directory:
             base = Path(directory)

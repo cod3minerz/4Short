@@ -268,7 +268,10 @@ export const workerHeartbeatSchema = z.object({
     completed: z.number().nonnegative(),
     total: z.number().positive().optional(),
     unit: z.enum(["bytes", "milliseconds", "frames", "steps"]).optional(),
-  }).optional(),
+  // Older workers sent an explicit JSON null before the first measurable
+  // progress sample. Treat it as omitted at the HTTP boundary so a rolling
+  // deploy cannot turn a media job into a 500.
+  }).nullish(),
 });
 
 export const jobCompletionSchema = z.object({
