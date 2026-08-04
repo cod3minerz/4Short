@@ -4,7 +4,22 @@ import type { StyleConfig } from "@/packages/contracts/src/media";
 import type { ClipDocumentV2, EditorCommand, ResolvedRenderPlan, TimeMapEntry } from "@/packages/contracts/src";
 
 const configuredApiUrl = process.env.NEXT_PUBLIC_CONTROL_API_URL?.replace(/\/$/, "");
-const apiUrl = configuredApiUrl && /^https?:\/\//.test(configuredApiUrl) ? configuredApiUrl : "";
+
+function resolveControlApiUrl() {
+  if (configuredApiUrl && /^https?:\/\//.test(configuredApiUrl)) return configuredApiUrl;
+
+  // The public build must still reach the Russian control plane if a hosting
+  // environment has not injected the public compile-time variable. Keep this
+  // fallback deliberately allowlisted: it never derives an API host from an
+  // arbitrary browser hostname.
+  if (typeof window !== "undefined" && /(^|\.)hashpix\.ru$/i.test(window.location.hostname)) {
+    return "https://api.hashpix.ru";
+  }
+
+  return "";
+}
+
+const apiUrl = resolveControlApiUrl();
 const developmentUserId = process.env.NEXT_PUBLIC_DEVELOPMENT_USER_ID;
 const workspaceStorageKey = "hashpix:workspace-id";
 

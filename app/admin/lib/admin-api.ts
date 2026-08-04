@@ -1,6 +1,11 @@
 "use client";
 
-const apiUrl = process.env.NEXT_PUBLIC_CONTROL_API_URL?.replace(/\/$/, "");
+const configuredApiUrl = process.env.NEXT_PUBLIC_CONTROL_API_URL?.replace(/\/$/, "");
+const apiUrl = configuredApiUrl && /^https?:\/\//.test(configuredApiUrl)
+  ? configuredApiUrl
+  : typeof window !== "undefined" && /(^|\.)hashpix\.ru$/i.test(window.location.hostname)
+    ? "https://api.hashpix.ru"
+    : "";
 const developmentUserId = process.env.NEXT_PUBLIC_DEVELOPMENT_USER_ID;
 
 export type AdminRole = "support" | "admin" | "super_admin";
