@@ -1,0 +1,4 @@
+interface:
+  display_name: "HVE Verification"
+  short_description: "Evidence gates for HVE media and editor changes"
+  default_prompt: "Use $hve-verification to select and run the required evidence gate for this HVE change."

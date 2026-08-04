@@ -41,12 +41,16 @@ export const sourceKind = pgEnum("source_kind", ["upload", "youtube"]);
 export const jobStatus = pgEnum("job_status", [
   "queued",
   "leased",
+  // Reserved for a future asynchronous external-provider adapter. Current
+  // Faster-Whisper and LLM work stays leased while it executes; a
+  // `waiting_provider` row must always have a lease deadline so queue
+  // recovery can return it to a runnable state.
   "waiting_provider",
   "succeeded",
   "failed",
   "cancelled",
 ]);
-export const jobClass = pgEnum("job_class", ["io", "provider", "cpu_light", "cpu_heavy"]);
+export const jobClass = pgEnum("job_class", ["io", "provider", "cpu_light", "cpu_medium", "cpu_heavy"]);
 export const minuteTransactionKind = pgEnum("minute_transaction_kind", [
   "grant",
   "reserve",
@@ -372,7 +376,10 @@ export const brandAssets = pgTable("brand_assets", {
   name: text("name").notNull(),
   metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
   ...timestamps,
-});
+}, (table) => [
+  uniqueIndex("brand_assets_media_object_unique").on(table.mediaObjectId),
+  index("brand_assets_workspace_idx").on(table.workspaceId, table.createdAt),
+]);
 
 export const momentSearches = pgTable("moment_searches", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -434,6 +441,12 @@ export const clipVersions = pgTable("clip_versions", {
   clipId: uuid("clip_id").notNull().references(() => clips.id, { onDelete: "cascade" }),
   version: integer("version").notNull(),
   edl: jsonb("edl").$type<Record<string, unknown>>().notNull(),
+  /** Expand-only HVE v2 fields. Legacy EDL remains readable during rollout. */
+  documentV2: jsonb("document_v2").$type<Record<string, unknown>>(),
+  documentHash: text("document_hash"),
+  /** Immutable editor metadata paired with this renderable HVE document. */
+  editorMetadata: jsonb("editor_metadata").$type<Record<string, unknown>>(),
+  layoutPlanId: uuid("layout_plan_id"),
   renderHash: text("render_hash").notNull(),
   createdBy: uuid("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -474,6 +487,54 @@ export const jobs = pgTable("jobs", {
   index("jobs_lease_idx").on(table.status, table.leaseExpiresAt),
 ]);
 
+/**
+ * Persistent weighted-fair-queue state.  It stores no user media or task
+ * payload: only the virtual service consumed by a workspace.  The claim
+ * transaction locks this row before advancing it, so a second worker cannot
+ * accidentally reset a busy workspace back to the head of the queue.
+ */
+export const workspaceQueueStates = pgTable("workspace_queue_states", {
+  workspaceId: uuid("workspace_id").primaryKey().references(() => workspaces.id, { onDelete: "cascade" }),
+  virtualFinish: numeric("virtual_finish", { precision: 20, scale: 6 }).notNull().default("0"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * A singleton dispatch streak guard complements weighted fair sharing. It is
+ * global rather than per-worker, so the no-monopoly rule still applies after
+ * a second worker joins the pool.
+ */
+export const queueDispatchStates = pgTable("queue_dispatch_states", {
+  id: integer("id").primaryKey(),
+  lastWorkspaceId: uuid("last_workspace_id"),
+  consecutiveClaims: integer("consecutive_claims").notNull().default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * An immutable, retained snapshot of the ready clips a user asked to download.
+ * It is deliberately separate from `jobs.result`: a job attempt is operational
+ * state, while a package remains an auditable user-visible export that can be
+ * signed, retained and later regenerated from the same manifest.
+ */
+export const projectPackages = pgTable("project_packages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
+  projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+  jobId: uuid("job_id").references(() => jobs.id, { onDelete: "set null" }),
+  mediaObjectId: uuid("media_object_id").references(() => mediaObjects.id, { onDelete: "set null" }),
+  status: text("status").notNull().default("queued"),
+  manifestHash: text("manifest_hash").notNull(),
+  manifest: jsonb("manifest").$type<Record<string, unknown>>().notNull(),
+  error: jsonb("error").$type<Record<string, unknown>>(),
+  createdBy: uuid("created_by").notNull().references(() => users.id),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("project_packages_manifest_unique").on(table.projectId, table.manifestHash),
+  index("project_packages_workspace_status_idx").on(table.workspaceId, table.status, table.createdAt),
+]);
+
 export const jobAttempts = pgTable("job_attempts", {
   id: uuid("id").primaryKey().defaultRandom(),
   jobId: uuid("job_id").notNull().references(() => jobs.id, { onDelete: "cascade" }),
@@ -506,6 +567,145 @@ export const workerLeases = pgTable("worker_leases", {
   lastHeartbeatAt: timestamp("last_heartbeat_at", { withTimezone: true }).notNull().defaultNow(),
   metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
 });
+
+/** Capability and resource admission constraints for HVE jobs. Legacy jobs have no row and remain compatible. */
+export const jobRequirements = pgTable("job_requirements", {
+  jobId: uuid("job_id").primaryKey().references(() => jobs.id, { onDelete: "cascade" }),
+  requirements: jsonb("requirements").$type<Record<string, unknown>>().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const qualityReports = pgTable("quality_reports", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  engineReleaseId: uuid("engine_release_id").references(() => engineReleases.id, { onDelete: "set null" }),
+  suite: text("suite").notNull(),
+  status: text("status").notNull(),
+  metrics: jsonb("metrics").$type<Record<string, unknown>>().notNull(),
+  reportArtifactId: uuid("report_artifact_id").references(() => analysisArtifacts.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index("quality_reports_release_idx").on(table.engineReleaseId, table.createdAt),
+]);
+
+export const benchmarkRuns = pgTable("benchmark_runs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  engineReleaseId: uuid("engine_release_id").references(() => engineReleases.id, { onDelete: "set null" }),
+  hardwareProfile: jsonb("hardware_profile").$type<Record<string, unknown>>().notNull(),
+  stageMetrics: jsonb("stage_metrics").$type<Record<string, unknown>>().notNull(),
+  baselineComparison: jsonb("baseline_comparison").$type<Record<string, unknown>>().notNull().default({}),
+  status: text("status").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index("benchmark_runs_release_idx").on(table.engineReleaseId, table.createdAt),
+]);
+
+export const engineReleases = pgTable("engine_releases", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  engineVersion: text("engine_version").notNull(),
+  plannerVersion: text("planner_version").notNull(),
+  rendererVersion: text("renderer_version").notNull(),
+  contractVersion: integer("contract_version").notNull().default(2),
+  capabilities: jsonb("capabilities").$type<Record<string, unknown>>().notNull(),
+  status: text("status").notNull().default("active"),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("engine_releases_version_unique").on(table.engineVersion, table.plannerVersion, table.rendererVersion),
+]);
+
+export const modelArtifacts = pgTable("model_artifacts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  engineReleaseId: uuid("engine_release_id").references(() => engineReleases.id, { onDelete: "set null" }),
+  name: text("name").notNull(),
+  version: text("version").notNull(),
+  sha256: text("sha256").notNull(),
+  license: text("license").notNull(),
+  compatibility: jsonb("compatibility").$type<Record<string, unknown>>().notNull().default({}),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("model_artifacts_hash_unique").on(table.name, table.version, table.sha256),
+]);
+
+export const sourceAnalyses = pgTable("source_analyses", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
+  sourceId: uuid("source_id").notNull().references(() => sources.id, { onDelete: "cascade" }),
+  engineReleaseId: uuid("engine_release_id").references(() => engineReleases.id, { onDelete: "set null" }),
+  sourceHash: text("source_hash").notNull(),
+  status: text("status").notNull().default("queued"),
+  manifest: jsonb("manifest").$type<Record<string, unknown>>().notNull(),
+  manifestHash: text("manifest_hash").notNull(),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("source_analyses_source_manifest_unique").on(table.sourceId, table.engineReleaseId, table.manifestHash),
+  index("source_analyses_source_idx").on(table.sourceId, table.createdAt),
+]);
+
+export const analysisArtifacts = pgTable("analysis_artifacts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  analysisId: uuid("analysis_id").notNull().references(() => sourceAnalyses.id, { onDelete: "cascade" }),
+  mediaObjectId: uuid("media_object_id").references(() => mediaObjects.id, { onDelete: "set null" }),
+  kind: text("kind").notNull(),
+  schemaVersion: integer("schema_version").notNull(),
+  engineVersion: text("engine_version").notNull(),
+  modelVersion: text("model_version"),
+  objectKey: text("object_key").notNull(),
+  sha256: text("sha256").notNull(),
+  byteSize: bigint("byte_size", { mode: "number" }).notNull(),
+  coverage: jsonb("coverage").$type<Array<Record<string, unknown>>>().notNull().default([]),
+  density: text("density").notNull().default("sparse"),
+  supersedes: jsonb("supersedes").$type<string[]>().notNull().default([]),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("analysis_artifacts_object_unique").on(table.analysisId, table.kind, table.objectKey),
+  index("analysis_artifacts_analysis_idx").on(table.analysisId, table.kind),
+]);
+
+export const layoutPlans = pgTable("layout_plans", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  clipVersionId: uuid("clip_version_id").references(() => clipVersions.id, { onDelete: "cascade" }),
+  documentHash: text("document_hash").notNull(),
+  planHash: text("plan_hash").notNull(),
+  plannerVersion: text("planner_version").notNull(),
+  plan: jsonb("plan").$type<Record<string, unknown>>(),
+  planArtifactId: uuid("plan_artifact_id").references(() => analysisArtifacts.id, { onDelete: "set null" }),
+  warnings: jsonb("warnings").$type<Array<Record<string, unknown>>>().notNull().default([]),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("layout_plans_hash_unique").on(table.documentHash, table.plannerVersion, table.planHash),
+  index("layout_plans_clip_version_idx").on(table.clipVersionId, table.createdAt),
+]);
+
+export const clipDrafts = pgTable("clip_drafts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
+  clipId: uuid("clip_id").notNull().references(() => clips.id, { onDelete: "cascade" }),
+  baseVersion: integer("base_version").notNull(),
+  revision: integer("revision").notNull().default(0),
+  document: jsonb("document").$type<Record<string, unknown>>().notNull(),
+  documentHash: text("document_hash").notNull(),
+  metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
+  updatedBy: uuid("updated_by").notNull().references(() => users.id),
+  ...timestamps,
+}, (table) => [
+  uniqueIndex("clip_drafts_clip_unique").on(table.clipId),
+  index("clip_drafts_workspace_updated_idx").on(table.workspaceId, table.updatedAt),
+]);
+
+export const editorCommandBatches = pgTable("editor_command_batches", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  clipDraftId: uuid("clip_draft_id").notNull().references(() => clipDrafts.id, { onDelete: "cascade" }),
+  batchId: uuid("batch_id").notNull(),
+  baseRevision: integer("base_revision").notNull(),
+  resultingRevision: integer("resulting_revision").notNull(),
+  commands: jsonb("commands").$type<Array<Record<string, unknown>>>().notNull(),
+  results: jsonb("results").$type<Array<Record<string, unknown>>>().notNull(),
+  createdBy: uuid("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("editor_command_batches_unique").on(table.clipDraftId, table.batchId),
+  index("editor_command_batches_draft_idx").on(table.clipDraftId, table.createdAt),
+]);
 
 export const renderArtifacts = pgTable("render_artifacts", {
   id: uuid("id").primaryKey().defaultRandom(),

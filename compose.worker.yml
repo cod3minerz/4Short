@@ -4,14 +4,14 @@ services:
   media-worker:
     env_file:
       - /etc/4short/media-worker.env
-      # Staged by the deployment workflow; the file is removed after Docker
-      # has copied the value into the container configuration.
-      - /tmp/4short-worker-api-token.env
+      # Atomically replaced by the privileged deployer before a release. It
+      # must survive Docker/host restarts after GitHub removes its /tmp upload.
+      - /etc/4short/worker-api-token.env
     environment:
-      HF_HOME: /var/lib/4short/models/huggingface
-      HF_HUB_CACHE: /var/lib/4short/models/huggingface/hub
-      HF_HUB_DISABLE_XET: "1"
-      XDG_CACHE_HOME: /var/lib/4short/models/cache
+      # The deployer derives this from the exact local OCI image ID. It is
+      # diagnostic at runtime and makes hardware benchmark evidence reject a
+      # report from an unknown/mutable image.
+      FOURSHORT_WORKER_IMAGE_DIGEST: ${FOURSHORT_WORKER_IMAGE_DIGEST:-}
     # Both Timeweb hosts are attached to the same private network. Keep the
     # public hostname for TLS/SNI, but send service-to-service traffic directly
     # to the control plane instead of hairpinning through the public Internet.
@@ -28,6 +28,12 @@ services:
       - /tmp:size=512m,mode=1777
     volumes:
       - /var/lib/4short/jobs:/var/lib/4short/jobs
+      # Operator-owned benchmark and release evidence. It is separate from
+      # job scratch so normal per-job cleanup cannot erase a hardware sample.
+      - /var/lib/4short/reports:/var/lib/4short/reports
+      # The worker is non-root and consumes a root-owned immutable model pack.
+      # Model provisioning is an explicit maintenance command, not a job-time
+      # network fallback.
       - /var/lib/4short/models:/var/lib/4short/models
     security_opt:
       - no-new-privileges:true

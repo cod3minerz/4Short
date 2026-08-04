@@ -80,7 +80,8 @@ Media job имеет lease и heartbeat. Исчезнувший worker не де
 - source читается через временный signed range URL;
 - полный YouTube source потоково multipart-загружается в S3;
 - job directory удаляется после загрузки результата;
-- модель хранится в постоянном read/write cache и прогревается при deploy;
+- модель хранится как заранее provisioned, content-addressed local pack;
+  worker никогда не скачивает или обновляет её внутри пользовательской job;
 - worker регистрирует capabilities в control API и продлевает lease фоновой heartbeat-задачей.
 
 ## Что нельзя выдавать за готовое

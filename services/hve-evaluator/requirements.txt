@@ -1,0 +1,8 @@
+# MediaPipe 0.10.18 deliberately pins NumPy below 2.  OpenCV 4.12 raised its
+# lower bound to NumPy 2, which makes the evaluator image impossible to build.
+# 4.10 retains the required VideoCapture/Canny API and is compatible with the
+# pinned NumPy 1.26 CPU runtime.
+numpy==1.26.4
+opencv-python-headless==4.10.0.84
+mediapipe==0.10.18
+sherpa-onnx==1.13.4

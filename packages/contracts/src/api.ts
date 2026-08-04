@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { styleConfigSchema } from "./media.js";
+import { engineCapabilitySchema, jobRequirementsSchema } from "./hve-v2.js";
 
 export const projectStatusSchema = z.enum([
   "draft",
@@ -178,6 +179,37 @@ export const createUploadSchema = z.object({
   partSize: z.number().int().min(8 * 1024 * 1024).max(16 * 1024 * 1024).default(12 * 1024 * 1024),
 });
 
+/** Static brand assets use the same resumable S3 transport as source media,
+ * but remain a separate product capability with a deliberately smaller and
+ * executable MIME allowlist. */
+const staticBrandAssetUploadSchema = z.object({
+  name: z.string().min(1).max(160),
+  kind: z.enum(["logo", "banner", "image"]),
+  fileName: z.string().min(1).max(512),
+  mimeType: z.enum(["image/png", "image/jpeg", "image/webp"]),
+  byteSize: z.number().int().positive().max(25 * 1024 * 1024),
+  partSize: z.number().int().min(5 * 1024 * 1024).max(16 * 1024 * 1024).default(8 * 1024 * 1024),
+});
+
+/**
+ * Timed media is deliberately a separate upload class. A claimed MIME type
+ * does not make it executable: worker-side ffprobe plus a full decode must
+ * mark the asset verified before the HVE planner can resolve it.
+ */
+const timedBrandAssetUploadSchema = z.object({
+  name: z.string().min(1).max(160),
+  kind: z.enum(["video", "broll", "outro"]),
+  fileName: z.string().min(1).max(512),
+  mimeType: z.literal("video/mp4"),
+  byteSize: z.number().int().positive().max(100 * 1024 * 1024),
+  partSize: z.number().int().min(5 * 1024 * 1024).max(16 * 1024 * 1024).default(8 * 1024 * 1024),
+});
+
+export const createBrandAssetUploadSchema = z.union([
+  staticBrandAssetUploadSchema,
+  timedBrandAssetUploadSchema,
+]);
+
 export const completeUploadSchema = z.object({
   parts: z.array(z.object({
     partNumber: z.number().int().min(1).max(10_000),
@@ -191,26 +223,40 @@ export const reserveMinutesSchema = z.object({
   seconds: z.number().int().positive().max(4 * 60 * 60),
 });
 
+export const jobTypeSchema = z.enum([
+  "probe", "youtube_import", "extract_audio", "speech_to_text", "generate_proxy",
+  "verify_brand_video", "find_moments", "analyze_visual", "analyze_clip_visual", "face_track",
+  "render_clip", "validate_render", "zip_project", "cleanup",
+]);
+
 export const enqueueJobSchema = z.object({
   projectId: z.string().uuid().optional(),
   clipId: z.string().uuid().optional(),
-  type: z.enum(["probe", "youtube_import", "extract_audio", "speech_to_text", "find_moments", "face_track", "render_clip", "validate_render", "zip_project", "cleanup"]),
-  class: z.enum(["io", "provider", "cpu_light", "cpu_heavy"]),
+  type: jobTypeSchema,
+  class: z.enum(["io", "provider", "cpu_light", "cpu_medium", "cpu_heavy"]),
   payload: z.record(z.string(), z.unknown()),
   artifactHash: z.string().max(256).optional(),
   estimatedCost: z.number().positive().max(100_000).default(1),
+  requirements: jobRequirementsSchema.optional(),
 });
 
 export const workerClaimSchema = z.object({
   workerId: z.string().min(1).max(120),
-  classes: z.array(z.enum(["io", "provider", "cpu_light", "cpu_heavy"])).min(1),
+  classes: z.array(z.enum(["io", "provider", "cpu_light", "cpu_medium", "cpu_heavy"])).min(1),
   leaseSeconds: z.number().int().min(30).max(600).default(120),
 });
+
+// A deployed v1 worker announces only the classes it can claim. Accept this
+// during a rolling HVE deployment, but never schedule a v2 job with explicit
+// resource/model requirements to it (the scheduler fails that match closed).
+const legacyWorkerCapabilitySchema = z.object({
+  classes: z.array(z.enum(["io", "provider", "cpu_light", "cpu_medium", "cpu_heavy"])).min(1),
+}).passthrough();
 
 export const workerRegistrationSchema = z.object({
   workerId: z.string().min(1).max(120),
   version: z.string().min(1).max(80),
-  capabilities: z.record(z.string(), z.unknown()),
+  capabilities: z.union([engineCapabilitySchema.passthrough(), legacyWorkerCapabilitySchema]),
   metadata: z.record(z.string(), z.unknown()).default({}),
 });
 

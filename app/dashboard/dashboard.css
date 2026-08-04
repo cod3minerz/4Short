@@ -965,6 +965,50 @@
   background: var(--ink);
 }
 
+/* A second, off-canvas native element carries the incoming half of an HVE
+ * pause crossfade. The composition canvas owns visual blending; native
+ * volumes are ramped by the same immutable output clock. */
+.clip-phone-preview__video--secondary {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* The HVE canvas is mounted only for a server-approved resolved plan. The
+ * media element remains alive underneath as the source clock and audio
+ * carrier; hiding it prevents the raw frame from competing with resolved
+ * crop geometry. */
+.clip-phone-preview.has-composition-preview .clip-phone-preview__video {
+  opacity: 0;
+}
+
+.clip-phone-preview__composition {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Truthful source-review / final-render labels. They are not editable video
+ * layers and deliberately never resemble title, logo or subtitle overlays. */
+.clip-phone-preview__source-review,
+.clip-phone-preview__rendered {
+  position: absolute;
+  z-index: 12;
+  top: 10px;
+  left: 10px;
+  margin: 0;
+  padding: 4px 7px;
+  border-radius: 6px;
+  background: rgba(6, 19, 26, .78);
+  color: var(--dash-surface);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+.clip-phone-preview__source-review { background: rgba(6, 86, 123, .88); }
+
 .clip-phone-preview__speaker small {
   display: block;
   margin-top: 4px;
@@ -2353,6 +2397,11 @@
   outline-offset: 2px; min-height: 34px; padding: 7px 8px; border-radius: var(--dash-radius-xs); font-size: 11px; }
 .clip-upload-asset { min-height: 34px; margin-top: 10px; border-radius: var(--dash-radius-xs); font-size: 10px; }
 .clip-help-text { margin-top: 8px; font-size: 9px; }
+.clip-panel-status {
+  color: var(--dash-text-muted);
+  font-size: 10px;
+  font-weight: 700;
+}
 
 .clip-editor__mobile-tabs { display: none; }
 

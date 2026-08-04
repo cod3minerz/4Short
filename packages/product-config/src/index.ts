@@ -73,7 +73,7 @@ export const defaultStyleConfig = {
     enabled: true,
     mode: "active_word" as const,
     preset: "clean" as const,
-    fontFamily: "Manrope",
+    fontFamily: "HVE Sans",
     fontSize: 58,
     fontWeight: 800,
     uppercase: false,
@@ -97,7 +97,10 @@ export const defaultStyleConfig = {
     minimumMs: 800,
     beforePaddingMs: 100,
     afterPaddingMs: 120,
-    crossfadeMs: 30,
+    // HVE's shared audio/video time map currently executes deterministic cuts.
+    // A non-zero crossfade changes output time and stays unavailable until it
+    // is represented in that same plan; never advertise a silent no-op.
+    crossfadeMs: 0,
   },
   safeZones: ["shorts", "reels", "tiktok", "vk"] as const,
   export: {

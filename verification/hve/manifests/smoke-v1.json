@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "corpusVersion": "smoke-v1",
+  "split": "smoke",
+  "status": "scaffold",
+  "createdAt": "2026-08-03T00:00:00.000Z",
+  "items": [
+    {
+      "itemId": "synthetic-solo-001",
+      "objectKey": "fixtures/synthetic/smoke-v1/solo-001.mp4",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "objectBytes": 0,
+      "annotationSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "licenseArtifactSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "licenseRef": "synthetic:ffmpeg",
+      "durationUs": 12000000,
+      "tags": ["content/solo", "codec/h264", "geometry/cfr", "speech/ru"],
+      "evaluationRanges": [{ "startUs": 0, "endUs": 12000000 }],
+      "annotationKey": "annotations/smoke-v1/synthetic-solo-001.json"
+    },
+    {
+      "itemId": "synthetic-split-001",
+      "objectKey": "fixtures/synthetic/smoke-v1/split-001.mp4",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "objectBytes": 0,
+      "annotationSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "licenseArtifactSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "licenseRef": "synthetic:ffmpeg",
+      "durationUs": 12000000,
+      "tags": ["content/conversation", "faces/two", "codec/h264", "geometry/cfr", "speech/ru"],
+      "evaluationRanges": [{ "startUs": 0, "endUs": 12000000 }],
+      "annotationKey": "annotations/smoke-v1/synthetic-split-001.json"
+    },
+    {
+      "itemId": "synthetic-av-sync-001",
+      "objectKey": "fixtures/synthetic/smoke-v1/av-sync-001.mp4",
+      "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "objectBytes": 0,
+      "annotationSha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "licenseArtifactSha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "licenseRef": "synthetic:ffmpeg",
+      "durationUs": 10000000,
+      "tags": ["quality/av_sync", "quality/flash_beep", "codec/h264", "geometry/cfr"],
+      "evaluationRanges": [{ "startUs": 0, "endUs": 10000000 }],
+      "annotationKey": "annotations/smoke-v1/synthetic-av-sync-001.json"
+    }
+  ]
+}

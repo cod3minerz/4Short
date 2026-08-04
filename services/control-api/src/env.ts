@@ -37,6 +37,15 @@ const environmentSchema = z.object({
   S3_DERIVED_PREFIX: z.string().default("derived"),
   S3_ASSETS_PREFIX: z.string().default("assets"),
   WORKER_API_TOKEN: z.string().min(32),
+  // Roll HVE documents out only alongside the typed focus-editor client.
+  // Defaulting to false protects existing v1 editor sessions from creating a
+  // lossy follow-up version after the pipeline has made a v2 version.
+  HVE_INITIAL_DOCUMENTS_ENABLED: z.stringbool().default(false),
+  // HVE-G6 is deliberately fail-closed. This may be enabled only after the
+  // signed corpus and `hve:verify:layout-director` evidence have been
+  // accepted for the exact engine release. Manual, user-verified composites
+  // do not depend on this flag.
+  HVE_AUTOMATIC_LAYOUT_DIRECTOR_ENABLED: z.stringbool().default(false),
   TBANK_TERMINAL_KEY: z.string().optional(),
   TBANK_PASSWORD: z.string().optional(),
   TBANK_API_URL: z.string().url().default("https://securepay.tinkoff.ru/v2"),

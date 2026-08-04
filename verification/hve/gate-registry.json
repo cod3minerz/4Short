@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "exitCodes": {
+    "PASS": 0,
+    "FAIL": 1,
+    "INSUFFICIENT": 2,
+    "ERROR": 3,
+    "SKIPPED": 4
+  },
+  "composition": "union",
+  "gates": [
+    {
+      "id": "HVE-G0",
+      "status": "scaffold",
+      "roadmap": "HVE-0",
+      "description": "Baseline, warnings and real media smoke",
+      "fileGlobs": ["services/media-worker/**", "verification/hve/**"],
+      "requiredSuites": ["contracts", "actual_ffmpeg_smoke", "worker_metrics"],
+      "requiredArtifacts": ["metrics.json", "junit.xml", "report.html", "environment.json"]
+    },
+    {
+      "id": "HVE-G1",
+      "status": "scaffold",
+      "roadmap": "HVE-1",
+      "description": "Contracts, canonicalization, migrations and time-map foundations",
+      "fileGlobs": ["packages/contracts/**", "db/**", "services/control-api/src/services/hve/**"],
+      "requiredSuites": ["contracts", "canonical_hash", "v1_v2_roundtrip", "migrations", "time_map_properties"],
+      "requiredArtifacts": ["metrics.json", "junit.xml", "report.html"]
+    },
+    {
+      "id": "HVE-G2",
+      "status": "scaffold",
+      "roadmap": "HVE-2",
+      "description": "Time-map, captions, cuts, pause removal and audio",
+      "fileGlobs": ["**/subtitles.*", "**/render.*", "**/planner/**"],
+      "requiredSuites": ["time_map", "captions", "audio", "full_decode"],
+      "requiredArtifacts": ["metrics.json", "junit.xml", "report.html", "failed-items.json"]
+    },
+    {
+      "id": "HVE-G3",
+      "status": "scaffold",
+      "roadmap": "HVE-3",
+      "description": "Slot compositor, production layers and preview/render parity",
+      "fileGlobs": ["**/compositor/**", "**/preview/**", "**/canvas/**"],
+      "requiredSuites": ["slot_geometry", "layers", "project_package", "render", "editor_parity"],
+      "requiredArtifacts": ["metrics.json", "junit.xml", "report.html", "failed-items.json"]
+    },
+    {
+      "id": "HVE-G4",
+      "status": "scaffold",
+      "roadmap": "HVE-4",
+      "description": "Editor drafts, commands, nonlinear playback and parity",
+      "fileGlobs": ["app/dashboard/editor/**", "**/drafts.*", "**/editor-draft.*"],
+      "requiredSuites": ["drafts", "commands", "conflicts", "editor_parity", "browser_matrix"],
+      "requiredArtifacts": ["metrics.json", "junit.xml", "report.html", "failed-items.json"]
+    },
+    {
+      "id": "HVE-G5",
+      "status": "scaffold",
+      "roadmap": "HVE-5",
+      "description": "Perception, active speaker and director",
+      "fileGlobs": ["**/vision/**", "**/association/**", "**/director/**", "**/classify/**"],
+      "requiredSuites": ["speech", "scenes", "active_speaker", "crop_tracking", "layout"],
+      "requiredArtifacts": ["metrics.json", "junit.xml", "report.html", "failed-items.json"]
+    },
+    {
+      "id": "HVE-G6",
+      "status": "scaffold",
+      "roadmap": "HVE-6",
+      "description": "Panel, screen and gameplay layouts",
+      "fileGlobs": ["**/regions/**", "**/screen/**", "**/gameplay/**"],
+      "requiredSuites": ["regions", "layout", "crop_tracking", "editor_parity"],
+      "requiredArtifacts": ["metrics.json", "junit.xml", "report.html", "failed-items.json"]
+    },
+    {
+      "id": "HVE-G7",
+      "status": "scaffold",
+      "roadmap": "HVE-7",
+      "description": "Queue fairness, resource admission, ETA and recovery",
+      "fileGlobs": ["**/queue.*", "**/worker.*", "**/reconciliation.*"],
+      "requiredSuites": ["queue_concurrency", "queue_fairness", "queue_offered_load", "lease_cancellation_process_tree", "resource_admission", "worker_runtime_identity", "worker_benchmark", "chaos"],
+      "requiredArtifacts": ["metrics.json", "junit.xml", "report.html", "baseline-comparison.json", "environment.json"]
+    },
+    {
+      "id": "HVE-G8",
+      "status": "scaffold",
+      "roadmap": "HVE-8",
+      "description": "Controlled B-roll, music and advanced production layers",
+      "fileGlobs": ["**/broll/**", "**/music/**", "**/generative/**", "**/layers/**"],
+      "requiredSuites": ["layers", "time_map", "media_validation", "cost_idempotency", "user_control"],
+      "requiredArtifacts": ["metrics.json", "junit.xml", "report.html", "failed-items.json"]
+    },
+    {
+      "id": "HVE-G9",
+      "status": "scaffold",
+      "roadmap": "HVE-9",
+      "description": "Sealed production and market release gate",
+      "fileGlobs": ["**"],
+      "requiredSuites": ["holdout", "stress", "chaos", "worker_benchmark", "market"],
+      "requiredArtifacts": ["metrics.json", "junit.xml", "report.html", "failed-items.json", "baseline-comparison.json", "environment.json"]
+    }
+  ]
+}

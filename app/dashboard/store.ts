@@ -5,6 +5,7 @@ import { defaultStyleConfig, productPlans } from "@/packages/product-config/src"
 import { useSyncExternalStore } from "react";
 import { previewBalanceSeconds, previewPlanCode, projects as previewProjects, styles as previewStyles } from "./data";
 import type { Project, ProjectStatus, StylePreset } from "./types";
+import { layoutLabelFromConfig, simpleLayoutFromLabel } from "./lib/style-layout";
 import {
   ControlApiError,
   createStyle as createApiStyle,
@@ -74,21 +75,16 @@ function persistPreview(next: DashboardStore) {
   }
 }
 
-function configFromStyle(style: StylePreset): StyleConfig {
+export function configFromStyle(style: StylePreset): StyleConfig {
   const preset = style.subtitlePreset === "active_word" || style.subtitlePreset === "word_pop"
     ? "bold"
     : style.subtitlePreset;
   return {
     ...defaultStyleConfig,
-    layout: style.framing === "Активный спикер"
-      ? { mode: "active_speaker", smoothing: 0.82 }
-      : style.framing === "Два спикера"
-        ? { mode: "two_speakers", split: "horizontal" }
-        : style.framing === "Фон с размытием"
-          ? { mode: "blur_background", blur: 32 }
-          : style.framing === "Статичный кадр"
-            ? { mode: "static_crop", x: 0.5, y: 0.5, zoom: 1 }
-            : { mode: "auto", safeFallback: "static_crop" },
+    // A preset stores the whole config.  Reducing it to a label here used to
+    // silently replace `video_image`, PiP and screen/gameplay styles with
+    // `auto` whenever any unrelated control was saved.
+    layout: style.layoutConfig ?? simpleLayoutFromLabel(style.framing) ?? defaultStyleConfig.layout,
     subtitles: {
       ...defaultStyleConfig.subtitles,
       enabled: style.captions !== "Выключены",
@@ -148,17 +144,7 @@ function configFromStyle(style: StylePreset): StyleConfig {
   } as StyleConfig;
 }
 
-function styleFromApi(style: ApiStyle): StylePreset {
-  const layoutLabels: Record<StyleConfig["layout"]["mode"], string> = {
-    auto: "Автоматически",
-    active_speaker: "Активный спикер",
-    static_crop: "Статичный кадр",
-    two_speakers: "Два спикера",
-    blur_background: "Фон с размытием",
-    video_image: "Видео + изображение",
-    picture_in_picture: "Картинка в картинке",
-    screen_gameplay: "Экран + спикер",
-  };
+export function styleFromApi(style: ApiStyle): StylePreset {
   return {
     id: style.id,
     name: style.name,
@@ -172,7 +158,8 @@ function styleFromApi(style: ApiStyle): StylePreset {
         : style.config.subtitles.preset === "pulse" ? "bold" : style.config.subtitles.preset,
     fontFamily: style.config.subtitles.fontFamily,
     subtitlePosition: style.config.subtitles.position,
-    framing: layoutLabels[style.config.layout.mode],
+    framing: layoutLabelFromConfig(style.config.layout),
+    layoutConfig: style.config.layout,
     silenceRemoval: style.config.silence.enabled,
     title: Boolean(style.config.title),
     logo: Boolean(style.config.logo),
@@ -374,7 +361,19 @@ export async function removeProject(projectId: string) {
 export function updateStyle(id: string, patch: Partial<StylePreset>) {
   persistPreview({
     ...state,
-    styles: state.styles.map((style) => style.id === id ? { ...style, ...patch, dirty: true } : style),
+    styles: state.styles.map((style) => {
+      if (style.id !== id) return style;
+      const updatedLayout = patch.framing === undefined ? undefined : simpleLayoutFromLabel(patch.framing);
+      return {
+        ...style,
+        ...patch,
+        // The compact style picker can only create fully-described simple
+        // layouts. A label change therefore replaces the stored layout only
+        // when it has an exact config; unrelated edits retain advanced data.
+        ...(updatedLayout ? { layoutConfig: updatedLayout } : {}),
+        dirty: true,
+      };
+    }),
   });
 }
 
@@ -466,7 +465,7 @@ export function createStyle() {
     description: "Настройте оформление под новый формат или рубрику.",
     captions: "Активное слово",
     subtitlePreset: "active_word",
-    fontFamily: "Manrope",
+    fontFamily: "HVE Sans",
     subtitlePosition: "bottom",
     framing: "Автоматически",
     silenceRemoval: true,

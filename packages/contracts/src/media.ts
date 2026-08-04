@@ -16,6 +16,12 @@ export const cropKeyframeSchema = z.object({
   confidence: z.number().min(0).max(1).optional(),
 });
 
+export const faceTrackSchema = z.object({
+  trackId: z.number().int().nonnegative(),
+  confidence: z.number().min(0).max(1).optional(),
+  keyframes: z.array(cropKeyframeSchema).min(1).max(10_000),
+});
+
 export const layoutConfigSchema = z.discriminatedUnion("mode", [
   z.object({ mode: z.literal("auto"), safeFallback: z.enum(["static_crop", "blur_background"]).default("static_crop") }),
   z.object({ mode: z.literal("active_speaker"), smoothing: z.number().min(0).max(1).default(0.82) }),
@@ -30,7 +36,10 @@ export const layoutConfigSchema = z.discriminatedUnion("mode", [
 export const subtitleConfigSchema = z.object({
   enabled: z.boolean().default(true),
   mode: z.enum(["line", "active_word", "karaoke", "word_by_word"]).default("active_word"),
-  preset: z.enum(["clean", "bold", "pulse", "karaoke", "minimal_box", "speaker_colors"]).default("clean"),
+  // Keep every persisted picker identity distinct. `mode` controls timing;
+  // `preset` preserves the visual choice for deterministic re-editing.
+  // `pulse` remains readable for existing saved styles.
+  preset: z.enum(["clean", "bold", "pulse", "karaoke", "active_word", "word_pop", "minimal_box", "speaker_colors"]).default("clean"),
   fontAssetId: z.string().uuid().optional(),
   fontFamily: z.string().min(1).max(120).default("Manrope"),
   fontSize: z.number().int().min(28).max(112).default(58),
@@ -77,7 +86,10 @@ export const silenceConfigSchema = z.object({
   minimumMs: z.number().int().min(250).max(5000).default(800),
   beforePaddingMs: z.number().int().min(0).max(500).default(100),
   afterPaddingMs: z.number().int().min(0).max(500).default(120),
-  crossfadeMs: z.number().int().min(0).max(120).default(30),
+  // HVE currently executes cuts in a shared audio/video time map. Keep the
+  // default at zero until a crossfade is represented in that immutable plan;
+  // a default that the worker cannot execute would be a silent media defect.
+  crossfadeMs: z.number().int().min(0).max(120).default(0),
 });
 
 export const exportConfigSchema = z.object({
@@ -118,6 +130,7 @@ export const clipEdlSchema = z.object({
   })).max(2_000).default([]),
   layout: layoutConfigSchema,
   cropTrack: z.array(cropKeyframeSchema).optional(),
+  faceTracks: z.array(faceTrackSchema).max(8).optional(),
   subtitles: subtitleConfigSchema,
   silence: silenceConfigSchema,
   title: timedLayerSchema.optional(),

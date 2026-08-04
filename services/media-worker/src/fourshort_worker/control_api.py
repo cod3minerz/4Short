@@ -6,6 +6,10 @@ import httpx
 from .config import Settings
 
 
+class LeaseLostError(RuntimeError):
+    """The job was cancelled, expired or reassigned while this worker ran."""
+
+
 @dataclass(frozen=True)
 class Job:
     id: str
@@ -66,6 +70,8 @@ class ControlApi:
             "checkpoint": checkpoint,
             "progress": progress,
         })
+        if response.status_code == 409:
+            raise LeaseLostError("Job lease is no longer owned by this worker")
         response.raise_for_status()
 
     def complete(self, job_id: str, result: dict, metrics: dict) -> None:

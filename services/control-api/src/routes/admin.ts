@@ -21,6 +21,7 @@ import {
 } from "../../../../packages/contracts/src/index.js";
 import {
   auditEvents,
+  jobAttempts,
   jobs,
   minuteBuckets,
   minuteTransactions,
@@ -36,6 +37,7 @@ import {
 import { getIdempotencyKey } from "../lib/http.js";
 import { assertAdminPermission } from "../plugins/context.js";
 import { getMinuteBalance } from "../services/minutes.js";
+import { evaluateHveEtaCoverage, readHveEtaPredictionSnapshot, type HveEtaCoverageObservation } from "../services/hve-eta-coverage.js";
 
 type AuditInput = {
   workspaceId?: string | null;
@@ -137,6 +139,45 @@ export async function adminRoutes(app: FastifyInstance) {
         online: Date.now() - worker.lastHeartbeatAt.getTime() < 90_000,
         capabilities: worker.capabilities,
       })),
+    };
+  });
+
+  /**
+   * Operational G7 telemetry. It exposes only aggregate calibration facts;
+   * no source URL, project title, transcript or user prompt participates in
+   * the ETA coverage evidence.
+   */
+  app.get("/v1/admin/hve/eta-coverage", adminOnly, async (request) => {
+    assertAdminPermission(request, "platform:read");
+    const query = request.query as { runtimeFingerprint?: string; days?: string };
+    const runtimeFingerprint = query.runtimeFingerprint?.toLowerCase();
+    if (!runtimeFingerprint || !/^[a-f0-9]{64}$/.test(runtimeFingerprint)) {
+      throw app.httpErrors.badRequest("runtimeFingerprint must be a SHA-256 value");
+    }
+    const parsedDays = Number(query.days ?? 30);
+    const days = Number.isInteger(parsedDays) && parsedDays >= 1 && parsedDays <= 90 ? parsedDays : null;
+    if (!days) throw app.httpErrors.badRequest("days must be an integer from 1 to 90");
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1_000);
+    const rows = await app.db.select({
+      attemptId: jobAttempts.id,
+      metrics: jobAttempts.metrics,
+    }).from(jobAttempts)
+      .innerJoin(jobs, eq(jobs.id, jobAttempts.jobId))
+      .where(and(eq(jobAttempts.status, "succeeded"), gt(jobAttempts.finishedAt, since)))
+      .orderBy(desc(jobAttempts.finishedAt))
+      .limit(5_000);
+    const observations: HveEtaCoverageObservation[] = rows.flatMap((row) => {
+      const metrics = row.metrics as Record<string, unknown>;
+      const prediction = readHveEtaPredictionSnapshot(metrics.hveEtaPrediction);
+      const actualWallSeconds = Number(metrics.wallSeconds);
+      return prediction && Number.isFinite(actualWallSeconds) && actualWallSeconds > 0
+        ? [{ attemptId: row.attemptId, actualWallSeconds, prediction }]
+        : [];
+    });
+    return {
+      periodDays: days,
+      since: since.toISOString(),
+      ...evaluateHveEtaCoverage({ runtimeFingerprint, observations }),
     };
   });
 

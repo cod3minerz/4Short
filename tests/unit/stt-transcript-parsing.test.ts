@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseSttResponse } from "../../services/control-api/src/services/transcript.js";
+import { parseSttResponse, reduceTranscriptRevisionsToCaptionOverrides } from "../../services/control-api/src/services/transcript.js";
 
 test("parses the canonical Faster-Whisper response into ordered segments", () => {
   const segments = parseSttResponse({
@@ -64,4 +64,26 @@ test("drops segments with an inverted or missing time range instead of writing g
   assert.ok(segments);
   assert.equal(segments!.length, 1);
   assert.equal(segments![0].originalText, "good");
+});
+
+test("freezes ordered transcript revisions into deterministic HVE caption overrides", () => {
+  const overrides = reduceTranscriptRevisionsToCaptionOverrides(
+    new Map([["11111111-1111-4111-8111-111111111111", [
+      "11111111-1111-4111-8111-111111111111:0",
+      "11111111-1111-4111-8111-111111111111:1",
+      "11111111-1111-4111-8111-111111111111:2",
+    ]]]),
+    [[
+      { type: "replace_text", segmentId: "11111111-1111-4111-8111-111111111111", text: "Новый текст целиком" },
+      { type: "hide_word", segmentId: "11111111-1111-4111-8111-111111111111", wordIndex: 1 },
+    ], [
+      { type: "cut_word", segmentId: "11111111-1111-4111-8111-111111111111", wordIndex: 2 },
+    ]],
+  );
+
+  assert.deepEqual(overrides, [
+    { wordId: "11111111-1111-4111-8111-111111111111:0", displayText: "Новый", hidden: false, cutFromMedia: false },
+    { wordId: "11111111-1111-4111-8111-111111111111:1", displayText: "текст", hidden: true, cutFromMedia: false },
+    { wordId: "11111111-1111-4111-8111-111111111111:2", displayText: "целиком", hidden: true, cutFromMedia: true },
+  ]);
 });

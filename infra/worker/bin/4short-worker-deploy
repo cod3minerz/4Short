@@ -7,9 +7,158 @@ release_sha="${1:-}"
 archive_path="${2:-}"
 release_root="/opt/4short/releases"
 current_link="/opt/4short/current-worker"
+worker_project="4short-worker"
+worker_service="media-worker"
+drain_file="/var/lib/4short/worker-drain"
+active_job_file="/var/lib/4short/worker-active-job.json"
+staged_worker_token_env="/tmp/4short-worker-api-token.env"
+worker_token_env="/etc/4short/worker-api-token.env"
+
+find_running_worker() {
+  local containers
+  containers="$(docker ps -q \
+    --filter "label=com.docker.compose.project=${worker_project}" \
+    --filter "label=com.docker.compose.service=${worker_service}")"
+
+  if [[ -z "${containers}" || "${containers}" == *$'\n'* ]]; then
+    echo "Expected exactly one running ${worker_project}/${worker_service} container." >&2
+    return 1
+  fi
+  printf '%s\n' "${containers}"
+}
+
+verify_runtime() {
+  local active_release expected_digest running_container actual_digest health
+
+  if [[ ! -L "${current_link}" ]]; then
+    echo "No active worker release is configured." >&2
+    return 1
+  fi
+  active_release="$(readlink -f "${current_link}")"
+  if [[ ! -s "${active_release}/.worker-image-digest" ]]; then
+    echo "Active worker release has no immutable image digest." >&2
+    return 1
+  fi
+  expected_digest="$(<"${active_release}/.worker-image-digest")"
+  if [[ ! "${expected_digest}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+    echo "Active worker release has an invalid image digest." >&2
+    return 1
+  fi
+
+  running_container="$(find_running_worker)"
+  health="$(docker inspect --format='{{.State.Health.Status}}' "${running_container}")"
+  if [[ "${health}" != "healthy" ]]; then
+    echo "Worker container is not healthy: ${health}." >&2
+    docker logs --tail 150 "${running_container}" >&2 || true
+    return 1
+  fi
+
+  actual_digest="$(docker inspect --format='{{.Image}}' "${running_container}")"
+  if [[ "${actual_digest}" != "${expected_digest}" ]]; then
+    echo "Running worker image differs from the active release digest." >&2
+    return 1
+  fi
+
+  # Re-check from inside the running, non-root container. This proves that the
+  # deployed process—not merely a build-time image—can read both immutable
+  # model packs and its persistent API token with the real production
+  # environment mounted. The value is never echoed.
+  docker exec "${running_container}" python -c \
+    "import os; from fourshort_worker.config import Settings; from fourshort_worker.model_assets import verify_face_detector_model, verify_local_stt_model; assert len(os.environ.get('WORKER_API_TOKEN', '')) >= 32; settings = Settings(); verify_local_stt_model(settings); verify_face_detector_model(settings)"
+
+  echo "Worker runtime is healthy and matches ${expected_digest}."
+}
+
+manage_drain() {
+  local action="${1:-status}"
+  case "${action}" in
+    on)
+      install -d -m 0750 -o 10001 -g 10001 /var/lib/4short
+      install -m 0600 -o 10001 -g 10001 /dev/null "${drain_file}"
+      echo "Worker drain is enabled. It will finish its current job and decline new ones."
+      ;;
+    off)
+      rm -f "${drain_file}"
+      echo "Worker drain is disabled."
+      ;;
+    status)
+      if [[ -f "${drain_file}" ]]; then
+        echo "Worker drain: enabled"
+      else
+        echo "Worker drain: disabled"
+      fi
+      if [[ -f "${active_job_file}" ]]; then
+        echo "Worker activity: active job"
+      else
+        echo "Worker activity: idle"
+      fi
+      ;;
+    *)
+      echo "Usage: $0 drain {on|off|status}" >&2
+      return 2
+      ;;
+  esac
+}
+
+run_hardware_benchmark() {
+  local label="${1:-}" running_container report_name report_path
+
+  if [[ -z "${label}" ]]; then
+    label="$(date -u +%Y%m%dT%H%M%SZ)"
+  fi
+  if [[ ! "${label}" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{2,80}$ ]]; then
+    echo "Benchmark label must use 3-81 letters, digits, dots, underscores or hyphens." >&2
+    return 2
+  fi
+  if [[ ! -f "${drain_file}" ]]; then
+    echo "Refusing benchmark: enable worker drain first so a customer job cannot share the cgroup." >&2
+    return 2
+  fi
+  if [[ -f "${active_job_file}" ]]; then
+    echo "Refusing benchmark: worker still reports an active job. Wait for idle before measuring." >&2
+    return 2
+  fi
+
+  # This also verifies the active release/image digest, local model pack and
+  # persistent control-plane credential before writing evidence. The function
+  # never prints a credential.
+  verify_runtime >/dev/null
+  running_container="$(find_running_worker)"
+  report_name="hve-worker-cpu8-12gb-${label}.json"
+  report_path="/var/lib/4short/reports/${report_name}"
+  if [[ -e "${report_path}" ]]; then
+    echo "Refusing to overwrite benchmark evidence: ${report_path}" >&2
+    return 2
+  fi
+
+  # The benchmark module rejects short samples without --allow-short. Keep the
+  # profile here, rather than accepting arbitrary caller flags, so every
+  # baseline candidate is directly comparable to the approved 60s fixture.
+  docker exec "${running_container}" python -m fourshort_worker.benchmark \
+    --duration-seconds=60 --threads=4 \
+    --scratch-root=/var/lib/4short/benchmark \
+    --output="${report_path}"
+  test -s "${report_path}"
+  echo "HVE benchmark evidence written: ${report_path}"
+}
+
+if [[ "${release_sha}" == "drain" ]]; then
+  manage_drain "${archive_path}"
+  exit 0
+fi
+
+if [[ "${release_sha}" == "verify-runtime" ]]; then
+  verify_runtime
+  exit 0
+fi
+
+if [[ "${release_sha}" == "benchmark" ]]; then
+  run_hardware_benchmark "${archive_path}"
+  exit 0
+fi
 
 if [[ ! "${release_sha}" =~ ^[0-9a-f]{40}$ ]]; then
-  echo "Expected a full 40-character Git commit SHA." >&2
+  echo "Expected 'drain', 'benchmark', 'verify-runtime' or a full 40-character Git commit SHA." >&2
   exit 2
 fi
 
@@ -24,19 +173,48 @@ if [[ ! -s /etc/4short/media-worker.env ]]; then
   exit 2
 fi
 
+# The workflow transports the current control-plane token through /tmp, but a
+# Compose env_file has to survive container recreation after that temporary
+# upload is gone. Validate a closed one-line format without printing its value,
+# then atomically replace the root-owned file read by Compose.
+if [[ ! -s "${staged_worker_token_env}" ]]; then
+  echo "${staged_worker_token_env} is missing or empty." >&2
+  exit 2
+fi
+if [[ "$(wc -l < "${staged_worker_token_env}")" -ne 1 ]]; then
+  echo "${staged_worker_token_env} must contain exactly one token line." >&2
+  exit 2
+fi
+IFS= read -r worker_token_line < "${staged_worker_token_env}"
+if [[ "${worker_token_line}" != WORKER_API_TOKEN=* ]]; then
+  echo "${staged_worker_token_env} has an invalid token key." >&2
+  exit 2
+fi
+worker_token_value="${worker_token_line#WORKER_API_TOKEN=}"
+if [[ "${#worker_token_value}" -lt 32 || "${worker_token_value}" == *$'\r'* ]]; then
+  echo "${staged_worker_token_env} has an invalid token value." >&2
+  exit 2
+fi
+install -m 0640 -o root -g deploy "${staged_worker_token_env}" "${worker_token_env}.next"
+mv -f "${worker_token_env}.next" "${worker_token_env}"
+
 # Bind mounts may be created by Docker as root before the first container
 # starts. Reassert the non-root worker ownership on every release.
-install -d -m 0750 -o 10001 -g 10001 /var/lib/4short/jobs /var/lib/4short/models
+install -d -m 0750 -o 10001 -g 10001 /var/lib/4short/jobs /var/lib/4short/models /var/lib/4short/reports
 
 release_dir="${release_root}/${release_sha}"
 image_tag="${release_sha:0:12}"
 previous_release=""
 previous_tag=""
+previous_digest=""
 
 if [[ -L "${current_link}" ]]; then
   previous_release="$(readlink -f "${current_link}")"
   if [[ -f "${previous_release}/.worker-image-tag" ]]; then
     previous_tag="$(<"${previous_release}/.worker-image-tag")"
+  fi
+  if [[ -f "${previous_release}/.worker-image-digest" ]]; then
+    previous_digest="$(<"${previous_release}/.worker-image-digest")"
   fi
 fi
 
@@ -46,7 +224,7 @@ rollback() {
     echo "Worker deployment failed; restoring the previous release." >&2
     (
       cd "${previous_release}"
-      FOURSHORT_IMAGE_TAG="${previous_tag}" docker compose -f compose.worker.yml up -d --no-build
+      FOURSHORT_IMAGE_TAG="${previous_tag}" FOURSHORT_WORKER_IMAGE_DIGEST="${previous_digest}" docker compose -f compose.worker.yml up -d --no-build
     ) || true
     ln -sfn "${previous_release}" "${current_link}"
   fi
@@ -74,11 +252,22 @@ for attempt in 1 2 3 4; do
 done
 [[ "${build_succeeded}" == "true" ]]
 
-FOURSHORT_IMAGE_TAG="${image_tag}" docker compose -f compose.worker.yml run --rm --no-deps \
-  --entrypoint python media-worker -c \
-  "from fourshort_worker.config import Settings; from faster_whisper import WhisperModel; s=Settings(); WhisperModel(s.stt_model, device=s.stt_device, compute_type=s.stt_compute_type, cpu_threads=s.stt_cpu_threads, num_workers=s.stt_num_workers, download_root=str(s.stt_model_cache))"
+image_digest="$(docker image inspect --format='{{.Id}}' "4short/media-worker:${image_tag}")"
+if [[ ! "${image_digest}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+  echo "Could not determine immutable worker OCI image digest." >&2
+  exit 1
+fi
+printf '%s\n' "${image_digest}" > .worker-image-digest
+chmod 0640 .worker-image-digest
 
-FOURSHORT_IMAGE_TAG="${image_tag}" docker compose -f compose.worker.yml up -d --no-build media-worker
+# Do not instantiate Faster-Whisper with a model name here: that API can
+# fetch model bytes on demand. A release is admitted only when a separately
+# provisioned, content-addressed local pack matches the deployment fingerprint.
+FOURSHORT_IMAGE_TAG="${image_tag}" FOURSHORT_WORKER_IMAGE_DIGEST="${image_digest}" docker compose -f compose.worker.yml run --rm --no-deps \
+  --entrypoint python media-worker -c \
+  "from fourshort_worker.config import Settings; from fourshort_worker.model_assets import verify_face_detector_model, verify_local_stt_model; settings = Settings(); verify_local_stt_model(settings); verify_face_detector_model(settings)"
+
+FOURSHORT_IMAGE_TAG="${image_tag}" FOURSHORT_WORKER_IMAGE_DIGEST="${image_digest}" docker compose -f compose.worker.yml up -d --no-build media-worker
 
 worker_state=""
 for _ in $(seq 1 90); do
@@ -93,6 +282,12 @@ if [[ "${worker_state}" != "healthy" ]]; then
   docker compose -f compose.worker.yml logs --tail 150 media-worker >&2 || true
   exit 1
 fi
+
+# Keep the privileged, argument-validating deploy entrypoint in lockstep with
+# the code it deploys. Bootstrap installs the first copy; only a release that
+# has passed model admission and container health updates that copy.
+install -m 0750 -o root -g root infra/worker/bin/4short-worker-deploy \
+  /usr/local/sbin/4short-worker-deploy
 
 ln -sfn "${release_dir}" "${current_link}"
 rm -f "${archive_path}"

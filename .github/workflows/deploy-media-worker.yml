@@ -62,7 +62,7 @@ jobs:
         env:
           WORKER_HOST: ${{ secrets.WORKER_HOST }}
         run: |
-          scp -o BatchMode=yes \
+          scp -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=yes \
             "/tmp/4short-worker-${GITHUB_SHA}.tar.gz" "/tmp/4short-worker-api-token.env" \
             "deploy@${WORKER_HOST}:/tmp/"
 
@@ -70,11 +70,19 @@ jobs:
         env:
           WORKER_HOST: ${{ secrets.WORKER_HOST }}
         run: |
-          ssh -o BatchMode=yes "deploy@${WORKER_HOST}" \
+          ssh -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=yes "deploy@${WORKER_HOST}" \
             "sudo /usr/local/sbin/4short-worker-deploy '${GITHUB_SHA}' '/tmp/4short-worker-${GITHUB_SHA}.tar.gz'"
+
+      - name: Verify running HVE worker
+        env:
+          WORKER_HOST: ${{ secrets.WORKER_HOST }}
+        run: |
+          ssh -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=yes \
+            "deploy@${WORKER_HOST}" \
+            "sudo /usr/local/sbin/4short-worker-deploy verify-runtime"
 
       - name: Remove staged secret
         if: always()
         env:
           WORKER_HOST: ${{ secrets.WORKER_HOST }}
-        run: ssh -o BatchMode=yes "deploy@${WORKER_HOST}" "rm -f /tmp/4short-worker-api-token.env" || true
+        run: ssh -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=yes "deploy@${WORKER_HOST}" "rm -f /tmp/4short-worker-api-token.env" || true

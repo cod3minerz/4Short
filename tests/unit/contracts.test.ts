@@ -4,6 +4,7 @@ import {
   clipEdlSchema,
   createProjectSchema,
   createTranscriptRevisionSchema,
+  subtitleConfigSchema,
   updateClipSchema,
   updateMomentSchema,
   youtubeUrlSchema,
@@ -90,4 +91,14 @@ test("EDL rejects an inverted range and accepts a canonical vertical export", ()
     edl: base,
     scope: "clip",
   }).success, true);
+});
+
+test("subtitle presets retain the selected active-word and word-pop identity", () => {
+  const activeWord = subtitleConfigSchema.safeParse({ preset: "active_word", mode: "active_word" });
+  const wordPop = subtitleConfigSchema.safeParse({ preset: "word_pop", mode: "word_by_word" });
+
+  assert.equal(activeWord.success, true);
+  assert.equal(wordPop.success, true);
+  if (activeWord.success) assert.equal(activeWord.data.preset, "active_word");
+  if (wordPop.success) assert.equal(wordPop.data.preset, "word_pop");
 });

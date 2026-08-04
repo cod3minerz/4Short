@@ -37,7 +37,35 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { defaultClipEditorState, transcript } from "../data";
 import { handleTablistKeyDown } from "../lib/a11y";
-import { ControlApiError, getClip, getClipPlayback, getTranscript, isControlApiConfigured, rerenderClip, updateClip } from "../lib/control-api";
+import {
+  applyEditorDraftCommands,
+  commitEditorDraft,
+  ControlApiError,
+  getClip,
+  getClipPlayback,
+  getEditorDraft,
+  getEditorManifest,
+  getTranscript,
+  isControlApiConfigured,
+  rerenderClip,
+  type ApiEditorManifest,
+  type ApiEditorDraft,
+  updateClip,
+} from "../lib/control-api";
+import { buildHveDraftSync } from "../lib/hve-draft-sync";
+import {
+  clearHveDraftRecovery,
+  readHveDraftRecovery,
+  recoveryMatchesDraft,
+  saveHveDraftRecovery,
+} from "../lib/hve-draft-recovery";
+import {
+  enqueueHveOfflineCommandBatch,
+  markHveOfflineCommandBatchError,
+  offlineBatchMatchesDraft,
+  readHveOfflineCommandBatches,
+  removeHveOfflineCommandBatch,
+} from "../lib/hve-offline-command-queue";
 import { layoutFromApi, layoutOptions, layoutToApi } from "../lib/layout-options";
 import { toEditorWords, type EditorWord } from "../lib/transcript";
 import { ColorField } from "./ui/ColorField";
@@ -50,11 +78,33 @@ import { SampleList } from "./ui/SampleList";
 import { Select } from "./ui/Select";
 import { SubtitlePreviewOverlay } from "./ui/SubtitlePreviewOverlay";
 import { Switch } from "./ui/Switch";
+import { HveCompositionPreview } from "./HveCompositionPreview";
 import { trackApp } from "../lib/track-app";
+import {
+  resolveHveSequenceFrame,
+  resolveHveSequenceStep,
+  type HveSequencePoint,
+  type TimeMapEntry,
+} from "@/packages/contracts/src";
 import type { ClipEditorState, SubtitlePreset } from "../types";
 
 type ApplyScope = "clip" | "project" | "style" | "new_style";
 type EditorPanel = "text" | "properties";
+type SourceReviewSequence = {
+  documentHash: string;
+  outputDurationUs: number;
+  timeMap: TimeMapEntry[];
+  previewMode: "single_media" | "dual_media_crossfade";
+};
+type SourceReviewComposition = Extract<ApiEditorManifest["composition"], { status: "ready" }>;
+
+function isRetryableEditorTransportFailure(error: unknown) {
+  // A 409/4xx response is a real product conflict or invalid command, not an
+  // unreliable network. Persisting it for automatic retry would hide the
+  // conflict and later reapply a user decision without consent.
+  if (!(error instanceof ControlApiError)) return true;
+  return error.status === 408 || error.status === 425 || error.status === 429 || error.status >= 500;
+}
 
 /** One undoable unit of editor state. */
 type EditorSnapshot = {
@@ -92,7 +142,10 @@ const previewWords: EditorWord[] = transcript.flatMap((line, lineIndex) =>
   }),
 );
 
-const fontOptions = ["Manrope", "Inter", "Onest", "Montserrat"];
+// Only a font bundled into the media-worker image can be promised in a final
+// render. Custom-font ingestion will add choices here only with its own asset
+// verification pipeline.
+const fontOptions = ["HVE Sans"];
 
 const positionOptions = [
   { id: "top", label: "Сверху" },
@@ -117,7 +170,6 @@ function subtitleMode(preset: SubtitlePreset) {
 }
 
 function subtitleApiPreset(preset: SubtitlePreset) {
-  if (preset === "active_word" || preset === "word_pop") return "bold";
   return preset;
 }
 
@@ -158,20 +210,55 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
   const [editorWords, setEditorWords] = useState<EditorWord[]>(previewWords);
   const [transcriptRevision, setTranscriptRevision] = useState<number | null>(null);
   const [draftStatus, setDraftStatus] = useState<"saved" | "saving" | "changed">("saved");
+  const [hveDraft, setHveDraft] = useState<ApiEditorDraft | null>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const secondaryVideoRef = useRef<HTMLVideoElement>(null);
+  const sequencePointRef = useRef<HveSequencePoint | null>(null);
+  const sequenceTransitionRef = useRef(false);
+  const sequenceOriginMsRef = useRef<number | null>(null);
+  const sequenceDocumentHashRef = useRef<string | null>(null);
+  const sourceReviewRetryUsedRef = useRef(false);
   const draftKey = `hashpix:clip-draft:${projectId}:${clipId}`;
+  const hveClientId = useRef(`focus-editor-${crypto.randomUUID()}`);
+  const hveClientSequence = useRef(0);
 
-  // Real rendered clip, when one exists. `null` means "not rendered yet" —
-  // the preview says so instead of showing a fake video area.
+  // A final render always wins. Before one exists the editor may play only a
+  // verified source/proxy for transcript and source-time review — never a
+  // faux composition with decorative overlays.
   const [playbackUrl, setPlaybackUrl] = useState<string | null>(null);
+  const [sourceReviewUrl, setSourceReviewUrl] = useState<string | null>(null);
+  const [sourceReviewKind, setSourceReviewKind] = useState<"proxy" | "original" | null>(null);
+  const [sourceReviewPending, setSourceReviewPending] = useState(false);
+  const [sourceReviewReason, setSourceReviewReason] = useState<string | null>(null);
+  const [sourceReviewRefreshNonce, setSourceReviewRefreshNonce] = useState(0);
+  const [sourceReviewSequence, setSourceReviewSequence] = useState<SourceReviewSequence | null>(null);
+  const [sourceReviewComposition, setSourceReviewComposition] = useState<SourceReviewComposition | null>(null);
   const [mediaDuration, setMediaDuration] = useState<number | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
 
+  const hasSourceSequence = Boolean(sourceReviewUrl && !playbackUrl && sourceReviewSequence);
+  // A delayed refresh must never combine a resolved geometry snapshot from
+  // one draft with the output clock from another draft.
+  const hasCompositionPreview = Boolean(
+    hasSourceSequence
+    && sourceReviewComposition
+    && sourceReviewSequence
+    && sourceReviewComposition.documentHash === sourceReviewSequence.documentHash,
+  );
+  const sourceSequenceDuration = sourceReviewSequence ? sourceReviewSequence.outputDurationUs / 1_000_000 : null;
+
   // Trim bounds come from the real media when we have it; otherwise from the
   // clip's own range, so the handles are never pinned to hardcoded seconds.
+  // A non-contiguous HVE sequence is deliberately review-only here: a dual
+  // source-range slider cannot truthfully edit a sequence after pause cuts.
+  // Its boundaries are changed by transcript selection instead.
   const timelineMin = 0;
-  const timelineMax = mediaDuration ?? Math.max(state.endSeconds + 30, state.startSeconds + 60);
+  const timelineMax = hasSourceSequence
+    ? sourceSequenceDuration ?? 1
+    : mediaDuration ?? Math.max(state.endSeconds + 30, state.startSeconds + 60);
+  const timelineStart = hasSourceSequence ? 0 : state.startSeconds;
+  const timelineEnd = hasSourceSequence ? sourceSequenceDuration ?? 1 : state.endSeconds;
 
   const filteredWords = useMemo(
     () => editorWords.filter((item) => item.word.toLowerCase().includes(wordQuery.toLowerCase())),
@@ -188,26 +275,38 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
         if (cancelled) return;
         setSavedVersion(response.clip.currentVersion);
         if (response.version?.edl) setBaseEdl(response.version.edl);
-        const stored = window.localStorage.getItem(draftKey);
-        if (stored) {
-          try {
-            const draft = JSON.parse(stored) as {
-              baseVersion: number;
-              state: ClipEditorState;
-              wordEdits: Record<string, string>;
-              hiddenWords: string[];
-              cutWords: string[];
-            };
-            if (draft.baseVersion === response.clip.currentVersion) {
-              setState(draft.state);
-              setWordEdits(draft.wordEdits ?? {});
-              setHiddenWords(draft.hiddenWords ?? []);
-              setCutWords(draft.cutWords ?? []);
-              return;
+        // Legacy clips have only an EDL, so they retain the old local draft
+        // fallback. HVE clips must always fetch their authoritative draft
+        // identity first: a base-version-only localStorage record is not
+        // enough to safely restore a command after another tab changed it.
+        const hasHveDocument = Boolean(response.version?.documentV2);
+        if (!hasHveDocument) {
+          const stored = window.localStorage.getItem(draftKey);
+          if (stored) {
+            try {
+              const draft = JSON.parse(stored) as {
+                baseVersion: number;
+                state: ClipEditorState;
+                wordEdits: Record<string, string>;
+                hiddenWords: string[];
+                cutWords: string[];
+              };
+              if (draft.baseVersion === response.clip.currentVersion) {
+                setState(draft.state);
+                setWordEdits(draft.wordEdits ?? {});
+                setHiddenWords(draft.hiddenWords ?? []);
+                setCutWords(draft.cutWords ?? []);
+                return;
+              }
+            } catch {
+              window.localStorage.removeItem(draftKey);
             }
-          } catch {
-            window.localStorage.removeItem(draftKey);
           }
+        } else {
+          // An HVE recovery lives in IndexedDB with an exact document hash.
+          // Do not allow a stale legacy record to be considered in a future
+          // non-HVE fallback after this clip has been migrated.
+          window.localStorage.removeItem(draftKey);
         }
         const edl = response.version?.edl as {
           layout?: { mode: string };
@@ -216,6 +315,7 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
             fontFamily: string; fontSize: number; position: "top" | "center" | "bottom";
             color: string; activeColor: string;
           };
+          title?: unknown;
           silence?: { enabled: boolean };
           export?: { height: number };
         } | undefined;
@@ -235,10 +335,56 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
             activeColor: edl.subtitles.activeColor,
           } : {}),
           ...(edl?.silence ? { silenceRemoval: edl.silence.enabled } : {}),
+          ...(edl?.title ? { titleEnabled: true } : { titleEnabled: false }),
           ...(edl?.export?.height === 1280 || edl?.export?.height === 1920
             ? { exportHeight: edl.export.height }
             : {}),
         }));
+        if (response.version?.documentV2) {
+          void getEditorDraft(projectId, clipId).then(async ({ draft }) => {
+            if (cancelled) return;
+            setHveDraft(draft);
+            hveClientSequence.current = 0;
+            setState((current) => ({
+              ...current,
+              title: draft.metadata.title,
+              socialTitle: draft.metadata.socialTitle ?? "",
+              socialDescription: draft.metadata.socialDescription ?? "",
+            }));
+            setWordEdits(Object.fromEntries(
+              (draft.document as { captions?: { words?: Array<{ wordId?: string; displayText?: string }> } }).captions?.words
+                ?.flatMap((word) => word.wordId && word.displayText ? [[word.wordId, word.displayText] as const] : []) ?? [],
+            ));
+            setHiddenWords(
+              (draft.document as { captions?: { words?: Array<{ wordId?: string; hidden?: boolean }> } }).captions?.words
+                ?.flatMap((word) => word.wordId && word.hidden ? [word.wordId] : []) ?? [],
+            );
+            setCutWords(
+              (draft.document as { captions?: { words?: Array<{ wordId?: string; cutFromMedia?: boolean }> } }).captions?.words
+                ?.flatMap((word) => word.wordId && word.cutFromMedia ? [word.wordId] : []) ?? [],
+            );
+            try {
+              const recovery = await readHveDraftRecovery(clipId);
+              if (cancelled || !recovery) return;
+              if (!recoveryMatchesDraft(recovery, draft)) {
+                setNotice("Есть несохранённая правка из другой версии клипа. Она не применена автоматически.");
+                return;
+              }
+              setState(recovery.state);
+              setWordEdits(recovery.wordEdits);
+              setHiddenWords(recovery.hiddenWords);
+              setCutWords(recovery.cutWords);
+              setDirty(true);
+              setDraftStatus("changed");
+              setNotice("Восстановлена несохранённая правка этого клипа.");
+            } catch {
+              // Recovery is best-effort. A privacy mode or quota error must
+              // never prevent opening the authoritative server draft.
+            }
+          }, (error: unknown) => {
+            if (!cancelled) setNotice(error instanceof ControlApiError ? error.message : "Не удалось открыть серверный черновик HVE.");
+          });
+        }
       })
       .catch((error: unknown) => setNotice(error instanceof ControlApiError ? error.message : "Не удалось загрузить клип. Проверьте соединение и попробуйте ещё раз."));
     return () => {
@@ -273,20 +419,214 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
     return () => { cancelled = true; };
   }, [canUseApi, clipId, projectId]);
 
-  // Drive the <video> from the editor's play/pause state and keep the
-  // playhead in sync, looping playback within the trimmed range.
+  // HVE editor manifest signs only a verified browser proxy or an explicitly
+  // H.264/AAC-compatible original. Refresh before expiry; a source URL is
+  // never persisted in the draft or shown in the interface.
+  useEffect(() => {
+    if (!canUseApi) return;
+    let cancelled = false;
+    let refreshTimer: number | undefined;
+    const load = async () => {
+      try {
+        const manifest = await getEditorManifest(projectId, clipId);
+        if (cancelled) return;
+        if (manifest.sequence.status === "ready") {
+          if (sequenceDocumentHashRef.current !== manifest.sequence.documentHash) {
+            sequenceDocumentHashRef.current = manifest.sequence.documentHash;
+            sequencePointRef.current = null;
+            sequenceOriginMsRef.current = null;
+            setCurrentTime(0);
+          }
+          setSourceReviewSequence({
+            documentHash: manifest.sequence.documentHash,
+            outputDurationUs: manifest.sequence.outputDurationUs,
+            timeMap: manifest.sequence.timeMap,
+            previewMode: manifest.sequence.previewMode,
+          });
+        } else {
+          sequenceDocumentHashRef.current = null;
+          setSourceReviewSequence(null);
+          setSourceReviewReason(null);
+        }
+        if (manifest.composition.status === "ready") {
+          setSourceReviewComposition(manifest.composition);
+        } else {
+          setSourceReviewComposition(null);
+        }
+        if (manifest.preview.status !== "ready") {
+          setSourceReviewUrl(null);
+          setSourceReviewKind(null);
+          setSourceReviewReason(manifest.preview.reason);
+          setSourceReviewPending(true);
+          return;
+        }
+        setSourceReviewUrl(manifest.preview.url);
+        setSourceReviewKind(manifest.preview.source);
+        if (manifest.sequence.status === "ready") setSourceReviewReason(null);
+        setSourceReviewPending(false);
+        refreshTimer = window.setTimeout(load, Math.max(60_000, (manifest.preview.expiresIn - 60) * 1_000));
+      } catch {
+        // The HVE v2 document can legitimately be unavailable while a legacy
+        // clip is still opening. The final render endpoint remains usable.
+        if (!cancelled) {
+          setSourceReviewUrl(null);
+          setSourceReviewKind(null);
+          setSourceReviewReason(null);
+          sequenceDocumentHashRef.current = null;
+          setSourceReviewSequence(null);
+          setSourceReviewComposition(null);
+        }
+      }
+    };
+    void load();
+    return () => {
+      cancelled = true;
+      if (refreshTimer !== undefined) window.clearTimeout(refreshTimer);
+    };
+  }, [canUseApi, clipId, hveDraft?.documentHash, projectId, sourceReviewRefreshNonce]);
+
+  // A signed source URL may be invalidated before its nominal expiry (for
+  // example after a retention transition). Retry exactly once with a fresh
+  // manifest. This never touches the editor draft, and a second failure is
+  // shown honestly instead of looping a broken private URL forever.
+  useEffect(() => {
+    sourceReviewRetryUsedRef.current = false;
+  }, [clipId, hveDraft?.documentHash, projectId]);
+
+  const retrySourceReviewAfterMediaError = useCallback(() => {
+    if (!sourceReviewUrl || playbackUrl) return;
+    if (!sourceReviewRetryUsedRef.current) {
+      sourceReviewRetryUsedRef.current = true;
+      setSourceReviewPending(true);
+      setSourceReviewReason(null);
+      setSourceReviewRefreshNonce((value) => value + 1);
+      return;
+    }
+    setSourceReviewUrl(null);
+    setSourceReviewKind(null);
+    setSourceReviewPending(false);
+    setSourceReviewReason("source_review_failed");
+  }, [playbackUrl, sourceReviewUrl]);
+
+  /**
+   * Moves one or two native source elements to the same immutable HVE output
+   * clock.  During an explicit pause crossfade both source ranges are active
+   * and their native audio is gain-ramped as well as their canvas opacity.
+   * This remains a source review: ASS glyph shaping and private production
+   * assets still belong to the final worker render.
+   */
+  const syncSourceReviewFrame = useCallback((outputUs: number, input: { force?: boolean; shouldPlay?: boolean } = {}) => {
+    if (!sourceReviewSequence) return null;
+    const primary = videoRef.current;
+    const secondary = secondaryVideoRef.current;
+    if (!primary) return null;
+    const frame = resolveHveSequenceFrame(sourceReviewSequence.timeMap, outputUs);
+    if (!frame) return null;
+    const sync = (video: HTMLVideoElement, point: HveSequencePoint, volume: number, force = false) => {
+      video.playbackRate = point.playbackRate;
+      video.volume = Math.max(0, Math.min(1, volume));
+      const sourceSeconds = point.sourceUs / 1_000_000;
+      const drift = Math.abs(video.currentTime - sourceSeconds);
+      if (force || !Number.isFinite(video.currentTime) || drift > 0.12) video.currentTime = sourceSeconds;
+    };
+    if (frame.kind === "crossfade") {
+      if (!secondary) return frame;
+      const force = Boolean(input.force) || !sequenceTransitionRef.current;
+      sync(primary, frame.from, 1 - frame.progress, force);
+      sync(secondary, frame.to, frame.progress, force);
+      sequenceTransitionRef.current = true;
+      sequencePointRef.current = frame.from;
+      if (input.shouldPlay) {
+        void primary.play().catch(() => setPlaying(false));
+        // Both elements have the same authorised source URL.  If a browser
+        // refuses the second native play after a user gesture, it stays
+        // visually correct but never claims a complete A/V preview.
+        void secondary.play().catch(() => setSourceReviewReason("crossfade_audio_unavailable"));
+      }
+      return frame;
+    }
+
+    const previous = sequenceTransitionRef.current ? null : sequencePointRef.current;
+    const step = resolveHveSequenceStep({
+      timeMap: sourceReviewSequence.timeMap,
+      outputUs,
+      previous,
+      observedSourceUs: Number.isFinite(primary.currentTime) ? Math.round(primary.currentTime * 1_000_000) : null,
+    });
+    if (step.kind === "ended") return null;
+    sync(primary, step.point, 1, Boolean(input.force) || step.kind === "seek" || sequenceTransitionRef.current);
+    if (secondary) {
+      secondary.pause();
+      secondary.volume = 0;
+    }
+    sequenceTransitionRef.current = false;
+    sequencePointRef.current = step.point;
+    if (input.shouldPlay) void primary.play().catch(() => setPlaying(false));
+    return frame;
+  }, [sourceReviewSequence]);
+
+  // Drive the <video> from the editor's play/pause state. An HVE source
+  // review starts on its output clock; legacy source review retains a simple
+  // contiguous source trim.
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    if (playing) void video.play().catch(() => setPlaying(false));
-    else video.pause();
-  }, [playing, playbackUrl]);
+    if (playing) {
+      if (hasSourceSequence && sourceReviewSequence) {
+        const outputUs = Math.round(Math.min(
+          Math.max(0, currentTime),
+          sourceReviewSequence.outputDurationUs / 1_000_000,
+        ) * 1_000_000);
+        const frame = syncSourceReviewFrame(outputUs, { force: true, shouldPlay: true })
+          ?? syncSourceReviewFrame(0, { force: true, shouldPlay: true });
+        if (frame) {
+          sequenceOriginMsRef.current = performance.now() - outputUs / 1_000;
+        }
+      } else if (!playbackUrl && (video.currentTime < state.startSeconds || video.currentTime >= state.endSeconds)) {
+        video.currentTime = state.startSeconds;
+      }
+      void video.play().catch(() => setPlaying(false));
+    } else {
+      video.pause();
+      secondaryVideoRef.current?.pause();
+      sequenceOriginMsRef.current = null;
+    }
+  }, [currentTime, hasSourceSequence, playbackUrl, playing, sourceReviewSequence, state.endSeconds, state.startSeconds, syncSourceReviewFrame]);
+
+  // Native `timeupdate` is too infrequent to skip a removed pause cleanly.
+  // This output clock is fed by the same immutable TimeMap as the worker and
+  // performs a source seek only at a proven discontinuity or material drift.
+  // It remains source review, not a simulated final visual composition.
+  useEffect(() => {
+    if (!playing || !hasSourceSequence || !sourceReviewSequence) return;
+    const video = videoRef.current;
+    if (!video) return;
+    let frameId = 0;
+    const tick = () => {
+      const origin = sequenceOriginMsRef.current ?? performance.now();
+      const outputUs = Math.round(Math.max(0, performance.now() - origin) * 1_000);
+      const frame = syncSourceReviewFrame(outputUs, { shouldPlay: true });
+      if (!frame) {
+        setCurrentTime(sourceReviewSequence.outputDurationUs / 1_000_000);
+        setPlaying(false);
+        return;
+      }
+      setCurrentTime(outputUs / 1_000_000);
+      frameId = window.requestAnimationFrame(tick);
+    };
+    frameId = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frameId);
+  }, [hasSourceSequence, playing, sourceReviewSequence, syncSourceReviewFrame]);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
     const onTime = () => {
-      if (video.currentTime >= state.endSeconds) {
+      // HVE sequence playback owns the output clock. Legacy source review
+      // loops inside the selected source range; completed renders already
+      // expose output time natively.
+      if (hasSourceSequence) return;
+      if (!playbackUrl && video.currentTime >= state.endSeconds) {
         video.currentTime = state.startSeconds;
         if (!playing) video.pause();
       }
@@ -299,10 +639,23 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
       video.removeEventListener("timeupdate", onTime);
       video.removeEventListener("loadedmetadata", onLoaded);
     };
-  }, [playing, state.endSeconds, state.startSeconds]);
+  }, [hasSourceSequence, playing, playbackUrl, state.endSeconds, state.startSeconds]);
 
   const seekTo = (seconds: number) => {
     const video = videoRef.current;
+    if (hasSourceSequence && sourceReviewSequence) {
+      const outputUs = Math.round(Math.min(
+        Math.max(0, seconds),
+        sourceReviewSequence.outputDurationUs / 1_000_000,
+      ) * 1_000_000);
+      syncSourceReviewFrame(outputUs, { force: true, shouldPlay: playing });
+      // Rebase in the animation-frame loop rather than reading the wall
+      // clock from the component render closure. That keeps React's render
+      // path pure and gives the next frame one authoritative start time.
+      sequenceOriginMsRef.current = null;
+      setCurrentTime(outputUs / 1_000_000);
+      return;
+    }
     if (video) video.currentTime = seconds;
     setCurrentTime(seconds);
   };
@@ -370,7 +723,112 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
     setDraftStatus("changed");
   };
 
+  const syncHveDraft = useCallback(async () => {
+    if (!hveDraft || !canUseApi) return hveDraft;
+    // The browser may have lost the response after the API committed a batch.
+    // Replay the exact persisted batch first: the API's batch idempotency then
+    // either returns that result or applies it once. Never replay a command
+    // into a newer document; that is a visible conflict, not a best effort.
+    let authoritativeDraft = hveDraft;
+    const queuedBatches = await readHveOfflineCommandBatches(clipId);
+    for (const batch of queuedBatches) {
+      if (!offlineBatchMatchesDraft(batch, authoritativeDraft)) {
+        await markHveOfflineCommandBatchError(batch.batchId, "DRAFT_IDENTITY_CHANGED");
+        setNotice("Есть офлайн-правка из другой версии клипа. Она не применена автоматически.");
+        return null;
+      }
+      try {
+        const replay = await applyEditorDraftCommands(projectId, clipId, {
+          batchId: batch.batchId,
+          baseRevision: batch.baseRevision,
+          commands: batch.commands,
+        });
+        await removeHveOfflineCommandBatch(batch.batchId);
+        authoritativeDraft = replay.draft;
+        setHveDraft(replay.draft);
+      } catch (error) {
+        await markHveOfflineCommandBatchError(
+          batch.batchId,
+          error instanceof ControlApiError ? error.code ?? error.message : "NETWORK_OR_UNKNOWN_ERROR",
+        );
+        throw error;
+      }
+    }
+
+    const result = buildHveDraftSync({
+      draft: authoritativeDraft as unknown as Parameters<typeof buildHveDraftSync>[0]["draft"],
+      state,
+      words: editorWords,
+      wordEdits,
+      hiddenWords,
+      cutWords,
+      clientId: hveClientId.current,
+      firstSequence: hveClientSequence.current,
+      batchId: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      createCommandId: () => crypto.randomUUID(),
+    });
+    if (result.unsupported.length) {
+      setNotice(result.unsupported.join(" "));
+      return null;
+    }
+    if (!result.commands.length) return authoritativeDraft;
+    setDraftStatus("saving");
+    const batchId = result.commands[0]!.batchId;
+    let response;
+    try {
+      response = await applyEditorDraftCommands(projectId, clipId, {
+        batchId,
+        baseRevision: authoritativeDraft.revision,
+        commands: result.commands,
+      });
+    } catch (error) {
+      if (!isRetryableEditorTransportFailure(error)) throw error;
+      // Keep the exact original batch id for a retry. Generating a new id
+      // after an uncertain network failure can apply the same edit twice.
+      // Persist the full UI snapshot first, so on reload the user sees the
+      // state that produced this command batch before it is retried.
+      await saveHveDraftRecovery({
+        schemaVersion: 1,
+        clipId,
+        documentHash: authoritativeDraft.documentHash,
+        baseVersion: authoritativeDraft.baseVersion,
+        revision: authoritativeDraft.revision,
+        state,
+        wordEdits,
+        hiddenWords,
+        cutWords,
+        updatedAt: new Date().toISOString(),
+      }).catch(() => undefined);
+      await enqueueHveOfflineCommandBatch({
+        schemaVersion: 1,
+        batchId,
+        clipId,
+        baseVersion: authoritativeDraft.baseVersion,
+        baseRevision: authoritativeDraft.revision,
+        documentHash: authoritativeDraft.documentHash,
+        commands: result.commands,
+        createdAt: new Date().toISOString(),
+        lastError: error instanceof ControlApiError ? error.code ?? error.message : "NETWORK_OR_UNKNOWN_ERROR",
+      });
+      throw error;
+    }
+    hveClientSequence.current = result.nextSequence;
+    setHveDraft(response.draft);
+    setDraftStatus("saved");
+    setDirty(false);
+    void clearHveDraftRecovery(clipId);
+    return response.draft;
+  }, [canUseApi, clipId, cutWords, editorWords, hiddenWords, hveDraft, projectId, state, wordEdits]);
+
   const persistDraft = useCallback(() => {
+    if (hveDraft && canUseApi) {
+      void syncHveDraft().catch((error: unknown) => {
+        setDraftStatus("changed");
+        setNotice(error instanceof ControlApiError ? error.message : "Не удалось сохранить серверный черновик HVE.");
+      });
+      return;
+    }
     setDraftStatus("saving");
     window.localStorage.setItem(draftKey, JSON.stringify({
       clipId,
@@ -383,13 +841,29 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
       updatedAt: new Date().toISOString(),
     }));
     setDraftStatus("saved");
-  }, [clipId, cutWords, draftKey, hiddenWords, savedVersion, state, wordEdits]);
+  }, [canUseApi, clipId, cutWords, draftKey, hiddenWords, hveDraft, savedVersion, state, syncHveDraft, wordEdits]);
 
   useEffect(() => {
     if (!dirty) return;
     const timer = window.setTimeout(persistDraft, 650);
     return () => window.clearTimeout(timer);
   }, [dirty, persistDraft]);
+
+  useEffect(() => {
+    if (!hveDraft || !dirty) return;
+    void saveHveDraftRecovery({
+      schemaVersion: 1,
+      clipId,
+      documentHash: hveDraft.documentHash,
+      baseVersion: hveDraft.baseVersion,
+      revision: hveDraft.revision,
+      state,
+      wordEdits,
+      hiddenWords,
+      cutWords,
+      updatedAt: new Date().toISOString(),
+    }).catch(() => undefined);
+  }, [clipId, cutWords, dirty, hiddenWords, hveDraft, state, wordEdits]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -492,7 +966,13 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
     setBusy(true);
     try {
       const edl = compileEdl();
-      if (canUseApi && edl) {
+      if (hveDraft && canUseApi) {
+        const draft = await syncHveDraft();
+        if (!draft) return;
+        const response = await commitEditorDraft(projectId, clipId, draft.revision);
+        setSavedVersion(response.version.version);
+        setHveDraft({ ...draft, baseVersion: response.version.version, revision: 0 });
+      } else if (canUseApi && edl) {
         const response = await updateClip(projectId, clipId, {
           expectedVersion: savedVersion,
           title: state.title,
@@ -524,7 +1004,13 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
   const runRerender = async () => {
     setBusy(true);
     try {
-      if (dirty) await saveVersion();
+      if (dirty) {
+        await saveVersion();
+        // Committing an HVE draft already creates the new immutable version
+        // and queues exactly one render. Do not enqueue the legacy rerender
+        // command as well.
+        if (hveDraft) return;
+      }
       if (canUseApi) await rerenderClip(projectId, clipId);
       setNotice("Перерендер запущен только для этого клипа. Минуты исходника не списываются.");
       trackApp("clip_rerender", { projectId, clipId });
@@ -677,66 +1163,96 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
             </button>
           ) : null}
           <div
-            className={`clip-phone-preview preset-${state.subtitlePreset} layout-${state.layout}`}
+            className={`clip-phone-preview preset-${state.subtitlePreset} layout-${state.layout} ${hasCompositionPreview ? "has-composition-preview" : ""}`}
             style={{ "--editor-zoom": zoom / 100 } as React.CSSProperties}
           >
-            {safeZonesVisible ? <div className="clip-phone-preview__safe-zone" /> : null}
-            {state.logoEnabled ? <span className="clip-phone-preview__logo">ВАШ ЛОГОТИП</span> : null}
-            {state.titleEnabled ? <h2 className={`is-${state.titlePosition}`}>{state.title}</h2> : null}
-            {playbackUrl ? (
-              <video
-                className="clip-phone-preview__video"
-                ref={videoRef}
-                src={playbackUrl}
-                playsInline
-                preload="metadata"
-              />
+            {playbackUrl || sourceReviewUrl ? (
+              <>
+                <video
+                  className="clip-phone-preview__video"
+                  ref={videoRef}
+                  src={playbackUrl ?? sourceReviewUrl ?? undefined}
+                  crossOrigin={sourceReviewUrl && !playbackUrl ? "anonymous" : undefined}
+                  onError={retrySourceReviewAfterMediaError}
+                  playsInline
+                  preload="metadata"
+                />
+                {sourceReviewUrl && !playbackUrl && sourceReviewSequence?.previewMode === "dual_media_crossfade" ? (
+                  <video
+                    aria-hidden="true"
+                    className="clip-phone-preview__video clip-phone-preview__video--secondary"
+                    ref={secondaryVideoRef}
+                    src={sourceReviewUrl}
+                    crossOrigin="anonymous"
+                    onError={retrySourceReviewAfterMediaError}
+                    playsInline
+                    preload="auto"
+                  />
+                ) : null}
+              </>
             ) : (
               <div className="clip-phone-preview__speaker">
-                {canUseApi ? "Клип ещё рендерится" : "Предпросмотр появится после рендера"}
-                <small>{layoutOptions.find((item) => item.id === state.layout)?.label}</small>
+                {canUseApi && sourceReviewPending
+                  ? sourceReviewReason === "browser_media_contract_unavailable"
+                    ? "Безопасный preview исходника временно недоступен"
+                    : "Подготавливаем совместимый proxy"
+                  : sourceReviewReason === "source_review_failed"
+                    ? "Не удалось открыть preview исходника"
+                  : "Финальный предпросмотр появится после рендера"}
+                <small>Оформление не имитируется до построения HVE-плана</small>
               </div>
             )}
-            {state.captionsEnabled ? (
-              <div className={`clip-phone-preview__subtitles is-${state.subtitlePosition}`} aria-hidden="true">
-                <SubtitlePreviewOverlay
-                  text="ПЕРВЫЙ ПРОДУКТ НЕ ОБЯЗАН БЫТЬ ИДЕАЛЬНЫМ"
-                  preset={state.subtitlePreset}
-                  fontFamily={state.fontFamily}
-                  fontSize={state.fontSize}
-                  position={state.subtitlePosition}
-                  color={state.primaryColor}
-                  activeColor={state.activeColor}
-                  // Follows real playback once a rendered clip is loaded.
-                  animate={!playbackUrl || playing}
-                />
-              </div>
+            {hasCompositionPreview && sourceReviewComposition ? (
+              <HveCompositionPreview
+                plan={sourceReviewComposition.resolvedPlan}
+                captionStyle={sourceReviewComposition.captionStyle}
+                outputTimeSeconds={currentTime}
+                videoRef={videoRef}
+                secondaryVideoRef={secondaryVideoRef}
+                safeZonesVisible={safeZonesVisible}
+              />
             ) : null}
-            {state.bannerEnabled ? <div className="clip-phone-preview__banner">ВАШ БАННЕР</div> : null}
-            <button className="clip-phone-preview__play" type="button" aria-label={playing ? "Пауза" : "Воспроизвести"} onClick={() => setPlaying((value) => !value)}>
+            {sourceReviewUrl && !playbackUrl ? (
+              <p className="clip-phone-preview__source-review" role="status">
+                {hasCompositionPreview
+                  ? "Композиционный preview HVE"
+                  : hasSourceSequence
+                    ? sourceReviewSequence?.previewMode === "dual_media_crossfade"
+                      ? sourceReviewReason === "crossfade_audio_unavailable"
+                        ? "Плавный переход · звук проверяется в финальном рендере"
+                        : "Исходник по HVE-последовательности · плавные переходы"
+                      : "Исходник по HVE-последовательности"
+                    : "Исходник для проверки"}
+                {" · "}{sourceReviewKind === "proxy" ? "proxy" : "оригинал"}
+              </p>
+            ) : null}
+            {playbackUrl ? <p className="clip-phone-preview__rendered">Финальный рендер</p> : null}
+            {safeZonesVisible && !sourceReviewUrl && !playbackUrl ? <div className="clip-phone-preview__safe-zone" /> : null}
+            {(playbackUrl || sourceReviewUrl) ? <button className="clip-phone-preview__play" type="button" aria-label={playing ? "Пауза" : "Воспроизвести"} onClick={() => setPlaying((value) => !value)}>
               {playing ? <Pause fill="currentColor" size={20} /> : <Play fill="currentColor" size={20} />}
-            </button>
+            </button> : null}
           </div>
           <div className="clip-trim">
             <div className="clip-transport">
               <button type="button" aria-label={playing ? "Пауза" : "Воспроизвести"} onClick={() => setPlaying((value) => !value)}>
                 {playing ? <Pause fill="currentColor" size={15} /> : <Play fill="currentColor" size={15} />}
               </button>
-              <span>{formatClock(state.startSeconds)}</span>
-              <strong>{Math.round(state.endSeconds - state.startSeconds)} сек.</strong>
-              <span>{formatClock(state.endSeconds)}</span>
+              <span>{formatClock(currentTime)}</span>
+              <strong>{Math.round(timelineEnd - timelineStart)} сек.</strong>
+              <span>{formatClock(timelineEnd)}</span>
               <Volume2 size={15} />
               <label><ZoomIn size={14} /><input aria-label="Масштаб холста" type="range" min={50} max={100} step={25} value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /><span>{zoom}%</span></label>
             </div>
             <RangeTimeline
               min={timelineMin}
               max={timelineMax}
-              start={state.startSeconds}
-              end={state.endSeconds}
-              playhead={playbackUrl ? currentTime : undefined}
+              start={timelineStart}
+              end={timelineEnd}
+              playhead={playbackUrl || sourceReviewUrl ? currentTime : undefined}
               minDuration={5}
               formatTime={formatClock}
-              onScrub={playbackUrl ? seekTo : undefined}
+              disabled={hasSourceSequence}
+              onScrub={hasSourceSequence ? undefined : playbackUrl || sourceReviewUrl ? seekTo : undefined}
               onChange={({ start, end }) => commit({
                 startSeconds: Math.round(start),
                 endSeconds: Math.round(end),
@@ -866,18 +1382,26 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
               icon={<ImagePlus size={17} />}
               title="Баннер"
               defaultExpanded={false}
-              headerControl={<Switch checked={state.bannerEnabled} aria-label="Показывать баннер" onCheckedChange={(value) => commit({ bannerEnabled: value })} />}
+              headerControl={hveDraft
+                ? <span className="clip-panel-status">Скоро</span>
+                : <Switch checked={state.bannerEnabled} aria-label="Показывать баннер" onCheckedChange={(value) => commit({ bannerEnabled: value })} />}
             >
-              <p className="clip-help-text">Изображение и его положение задаются в стиле — так они одинаковы во всех клипах проекта.</p>
+              {hveDraft
+                ? <LockedField label="Баннер" reason="Версионированные asset-слои ещё не подключены к HVE-редактору." />
+                : <p className="clip-help-text">Изображение и его положение задаются в стиле — так они одинаковы во всех клипах проекта.</p>}
             </PanelSection>
 
             <PanelSection
               icon={<Stamp size={17} />}
               title="Логотип"
               defaultExpanded={false}
-              headerControl={<Switch checked={state.logoEnabled} aria-label="Показывать логотип" onCheckedChange={(value) => commit({ logoEnabled: value })} />}
+              headerControl={hveDraft
+                ? <span className="clip-panel-status">Скоро</span>
+                : <Switch checked={state.logoEnabled} aria-label="Показывать логотип" onCheckedChange={(value) => commit({ logoEnabled: value })} />}
             >
-              <p className="clip-help-text">Изображение и его положение задаются в стиле — так они одинаковы во всех клипах проекта.</p>
+              {hveDraft
+                ? <LockedField label="Логотип" reason="Версионированные asset-слои ещё не подключены к HVE-редактору." />
+                : <p className="clip-help-text">Изображение и его положение задаются в стиле — так они одинаковы во всех клипах проекта.</p>}
             </PanelSection>
 
             <PanelSection icon={<Sparkles size={17} />} title="Качество рендера" defaultExpanded={false}>

@@ -46,14 +46,14 @@ jobs:
           curl --silent --show-error --max-time 15 \
             --header "X-Worker-Token: ${WORKER_API_TOKEN}" \
             --header 'Content-Type: application/json' \
-            --data '{"workerId":"control-local-diagnostic","version":"diagnostic","capabilities":{"classes":["cpu_heavy"]},"metadata":{"source":"github-actions"}}' \
+            --data '{"workerId":"control-local-diagnostic","version":"diagnostic","capabilities":{"engineVersion":"diagnostic","plannerVersion":"diagnostic","rendererVersion":"diagnostic","jobClasses":["cpu_heavy"],"models":{},"memoryBytes":1,"scratchFreeBytes":0,"heavySlots":0,"mediumSlots":0},"metadata":{"source":"github-actions"}}' \
             --write-out '\nhttp=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \
             http://127.0.0.1:4100/v1/internal/workers/register || true
           echo "== public authenticated registration from control host =="
           curl --silent --show-error --max-time 15 \
             --header "X-Worker-Token: ${WORKER_API_TOKEN}" \
             --header 'Content-Type: application/json' \
-            --data '{"workerId":"control-public-diagnostic","version":"diagnostic","capabilities":{"classes":["cpu_heavy"]},"metadata":{"source":"github-actions"}}' \
+            --data '{"workerId":"control-public-diagnostic","version":"diagnostic","capabilities":{"engineVersion":"diagnostic","plannerVersion":"diagnostic","rendererVersion":"diagnostic","jobClasses":["cpu_heavy"],"models":{},"memoryBytes":1,"scratchFreeBytes":0,"heavySlots":0,"mediumSlots":0},"metadata":{"source":"github-actions"}}' \
             --write-out '\nhttp=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \
             https://api.4short.ru/v1/internal/workers/register || true
           REMOTE
@@ -109,7 +109,7 @@ jobs:
           curl --ipv4 --silent --show-error --max-time 15 \
             --header "X-Worker-Token: ${WORKER_API_TOKEN}" \
             --header 'Content-Type: application/json' \
-            --data '{"workerId":"network-diagnostic","version":"diagnostic","capabilities":{"classes":["cpu_heavy"]},"metadata":{"source":"github-actions"}}' \
+            --data '{"workerId":"network-diagnostic","version":"diagnostic","capabilities":{"engineVersion":"diagnostic","plannerVersion":"diagnostic","rendererVersion":"diagnostic","jobClasses":["cpu_heavy"],"models":{},"memoryBytes":1,"scratchFreeBytes":0,"heavySlots":0,"mediumSlots":0},"metadata":{"source":"github-actions"}}' \
             --write-out '\nhttp=%{http_code} connect=%{time_connect}s total=%{time_total}s\n' \
             https://api.4short.ru/v1/internal/workers/register || true
           REMOTE

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "name": "production-v1",
+  "gate": {
+    "status": "scaffold",
+    "requiredSplits": ["smoke", "development", "holdout", "stress"],
+    "requiredReports": ["metrics.json", "corpus-summary.json", "junit.xml", "report.html", "failed-items.json", "baseline-comparison.json", "environment.json"],
+    "requiredSuites": [
+      "contracts", "time_map", "speech", "active_speaker", "crop_tracking",
+      "layout", "captions", "render", "editor_parity", "queue_fairness",
+      "worker_benchmark", "chaos", "holdout", "stress", "market"
+    ],
+    "requiredStrata": [
+      "solo", "conversation", "panel_3", "panel_4_plus", "remote_grid",
+      "screen_speaker", "screen_only", "gameplay_facecam", "gameplay_only",
+      "vertical_source", "broll_voiceover", "no_speech", "vfr", "hevc_mov"
+    ],
+    "minimumCorpus": {
+      "sourceCount": 180,
+      "annotatedRangeCount": 1500,
+      "durationHours": 75,
+      "russianRatio": 0.7,
+      "minimumPerRequiredStratum": 20
+    },
+    "hardwareBaseline": "timeweb-cpu8-12gb-v1",
+    "missingMetricPolicy": "INSUFFICIENT",
+    "insufficientIsPass": false,
+    "allowOverallToHideStratumFailure": false
+  },
+  "sceneF1At500msMin": 0.94,
+  "contentMacroF1Min": 0.9,
+  "activeSpeakerTwoPersonF1Min": 0.92,
+  "activeSpeakerHardF1Min": 0.85,
+  "speakerVisibleRatioMin": 0.98,
+  "acceptableLayoutRatioMin": 0.92,
+  "forbiddenLayoutCountMax": 0,
+  "cropOutOfBoundsCountMax": 0,
+  "previewGeometryErrorPxMax": 2,
+  "avSyncP95MsMax": 80,
+  "peakWorkerRssBytesMax": 9663676416,
+  "renderP95RtfMax": 2.0,
+  "weightedJainFairnessMin": 0.95,
+  "starvationCountMax": 0,
+  "marketPreferredRatioMin": 0.6,
+  "marketWilsonLowerBoundMin": 0.5,
+  "marketLosingMajorStratumCountMax": 0,
+  "manualCorrectionRateMax": 0.1
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://4short.ru/schemas/hve/release-evidence-v1.json",
+  "title": "HVE signed production release evidence v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "kind", "thresholdVersion", "candidate", "corpus",
+    "metrics", "baseline", "artifacts", "signedAt", "signature"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "hve-production-evidence" },
+    "thresholdVersion": { "type": "string", "minLength": 1 },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gitSha", "imageDigest"],
+      "properties": {
+        "gitSha": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+        "imageDigest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+      }
+    },
+    "corpus": { "type": "object" },
+    "metrics": { "type": "object" },
+    "baseline": { "type": "object" },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+    },
+    "signedAt": { "type": "string", "format": "date-time" },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "keyFingerprint", "value"],
+      "properties": {
+        "algorithm": { "const": "ed25519" },
+        "keyFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "value": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

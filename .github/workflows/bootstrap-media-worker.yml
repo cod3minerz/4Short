@@ -20,9 +20,10 @@ jobs:
           WORKER_ROOT_PASSWORD: ${{ secrets.WORKER_ROOT_PASSWORD }}
           WORKER_DEPLOY_PUBLIC_KEY: ${{ secrets.WORKER_DEPLOY_PUBLIC_KEY }}
           WORKER_DEPLOY_PRIVATE_KEY: ${{ secrets.WORKER_DEPLOY_PRIVATE_KEY }}
+          WORKER_DEPLOY_KNOWN_HOSTS: ${{ secrets.WORKER_DEPLOY_KNOWN_HOSTS }}
         run: |
           missing=0
-          for name in WORKER_HOST WORKER_ROOT_PASSWORD WORKER_DEPLOY_PUBLIC_KEY WORKER_DEPLOY_PRIVATE_KEY; do
+          for name in WORKER_HOST WORKER_ROOT_PASSWORD WORKER_DEPLOY_PUBLIC_KEY WORKER_DEPLOY_PRIVATE_KEY WORKER_DEPLOY_KNOWN_HOSTS; do
             if [ -z "${!name}" ]; then
               echo "::error::Bootstrap secret ${name} is not configured"
               missing=1
@@ -35,17 +36,13 @@ jobs:
           WORKER_HOST: ${{ secrets.WORKER_HOST }}
           WORKER_DEPLOY_PUBLIC_KEY: ${{ secrets.WORKER_DEPLOY_PUBLIC_KEY }}
           WORKER_DEPLOY_PRIVATE_KEY: ${{ secrets.WORKER_DEPLOY_PRIVATE_KEY }}
+          WORKER_DEPLOY_KNOWN_HOSTS: ${{ secrets.WORKER_DEPLOY_KNOWN_HOSTS }}
         run: |
           install -d -m 0700 ~/.ssh
           printf '%s\n' "${WORKER_DEPLOY_PUBLIC_KEY}" > /tmp/worker-deploy.pub
           printf '%s\n' "${WORKER_DEPLOY_PRIVATE_KEY}" > ~/.ssh/id_ed25519
+          printf '%s\n' "${WORKER_DEPLOY_KNOWN_HOSTS}" > ~/.ssh/known_hosts
           chmod 0600 ~/.ssh/id_ed25519
-          for attempt in 1 2 3 4 5; do
-            if ssh-keyscan -T 10 -H "${WORKER_HOST}" > ~/.ssh/known_hosts 2>/dev/null; then
-              break
-            fi
-            sleep $((attempt * 2))
-          done
           test -s ~/.ssh/known_hosts
 
       - name: Install deploy key and base packages

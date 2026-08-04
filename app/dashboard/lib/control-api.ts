@@ -1,6 +1,7 @@
 "use client";
 
 import type { StyleConfig } from "@/packages/contracts/src/media";
+import type { ClipDocumentV2, EditorCommand, ResolvedRenderPlan, TimeMapEntry } from "@/packages/contracts/src";
 
 const configuredApiUrl = process.env.NEXT_PUBLIC_CONTROL_API_URL?.replace(/\/$/, "");
 const apiUrl = configuredApiUrl && /^https?:\/\//.test(configuredApiUrl) ? configuredApiUrl : "";
@@ -102,6 +103,108 @@ export type ApiClip = {
   socialDescription: string | null;
   status: string;
   currentVersion: number;
+};
+
+export type ApiLayoutRecommendation = {
+  status: "ready" | "unavailable";
+  reason?: "source_or_range_not_ready" | "visual_evidence_pending" | "visual_evidence_unavailable" | "visual_evidence_rejected" | "automatic_layout_evidence_not_approved";
+  analysisId?: string;
+  recommendation?: {
+    schemaVersion: 1;
+    sourceId: string;
+    sourceHash: string;
+    decisions: Array<{
+      range: { startUs: number; endUs: number };
+      template: string;
+      score: number;
+      regionIds: string[];
+      contentType: string;
+      trace: Array<{ code: string; detail: string }>;
+    }>;
+    warnings: Array<{ code: string; userMessage: string }>;
+  };
+};
+
+/**
+ * Bounded evidence for the manual HVE participant picker. A ready response
+ * contains identities only — never frames or S3 URLs — and every listed track
+ * already covers this clip's entire retained source range.
+ */
+export type ApiClipPerception =
+  | { status: "pending"; analysisId: string }
+  | {
+      status: "ready";
+      analysisId: string;
+      density: "dense";
+      sourceRange: { startUs: number; endUs: number };
+      faceTracks: Array<{
+        trackId: string;
+        confidence: number;
+        sourceRange: { startUs: number; endUs: number };
+        keyframeCount: number;
+      }>;
+    }
+  | {
+      status: "unavailable";
+      analysisId?: string;
+      reason: "source_or_range_not_ready" | "visual_evidence_rejected" | "visual_evidence_partial";
+    };
+
+export type ApiEditorDraft = {
+  clipId: string;
+  baseVersion: number;
+  revision: number;
+  document: Record<string, unknown>;
+  documentHash: string;
+  metadata: {
+    title: string;
+    socialTitle: string | null;
+    socialDescription: string | null;
+  };
+  updatedAt: string;
+  updatedBy: string;
+};
+
+export type ApiEditorCommand = EditorCommand;
+
+export type ApiEditorManifest = {
+  schemaVersion: 1;
+  clipId: string;
+  baseVersion: number;
+  documentHash: string;
+  /** The source is for transcript/clock review, never a final composition preview. */
+  previewPurpose: "source_review_only";
+  sourceDurationUs: number | null;
+  /** Exact HVE output clock for source review; it contains no media URL. */
+  sequence:
+    | {
+        status: "ready";
+        documentHash: string;
+        outputDurationUs: number;
+        timeMap: TimeMapEntry[];
+        previewMode: "single_media" | "dual_media_crossfade";
+      }
+    | { status: "unavailable"; reason: "transcript_timing_unavailable" | "invalid_timing_plan" };
+  /**
+   * Geometry/caption plan that the browser can draw without exposing a
+   * private brand asset. A missing composition is not a degraded final
+   * render: the editor remains in source-review mode until it is safe.
+   */
+  composition:
+    | {
+        status: "ready";
+        documentHash: string;
+        resolvedPlan: ResolvedRenderPlan;
+        captionStyle: ClipDocumentV2["captions"]["style"];
+      }
+    | {
+        status: "unavailable";
+        reason: "perception_required" | "private_asset_required" | "blur_layout_unsupported" | "plan_unavailable";
+      };
+  preview: (
+    | { status: "ready"; source: "proxy" | "original"; url: string; mimeType: string; expiresIn: number }
+    | { status: "pending_proxy"; reason: "browser_proxy_pending" | "source_media_unavailable" | "browser_media_contract_unavailable" }
+  );
 };
 
 export async function listStyles() {
@@ -339,9 +442,90 @@ export async function getClip(projectId: string, clipId: string) {
     clip: ApiClip;
     project: { id: string; title: string; status: string };
     moment: ApiMoment | null;
-    version: { id: string; version: number; edl: Record<string, unknown>; renderHash: string } | null;
+    version: {
+      id: string;
+      version: number;
+      edl: Record<string, unknown>;
+      documentV2: Record<string, unknown> | null;
+      editorMetadata: Record<string, unknown> | null;
+      renderHash: string;
+    } | null;
     artifacts: Array<{ id: string; kind: string; validation: Record<string, unknown> }>;
   }>(`/v1/projects/${projectId}/clips/${clipId}`);
+}
+
+/**
+ * Read-only HVE composition advice for the selected clip. A response never
+ * changes the current draft: the user still applies any layout deliberately.
+ */
+export async function getClipLayoutRecommendation(projectId: string, clipId: string) {
+  return request<ApiLayoutRecommendation>(
+    `/v1/projects/${projectId}/clips/${clipId}/layout-recommendation`,
+  );
+}
+
+/** Queues the exact, opt-in dense analysis required for a manual HVE-6 layout. */
+export async function requestClipPerception(projectId: string, clipId: string) {
+  return request<{
+    analysisId: string;
+    jobId: string;
+    status: string;
+    range: { startMs: number; endMs: number };
+    density: "dense";
+  }>(`/v1/projects/${projectId}/clips/${clipId}/perception`, {
+    method: "POST",
+    headers: { "Idempotency-Key": idempotencyKey("clip-perception") },
+  });
+}
+
+/** Reads only verified candidate track identities for the manual HVE-6 picker. */
+export async function getClipPerception(projectId: string, clipId: string) {
+  return request<ApiClipPerception>(`/v1/projects/${projectId}/clips/${clipId}/perception`);
+}
+
+/** Server-backed HVE draft. The API creates it lazily from the immutable clip version. */
+export async function getEditorDraft(projectId: string, clipId: string) {
+  return request<{ draft: ApiEditorDraft }>(`/v1/projects/${projectId}/clips/${clipId}/draft`);
+}
+
+/**
+ * Returns a short-lived source-review URL for the HVE sequence player. The
+ * player must still derive visual composition from the resolved HVE plan.
+ */
+export async function getEditorManifest(projectId: string, clipId: string) {
+  return request<ApiEditorManifest>(`/v1/projects/${projectId}/clips/${clipId}/editor-manifest`);
+}
+
+/**
+ * Applies one optimistic-concurrency batch. It is deliberately separate from
+ * render: a browser save cannot consume minutes or create a clip version.
+ */
+export async function applyEditorDraftCommands(projectId: string, clipId: string, input: {
+  batchId: string;
+  baseRevision: number;
+  commands: ApiEditorCommand[];
+}) {
+  return request<{ draft: ApiEditorDraft; replayed: boolean; results: Array<{ commandId: string; status: string }> }>(
+    `/v1/projects/${projectId}/clips/${clipId}/draft`,
+    { method: "PUT", body: JSON.stringify(input) },
+  );
+}
+
+/** Creates an immutable clip version from the already saved draft and queues one clip-only render. */
+export async function commitEditorDraft(projectId: string, clipId: string, expectedRevision: number) {
+  return request<{
+    clip: ApiClip;
+    version: { id: string; version: number };
+    job: { id: string } | null;
+    reusedRender: boolean;
+  }>(
+    `/v1/projects/${projectId}/clips/${clipId}/draft/commit`,
+    {
+      method: "POST",
+      headers: { "Idempotency-Key": idempotencyKey("editor-draft-commit") },
+      body: JSON.stringify({ expectedRevision }),
+    },
+  );
 }
 
 export async function updateClip(projectId: string, clipId: string, input: {
@@ -487,6 +671,12 @@ export async function purchaseMinutePackage(code: string) {
 export async function getClipPlayback(projectId: string, clipId: string) {
   return request<{ url: string; mimeType: string; expiresIn: number }>(
     `/v1/projects/${projectId}/clips/${clipId}/playback`,
+  );
+}
+
+export async function getClipArtifact(projectId: string, clipId: string, kind: "mp4" | "srt" | "vtt") {
+  return request<{ url: string; mimeType: string; expiresIn: number; kind: string }>(
+    `/v1/projects/${projectId}/clips/${clipId}/artifacts/${kind}`,
   );
 }
 

@@ -2,13 +2,14 @@ import { and, eq, gt } from "drizzle-orm";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import {
   enqueueJobSchema,
+  engineCapabilitySchema,
   jobCompletionSchema,
   jobFailureSchema,
   workerClaimSchema,
   workerHeartbeatSchema,
   workerRegistrationSchema,
 } from "../../../../packages/contracts/src/index.js";
-import { jobEvents, jobs, workerLeases } from "../../../../db/schema.js";
+import { engineReleases, jobEvents, jobRequirements, jobs, projectPackages, workerLeases } from "../../../../db/schema.js";
 import { getEnv } from "../env.js";
 import { getIdempotencyKey } from "../lib/http.js";
 import {
@@ -19,7 +20,7 @@ import {
   markAdvancePending,
   markJobAdvanced,
 } from "../services/queue.js";
-import { advancePipeline } from "../services/pipeline.js";
+import { advancePipeline, markBrandAssetVerificationFailed } from "../services/pipeline.js";
 
 async function requireWorker(request: FastifyRequest) {
   const token = request.headers["x-worker-token"];
@@ -47,12 +48,36 @@ export async function jobRoutes(app: FastifyInstance) {
       target: [jobs.workspaceId, jobs.idempotencyKey],
       set: { updatedAt: new Date() },
     }).returning();
+    if (body.requirements) {
+      await app.db.insert(jobRequirements).values({
+        jobId: job.id,
+        requirements: body.requirements,
+      }).onConflictDoUpdate({
+        target: jobRequirements.jobId,
+        set: { requirements: body.requirements },
+      });
+    }
     return reply.code(201).send(job);
   });
 
   app.post("/v1/internal/workers/register", { preHandler: requireWorker }, async (request) => {
     const body = workerRegistrationSchema.parse(request.body);
+    const capabilityResult = engineCapabilitySchema.safeParse(body.capabilities);
     request.log.debug({ workerId: body.workerId }, "worker registration started");
+    if (capabilityResult.success) {
+      const capability = capabilityResult.data;
+      await app.db.insert(engineReleases).values({
+        engineVersion: capability.engineVersion,
+        plannerVersion: capability.plannerVersion,
+        rendererVersion: capability.rendererVersion,
+        contractVersion: 2,
+        capabilities: capability,
+        status: "active",
+      }).onConflictDoUpdate({
+        target: [engineReleases.engineVersion, engineReleases.plannerVersion, engineReleases.rendererVersion],
+        set: { capabilities: capability, status: "active", updatedAt: new Date() },
+      });
+    }
     const [worker] = await app.db.insert(workerLeases).values({
       workerId: body.workerId,
       version: body.version,
@@ -112,6 +137,23 @@ export async function jobRoutes(app: FastifyInstance) {
       error: { code: body.code, message: body.message, details: body.details },
     });
     if (!job) throw app.httpErrors.conflict("Job lease is no longer owned by this worker");
+    if (job.type === "zip_project" && job.status === "failed") {
+      await app.db.update(projectPackages).set({
+        status: "failed",
+        error: body.details ? { code: body.code, message: body.message, details: body.details } : { code: body.code, message: body.message },
+        updatedAt: new Date(),
+      }).where(eq(projectPackages.jobId, job.id));
+    }
+    try {
+      await markBrandAssetVerificationFailed(app.db, job, {
+        code: body.code,
+        message: body.message,
+      });
+    } catch (error) {
+      // The worker result is already terminal. Keep the failed job visible
+      // even if the cosmetic asset-status projection must be retried by ops.
+      request.log.error({ err: error, jobId: job.id }, "brand asset failure projection deferred");
+    }
     return job;
   });
 

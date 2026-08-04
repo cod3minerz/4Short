@@ -132,6 +132,12 @@ export async function uploadRoutes(app: FastifyInstance) {
       ))
       .limit(1);
     if (!row) throw app.httpErrors.notFound("Upload not found");
+    // Brand assets have a separate completion boundary which verifies their
+    // bytes and records their SHA-256 before HVE can consume them. Never let
+    // the generic source completion route bypass that invariant.
+    if (!row.upload.sourceId || row.media.kind === "brand_asset") {
+      throw app.httpErrors.conflict("Complete brand assets through /v1/brand-assets/uploads/:uploadId/complete");
+    }
     if (row.upload.status === "completed") return { uploadId, sourceId: row.upload.sourceId, status: "completed" };
 
     await completeMultipartUpload({

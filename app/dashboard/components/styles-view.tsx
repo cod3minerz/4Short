@@ -41,7 +41,7 @@ const framingOptions = [
   "Статичный кадр",
 ].map((label) => ({ id: label, label }));
 
-const fontOptions = ["Manrope", "Inter", "Onest", "Montserrat"].map((label) => ({ id: label, label }));
+const fontOptions = ["HVE Sans"].map((label) => ({ id: label, label }));
 
 const positionOptions: Array<{ id: StylePreset["subtitlePosition"]; label: string }> = [
   { id: "top", label: "Сверху" },
@@ -56,6 +56,12 @@ export function StylesView() {
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState("");
   const active = styles.find((style) => style.id === activeId) ?? styles[0];
+  // Asset- and participant-backed layouts are edited in the clip editor, but
+  // an existing preset must still display its true layout instead of looking
+  // like it has become `auto` in this compact screen.
+  const activeFramingOptions = active && !framingOptions.some((option) => option.id === active.framing)
+    ? [{ id: active.framing, label: `${active.framing} — настраивается в редакторе` }, ...framingOptions]
+    : framingOptions;
 
   const patch = (value: Parameters<typeof updateStyle>[1]) => {
     if (!active) return;
@@ -200,7 +206,7 @@ export function StylesView() {
               <label className="style-field">
                 <span><strong>Кадрирование</strong><small>Безопасный fallback при ошибке трекинга</small></span>
                 <Select
-                  options={framingOptions}
+                  options={activeFramingOptions}
                   value={active.framing}
                   onChange={(value) => patch({ framing: value })}
                   aria-label="Кадрирование"

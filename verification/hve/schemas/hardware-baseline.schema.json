@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://4short.ru/schemas/hve/hardware-baseline-v1.json",
+  "title": "HVE hardware baseline v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "baselineId", "status", "hardware", "software", "corpusVersion", "benchmarkProfile", "metrics", "signedAt", "signature"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "hve-worker-hardware-baseline" },
+    "baselineId": { "type": "string", "minLength": 4 },
+    "status": { "enum": ["candidate", "approved", "retired"] },
+    "corpusVersion": { "type": "string" },
+    "signedAt": { "type": "string", "format": "date-time" },
+    "hardware": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cpuModel", "logicalCpu", "cpuLimitCores", "ramBytes", "scratchBytes", "region"],
+      "properties": {
+        "cpuModel": { "type": "string" },
+        "logicalCpu": { "type": "integer", "minimum": 1 },
+        "cpuLimitCores": { "type": "number", "exclusiveMinimum": 0 },
+        "ramBytes": { "type": "integer", "minimum": 1 },
+        "scratchBytes": { "type": "integer", "minimum": 1 },
+        "region": { "type": "string" }
+      }
+    },
+    "software": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["imageDigest", "kernel", "ffmpeg", "ffmpegBuildSha256", "python", "modelHashes"],
+      "properties": {
+        "imageDigest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "kernel": { "type": "string" },
+        "ffmpeg": { "type": "string" },
+        "ffmpegBuildSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "python": { "type": "string" },
+        "modelHashes": { "type": "object", "additionalProperties": { "type": "string", "pattern": "^[a-f0-9]{64}$" } }
+      }
+    },
+    "benchmarkProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fixture", "threads", "sampleCount", "sampleHashes"],
+      "properties": {
+        "fixture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sourceDurationSeconds", "sourceResolution", "outputResolution", "fps", "encoder", "audio"],
+          "properties": {
+            "sourceDurationSeconds": { "type": "integer", "minimum": 30 },
+            "sourceResolution": { "const": "1280x720" },
+            "outputResolution": { "const": "1080x1920" },
+            "fps": { "const": 30 },
+            "encoder": { "const": "libx264/veryfast" },
+            "audio": { "const": "aac/128k" }
+          }
+        },
+        "threads": { "type": "integer", "minimum": 1, "maximum": 8 },
+        "sampleCount": { "type": "integer", "minimum": 3 },
+        "sampleHashes": {
+          "type": "array",
+          "minItems": 3,
+          "items": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+        }
+      }
+    },
+    "metrics": { "type": "object", "minProperties": 1, "additionalProperties": { "type": "number" } },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reference", "reviewedBy"],
+      "properties": {
+        "reference": { "type": "string", "minLength": 4 },
+        "reviewedBy": { "type": "string", "minLength": 2 }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "keyFingerprint", "value"],
+      "properties": {
+        "algorithm": { "const": "ed25519" },
+        "keyFingerprint": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "value": { "type": "string", "minLength": 32 }
+      }
+    }
+  }
+}

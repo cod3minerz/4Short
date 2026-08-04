@@ -115,6 +115,8 @@ export type StylePreset = {
   fontFamily: string;
   subtitlePosition: "top" | "center" | "bottom";
   framing: string;
+  /** Full immutable API layout; `framing` is only its dashboard label. */
+  layoutConfig?: StyleConfig["layout"];
   silenceRemoval: boolean;
   title: boolean;
   logo: boolean;
@@ -167,3 +169,4 @@ export type AppAnalyticsEvent =
   | "minutes_package_select"
   | "minutes_purchase_start"
   | "minutes_purchase_complete";
+import type { StyleConfig } from "@/packages/contracts/src/media";

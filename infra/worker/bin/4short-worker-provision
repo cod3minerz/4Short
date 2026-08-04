@@ -63,7 +63,7 @@ bootstrap() {
 
   install -d -m 0750 -o root -g "${deploy_user}" /opt/4short /opt/4short/releases
   install -d -m 0750 -o root -g "${deploy_user}" /etc/4short
-  install -d -m 0750 -o 10001 -g 10001 /var/lib/4short /var/lib/4short/jobs
+  install -d -m 0750 -o 10001 -g 10001 /var/lib/4short /var/lib/4short/jobs /var/lib/4short/reports
 
   install -m 0750 -o root -g root "$0" /usr/local/sbin/4short-worker-provision
   if [[ -n "${deployer_path}" ]]; then

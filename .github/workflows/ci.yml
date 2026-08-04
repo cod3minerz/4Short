@@ -12,6 +12,20 @@ jobs:
   web-and-api:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fourshort_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d fourshort_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,11 +37,38 @@ jobs:
       - run: npm run typecheck
       - run: npm run test:unit
       - run: npm run db:check
+      - name: Verify PostgreSQL HVE queue semantics
+        env:
+          HVE_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/fourshort_test
+          HVE_ALLOW_DESTRUCTIVE_INTEGRATION_TESTS: "1"
+          DATABASE_SSL: disable
+          HVE_PYTHON: python
+        run: |
+          DATABASE_URL="$HVE_TEST_DATABASE_URL" npm run db:migrate
+          npm run test:integration:queue
+          npm run test:integration:queue-load
       - run: npm run build:vercel
 
   media-worker:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # A clean production image installs FFmpeg, OpenCV and Faster-Whisper in
+    # addition to running media fixtures. Ten minutes creates flaky false
+    # failures during a cold GitHub Actions cache.
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fourshort_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d fourshort_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -35,6 +76,141 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: services/media-worker/pyproject.toml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
       - name: Install media worker
         run: python -m pip install --editable services/media-worker
+      - name: Install HVE evaluator contract package without candidate model dependencies
+        # Candidate runtime packages are exercised only in the isolated image.
+        # Unit tests intentionally prove the manifest/evidence boundary without
+        # making every ordinary HVE worker test pull 40+ MiB of evaluator-only
+        # native dependencies.
+        run: python -m pip install --no-deps --editable services/hve-evaluator
+      - name: Require FFmpeg subtitle renderer
+        run: ffmpeg -hide_banner -filters 2>&1 | grep -Eq '(^|[[:space:]])ass([[:space:]]|$)'
+      - name: Require the deterministic HVE subtitle font pack
+        run: fc-match --format='%{family}\n' 'DejaVu Sans' | head -n1 | grep -Fx 'DejaVu Sans'
       - run: python -m unittest discover -s services/media-worker/tests
+      - name: Verify evaluator-only provenance and artifact boundary
+        run: npm run test:hve-evaluator
+      - name: Build the production media-worker image
+        run: docker build --file services/media-worker/Dockerfile --tag fourshort-media-worker:ci .
+      - name: Build the isolated HVE evaluator image
+        run: docker build --file services/hve-evaluator/Dockerfile --tag fourshort-hve-evaluator:ci .
+      - name: Verify evaluator image is not a privileged worker image
+        run: |
+          docker run --rm --entrypoint /bin/sh fourshort-hve-evaluator:ci -ec '
+            test "$(id -u)" = "10002"
+            test "$HVE_EVALUATOR_MODE" = "1"
+            python -m pip check
+            python -c "import hve_evaluator, fourshort_worker.active_speaker_evidence; print('evaluator boundary import ok')"
+          '
+      - name: Execute evaluator provenance suite inside its isolated image
+        # The host-only suite cannot detect a dependency-resolution failure in
+        # MediaPipe/OpenCV or a path mismatch in the installed evaluator. Keep
+        # this separate from the customer worker: no model mount, S3 credential
+        # or evaluator key is supplied to CI.
+        run: |
+          docker run --rm \
+            --entrypoint /usr/bin/tini \
+            -e PYTHONPATH=/app/src \
+            --volume "$PWD/services/hve-evaluator/tests:/app/services/hve-evaluator/tests:ro" \
+            fourshort-hve-evaluator:ci -- \
+            python -m unittest discover -s /app/services/hve-evaluator/tests
+      - name: Verify the production media-worker runtime
+        run: |
+          docker run --rm --entrypoint /bin/sh fourshort-media-worker:ci -ec '
+            test "$(id -u)" = "10001"
+            test -r /opt/4short/models/face_detection_yunet_2023mar_int8.onnx
+            ffmpeg -hide_banner -filters 2>&1 | grep -Eq "(^|[[:space:]])ass([[:space:]]|$)"
+            ffmpeg -hide_banner -encoders 2>&1 | grep -Eq "libx264"
+            python -c "import cv2, faster_whisper, fourshort_worker; print(cv2.__version__)"
+          '
+      - name: Execute deterministic HVE media slices inside the production worker image
+        # The host runner suite proves the contracts; this direct container
+        # execution proves that the exact image which later consumes jobs can
+        # decode, compose slots/crops/assets, burn libass captions and encode
+        # every supported treatment. It is intentionally real FFmpeg media
+        # evidence, not a grep for `ass` or a host-only test.
+        run: |
+          docker run --rm \
+            --volume "$PWD/services/media-worker/tests:/tests:ro" \
+            fourshort-media-worker:ci \
+            /bin/sh -ec '
+              for test_name in \
+                source_cut_executes_as_full_decode_and_keeps_audio_in_sync \
+                hve2_time_map_executes_at_microsecond_boundaries \
+                hve2_pause_crossfade_executes_video_and_audio_on_the_same_shortened_clock \
+                hve2_output_timed_captions_are_burned_after_source_cuts \
+                hve2_public_and_legacy_caption_presets_produce_visible_burned_output \
+                hve3_resolved_slot_compositor_executes_geometry_with_full_decode \
+                hve3_contiguous_layout_segments_switch_on_the_shared_output_clock \
+                hve3_dynamic_crop_moves_across_verified_output_clock \
+                hve3_verified_static_logo_is_burned_only_in_its_output_range \
+                hve3_verified_timed_video_is_a_muted_overlay_at_its_output_range \
+                hve3_timed_video_loop_repeats_visual_input_without_extending_clip_clock \
+                hve3_resolved_text_layer_is_burned_at_its_resolved_output_time \
+                hve6_user_verified_gameplay_composite_executes_top_and_bottom_slots \
+                hve6_user_verified_three_person_grid_executes_all_slots \
+                hve6_user_verified_four_person_grid_executes_all_slots \
+                hve8_broll_replaces_only_visuals_and_preserves_narrative_audio
+              do
+                python -m unittest discover -s /tests -p test_render.py -k "$test_name"
+              done
+              # The host suite may skip this when the local developer has not
+              # provisioned the immutable model. In the production image the
+              # model is mandatory, therefore a skip is an error as well as a
+              # failure: instantiate the exact pinned YuNet runtime here.
+              vision_output=$(python -m unittest discover -s /tests -p test_vision.py -k yunet_detector_can_be_constructed_from_the_verified_model 2>&1)
+              vision_status=$?
+              printf "%s\\n" "$vision_output"
+              test "$vision_status" -eq 0
+              ! printf "%s\\n" "$vision_output" | grep -Eq "skipped=([1-9][0-9]*)"
+            '
+      - name: HVE executable evidence
+        env:
+          HVE_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/fourshort_test
+          HVE_ALLOW_DESTRUCTIVE_INTEGRATION_TESTS: "1"
+          DATABASE_SSL: disable
+          # The HVE smoke suite must use the just-built production image for
+          # executable media/process evidence. Local Python has a different
+          # dependency and init envelope, so it cannot stand in for it.
+          HVE_WORKER_TEST_IMAGE: fourshort-media-worker:ci
+        run: |
+          # HVE smoke scripts use exit 2 for a deliberately fail-closed
+          # INSUFFICIENT result (for example, no signed external benchmark
+          # corpus). It is evidence that must be retained, not a CI failure.
+          # Exit 1 remains a real regression and fails the workflow.
+          run_evidence() {
+            if "$@"; then
+              return 0
+            else
+              exit_code=$?
+              if [ "$exit_code" -eq 2 ]; then
+                echo "HVE evidence is INSUFFICIENT; report retained for review: $*"
+                return 0
+              fi
+
+              echo "HVE smoke failed with exit $exit_code: $*" >&2
+              return "$exit_code"
+            fi
+          }
+
+          DATABASE_URL="$HVE_TEST_DATABASE_URL" npm run db:migrate
+          run_evidence npm run hve:smoke:g2 -- --output-dir=outputs/hve/hve-g2-ci
+          run_evidence npm run hve:smoke:g3 -- --output-dir=outputs/hve/hve-g3-ci
+          run_evidence npm run hve:smoke:g4 -- --output-dir=outputs/hve/hve-g4-ci
+          run_evidence npm run hve:smoke:g5 -- --output-dir=outputs/hve/hve-g5-ci
+          run_evidence npm run hve:smoke:g6 -- --output-dir=outputs/hve/hve-g6-ci
+          run_evidence npm run hve:smoke:g7 -- --output-dir=outputs/hve/hve-g7-ci
+      - name: Upload HVE smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hve-smoke-evidence
+          path: outputs/hve
+          if-no-files-found: warn
+          retention-days: 14

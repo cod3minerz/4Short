@@ -5,18 +5,18 @@ description: Reference for the subtitle preset catalogue used in the wizard, sty
 
 # Subtitle style catalogue
 
-## The enum mismatch (real, not yet reconciled)
+## Persisted preset contract
 
 - UI (`app/dashboard/types.ts` `SubtitlePreset`): 7 values — `clean, bold, karaoke, active_word, word_pop, minimal_box, speaker_colors`.
-- Contract (`packages/contracts/src/media.ts:30-53`): 6 values — `clean, bold, pulse, karaoke, minimal_box, speaker_colors`.
-- `subtitleApiPreset()` in `clip-editor.tsx` maps both `active_word` and `word_pop` to the contract's `bold` — they are visually distinct in the UI preview but currently indistinguishable in what actually gets sent to render.
-- The contract's `pulse` preset has no UI counterpart at all.
+- Contract (`packages/contracts/src/media.ts`): retains those seven values and additionally keeps `pulse` readable for older saved presets.
+- `subtitleApiPreset()` serialises every selected preset directly. The mode controls active-word/word-pop/karaoke timing; the preset preserves visual identity for deterministic re-editing.
+- `pulse` remains backwards-compatible and has no first-picker UI counterpart.
 
-Don't design new UI around the 7-value UI enum as if it's authoritative — it isn't what the worker receives.
+Do not add a preset unless its contract, preview and final renderer behaviour are all defined.
 
 ## Burn-in reality (Phase F1 — done, but only halfway to what the preview shows)
 
-Subtitles now genuinely burn into rendered video (`services/control-api/src/services/subtitles.ts` `buildSubtitleCues`) — previously every render sent `subtitleCues: []` and the ASS pass never ran, so nothing a user configured ever showed up in the output. The burn-in path is still **segment-level only**: one cue per transcript segment (a full sentence/speaker turn), not per word. The OpenAI-compatible `verbose_json` parser now persists word timings into `transcript_segments.words`, while the default Yandex SpeechKit path still lacks a verified parser; neither path currently compiles those words into per-word ASS events. Therefore `active_word`/`karaoke`/`word_by_word` in `SubtitlePreviewOverlay` honestly demonstrate the STYLE but not the exact final timing. Don't remove the animated preview, but don't describe it as pixel-accurate until `buildSubtitleCues` emits per-word cues for a provider with verified timings.
+Subtitles now genuinely burn into rendered video. Local Faster-Whisper Large V3 Turbo persists word timings in `transcript_segments.words` and the HVE V2 planner maps those canonical words onto the same output clock as the video/audio cuts. The legacy renderer still emits segment-level cues, so its animated UI preview is not a pixel-parity claim. `active_word`/`karaoke`/`word_pop` must only be advertised as final-output-equivalent on the HVE V2 route after its visual corpus gate passes; there is no Yandex/SpeechKit STT path in this repository.
 
 ## The one rule for any preset list
 

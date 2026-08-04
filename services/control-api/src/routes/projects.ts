@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNull, max, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, max, ne, sql } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import {
@@ -6,6 +6,7 @@ import {
   createMomentSearchSchema,
   createProjectSchema,
   createTranscriptRevisionSchema,
+  clipDocumentV2Schema,
   updateClipSchema,
   updateMomentSchema,
   updateProjectSchema,
@@ -14,12 +15,15 @@ import {
 import {
   clipVersions,
   clips,
+  jobAttempts,
+  jobRequirements,
   jobs,
   mediaObjects,
   momentCandidates,
   momentRevisions,
   momentSearches,
   projectVersions,
+  projectPackages,
   projects,
   renderArtifacts,
   sources,
@@ -29,19 +33,48 @@ import {
   transcriptSegments,
   transcripts,
   uploads,
+  workerLeases,
   workspaces,
 } from "../../../../db/schema.js";
 import { getIdempotencyKey } from "../lib/http.js";
 import { signDownload } from "../lib/s3.js";
 import { runIdempotent } from "../services/idempotency.js";
 import { buildSubtitleCues } from "../services/subtitles.js";
+import { readTimingTranscriptWords } from "../services/transcript.js";
+import {
+  Hve2PlanNotExecutableError,
+  Hve3PlanNotExecutableError,
+  Hve5PlanNotExecutableError,
+  resolveHve3ExecutionPlan,
+  resolveHve5ExecutionPlan,
+} from "../services/hve/render-plan.js";
+import { materializeHveRenderEdl } from "../services/hve/render-edl.js";
+import {
+  hveDocumentRequiresPerception,
+  hveAssetResolverForPlan,
+  loadVerifiedHveRenderAssets,
+  renderAssetsForResolvedPlan,
+} from "../services/hve/render-input.js";
+import { loadVerifiedHvePerceptionContext } from "../services/hve/perception-artifact.js";
 import { clampExportForPlan, type PlanCode } from "../../../../packages/product-config/src/index.js";
+import { estimateHveProjectExecution, type HveDurationObservation } from "../services/hve-eta.js";
+import {
+  HVE_ACTIVE_WORKER_WINDOW_MS,
+  readHveRuntimeFingerprint,
+  selectActiveHveRuntimeFingerprint,
+} from "../services/hve-runtime-identity.js";
 
 function preliminaryFingerprint(value: string) {
   return createHash("sha256").update(value.trim()).digest("hex");
 }
 
 function versionHash(value: unknown) {
+  return createHash("sha256").update(JSON.stringify(value)).digest("hex");
+}
+
+function packageManifestHash(value: unknown) {
+  // The route constructs this manifest in a stable project/clip/artifact
+  // order. It is an immutable package identity, not a client-provided hash.
   return createHash("sha256").update(JSON.stringify(value)).digest("hex");
 }
 
@@ -172,6 +205,68 @@ export async function projectRoutes(app: FastifyInstance) {
       moments: candidates,
       clips: projectClips,
     };
+  });
+
+  // This is intentionally a narrow operational endpoint. It returns a
+  // measured execution range only after enough comparable completed jobs;
+  // queue start time stays null until weighted-fair scheduling has a proven
+  // calibration model. The dashboard must never turn this into a fake bar.
+  app.get("/v1/projects/:projectId/eta", { preHandler: app.requireWorkspace }, async (request) => {
+    const { projectId } = request.params as { projectId: string };
+    const { workspaceId } = request.authContext!;
+    const [project] = await app.db.select({ id: projects.id })
+      .from(projects)
+      .where(and(eq(projects.id, projectId), eq(projects.workspaceId, workspaceId)))
+      .limit(1);
+    if (!project) throw app.httpErrors.notFound("Project not found");
+
+    const targetRows = await app.db.select({
+      type: jobs.type,
+      jobClass: jobs.class,
+      estimatedCost: jobs.estimatedCost,
+    }).from(jobs).where(and(
+      eq(jobs.projectId, projectId),
+      sql`${jobs.status} in ('queued', 'leased', 'waiting_provider')`,
+    ));
+    const observedRows = await app.db.select({
+      type: jobs.type,
+      jobClass: jobs.class,
+      estimatedCost: jobs.estimatedCost,
+      metrics: jobAttempts.metrics,
+    }).from(jobAttempts)
+      .innerJoin(jobs, eq(jobs.id, jobAttempts.jobId))
+      .where(eq(jobAttempts.status, "succeeded"))
+      .orderBy(desc(jobAttempts.finishedAt))
+      .limit(500);
+    const observations: HveDurationObservation[] = observedRows.map((row) => {
+      const runtimeIdentity = readHveRuntimeFingerprint(row.metrics);
+      return {
+        type: row.type,
+        jobClass: row.jobClass,
+        estimatedCost: Number(row.estimatedCost),
+        wallSeconds: Number((row.metrics as Record<string, unknown>).wallSeconds),
+        ...(runtimeIdentity ? { runtimeFingerprint: runtimeIdentity } : {}),
+      };
+    });
+    // Registration is renewed every 30 seconds by the worker. Two minutes
+    // tolerates a short network hiccup while excluding stale pre-deploy rows.
+    // If active workers have different runtimes, ETA is deliberately unknown:
+    // blending their throughput would present false precision to the user.
+    const activeWorkers = await app.db.select({
+      metadata: workerLeases.metadata,
+      lastHeartbeatAt: workerLeases.lastHeartbeatAt,
+    })
+      .from(workerLeases)
+      .where(gt(workerLeases.lastHeartbeatAt, new Date(Date.now() - HVE_ACTIVE_WORKER_WINDOW_MS)));
+    const activeRuntime = selectActiveHveRuntimeFingerprint(activeWorkers);
+    return estimateHveProjectExecution(targetRows.map((row) => ({
+      type: row.type,
+      jobClass: row.jobClass,
+      estimatedCost: Number(row.estimatedCost),
+    })), observations, {
+      mode: "exact_runtime",
+      runtimeFingerprint: activeRuntime,
+    });
   });
 
   app.get("/v1/projects/:projectId/transcript", { preHandler: app.requireWorkspace }, async (request) => {
@@ -433,6 +528,13 @@ export async function projectRoutes(app: FastifyInstance) {
         eq(jobs.projectId, projectId),
         inArray(jobs.status, ["queued", "leased", "waiting_provider"]),
       ));
+      await tx.update(projectPackages).set({
+        status: "cancelled",
+        updatedAt: now,
+      }).where(and(
+        eq(projectPackages.projectId, projectId),
+        inArray(projectPackages.status, ["queued", "processing"]),
+      ));
 
       const artifactRows = await tx.select({ mediaObjectId: renderArtifacts.mediaObjectId })
         .from(renderArtifacts)
@@ -440,6 +542,12 @@ export async function projectRoutes(app: FastifyInstance) {
         .innerJoin(clips, eq(clips.id, clipVersions.clipId))
         .where(eq(clips.projectId, projectId));
       const mediaIds = new Set(artifactRows.map((row) => row.mediaObjectId));
+      const packageRows = await tx.select({ mediaObjectId: projectPackages.mediaObjectId })
+        .from(projectPackages)
+        .where(eq(projectPackages.projectId, projectId));
+      for (const packageRow of packageRows) {
+        if (packageRow.mediaObjectId) mediaIds.add(packageRow.mediaObjectId);
+      }
 
       if (project.sourceId) {
         const [otherProject] = await tx.select({ id: projects.id })
@@ -562,6 +670,19 @@ export async function projectRoutes(app: FastifyInstance) {
       .where(and(eq(projects.id, projectId), eq(projects.workspaceId, workspaceId)))
       .limit(1);
     if (!project) throw app.httpErrors.notFound("Project not found");
+    if (!project.sourceId) throw app.httpErrors.conflict("Project source is not ready");
+    if (!project.styleVersionId) throw app.httpErrors.conflict("Project style is not configured");
+    const [renderSource] = await app.db.select({
+      source: sources,
+      media: mediaObjects,
+      style: styleVersions,
+    }).from(sources)
+      .innerJoin(mediaObjects, eq(mediaObjects.id, sources.originalMediaId))
+      .innerJoin(styleVersions, eq(styleVersions.id, project.styleVersionId))
+      .where(and(eq(sources.id, project.sourceId), eq(sources.workspaceId, workspaceId)))
+      .limit(1);
+    if (!renderSource) throw app.httpErrors.conflict("Source media or style is not ready");
+    const renderStyle = styleConfigSchema.parse(renderSource.style.config);
     const candidates = await app.db.select({ candidate: momentCandidates })
       .from(momentCandidates)
       .innerJoin(momentSearches, eq(momentSearches.id, momentCandidates.searchId))
@@ -586,7 +707,19 @@ export async function projectRoutes(app: FastifyInstance) {
           clipId: clip.id,
           type: "face_track",
           class: "cpu_light",
-          payload: { clipId: clip.id, momentId: candidate.id, requestedBy: userId },
+          payload: {
+            clipId: clip.id,
+            momentId: candidate.id,
+            requestedBy: userId,
+            source: {
+              kind: "s3",
+              bucket: renderSource.media.bucket,
+              key: renderSource.media.objectKey,
+            },
+            range: { startMs: candidate.startMs, endMs: candidate.endMs },
+            export: renderStyle.export,
+            layout: renderStyle.layout,
+          },
           idempotencyKey: `${key}:clip:${clip.id}:face-track`,
           estimatedCost: String(Math.max((candidate.endMs - candidate.startMs) / 1000, 1)),
         }).returning();
@@ -651,6 +784,223 @@ export async function projectRoutes(app: FastifyInstance) {
       url: await signDownload(row.media.bucket, row.media.objectKey, expiresIn),
       mimeType: row.media.mimeType,
       expiresIn,
+    };
+  });
+
+  /** Download a retained render sidecar without exposing its object key. */
+  app.get("/v1/projects/:projectId/clips/:clipId/artifacts/:kind", { preHandler: app.requireWorkspace }, async (request) => {
+    const { projectId, clipId, kind } = request.params as { projectId: string; clipId: string; kind: string };
+    if (kind !== "mp4" && kind !== "srt" && kind !== "vtt") throw app.httpErrors.notFound("Artifact type is not available");
+    const { workspaceId } = request.authContext!;
+    const [row] = await app.db.select({ media: mediaObjects, artifact: renderArtifacts })
+      .from(clips)
+      .innerJoin(projects, eq(projects.id, clips.projectId))
+      .innerJoin(clipVersions, and(
+        eq(clipVersions.clipId, clips.id),
+        eq(clipVersions.version, clips.currentVersion),
+      ))
+      .innerJoin(renderArtifacts, and(
+        eq(renderArtifacts.clipVersionId, clipVersions.id),
+        eq(renderArtifacts.kind, kind),
+      ))
+      .innerJoin(mediaObjects, eq(mediaObjects.id, renderArtifacts.mediaObjectId))
+      .where(and(
+        eq(clips.id, clipId),
+        eq(projects.id, projectId),
+        eq(projects.workspaceId, workspaceId),
+        isNull(mediaObjects.deletedAt),
+      ))
+      .limit(1);
+    if (!row) throw app.httpErrors.notFound("Rendered artifact is not available yet");
+    const expiresIn = 900;
+    return {
+      url: await signDownload(row.media.bucket, row.media.objectKey, expiresIn),
+      mimeType: row.media.mimeType,
+      expiresIn,
+      kind,
+    };
+  });
+
+  /**
+   * Snapshot every currently ready clip into one immutable ZIP task. The
+   * manifest pins current clip versions and their actual retained objects, so
+   * rerenders finishing later never mutate a package already requested.
+   */
+  app.post("/v1/projects/:projectId/packages", { preHandler: app.requireWorkspace }, async (request, reply) => {
+    const { projectId } = request.params as { projectId: string };
+    const { workspaceId, userId } = request.authContext!;
+    const key = getIdempotencyKey(request);
+    const result = await runIdempotent({
+      db: app.db,
+      workspaceId,
+      key,
+      body: { projectId, operation: "create_project_package" },
+      statusCode: 202,
+      execute: async (tx) => {
+        const [project] = await tx.select({ id: projects.id })
+          .from(projects)
+          .where(and(eq(projects.id, projectId), eq(projects.workspaceId, workspaceId), isNull(projects.archivedAt)))
+          .for("update")
+          .limit(1);
+        if (!project) throw app.httpErrors.notFound("Project not found");
+        const rows = await tx.select({
+          clipId: clips.id,
+          title: clips.title,
+          versionId: clipVersions.id,
+          version: clipVersions.version,
+          kind: renderArtifacts.kind,
+          bucket: mediaObjects.bucket,
+          objectKey: mediaObjects.objectKey,
+          byteSize: mediaObjects.byteSize,
+          sha256: mediaObjects.sha256,
+          mediaDeletedAt: mediaObjects.deletedAt,
+        })
+          .from(clips)
+          .innerJoin(clipVersions, and(
+            eq(clipVersions.clipId, clips.id),
+            eq(clipVersions.version, clips.currentVersion),
+          ))
+          .innerJoin(renderArtifacts, eq(renderArtifacts.clipVersionId, clipVersions.id))
+          .innerJoin(mediaObjects, eq(mediaObjects.id, renderArtifacts.mediaObjectId))
+          .where(and(eq(clips.projectId, projectId), eq(clips.status, "ready"), isNull(mediaObjects.deletedAt)))
+          .orderBy(asc(clips.createdAt), asc(renderArtifacts.kind));
+
+        const byClip = new Map<string, {
+          clipId: string;
+          title: string;
+          clipVersionId: string;
+          version: number;
+          artifacts: Array<{ kind: "mp4" | "srt" | "vtt"; bucket: string; key: string; byteSize: number; sha256?: string }>;
+        }>();
+        for (const row of rows) {
+          if (row.kind !== "mp4" && row.kind !== "srt" && row.kind !== "vtt") continue;
+          const item = byClip.get(row.clipId) ?? {
+            clipId: row.clipId,
+            title: row.title,
+            clipVersionId: row.versionId,
+            version: row.version,
+            artifacts: [],
+          };
+          item.artifacts.push({
+            kind: row.kind,
+            bucket: row.bucket,
+            key: row.objectKey,
+            byteSize: row.byteSize,
+            ...(row.sha256 && /^[a-f0-9]{64}$/.test(row.sha256) ? { sha256: row.sha256 } : {}),
+          });
+          byClip.set(row.clipId, item);
+        }
+        const manifest = {
+          schemaVersion: 1,
+          projectId,
+          items: [...byClip.values()]
+            .filter((item) => item.artifacts.some((artifact) => artifact.kind === "mp4"))
+            .map((item) => ({
+              ...item,
+              artifacts: item.artifacts.sort((left, right) => ["mp4", "srt", "vtt"].indexOf(left.kind) - ["mp4", "srt", "vtt"].indexOf(right.kind)),
+            })),
+        };
+        if (!manifest.items.length) throw app.httpErrors.conflict("No ready clips are available for a package yet");
+        const manifestHash = packageManifestHash(manifest);
+        const [existing] = await tx.select().from(projectPackages)
+          .where(and(eq(projectPackages.projectId, projectId), eq(projectPackages.manifestHash, manifestHash)))
+          .limit(1);
+        if (existing) {
+          if (existing.status !== "failed") return { package: existing, reused: true };
+          // A terminal packaging error may be retried without re-rendering.
+          // It reuses the exact immutable artifact manifest, but not the old
+          // exhausted job idempotency key.
+          const [retryJob] = await tx.insert(jobs).values({
+            workspaceId,
+            projectId,
+            type: "zip_project",
+            class: "io",
+            payload: { packageId: existing.id, manifestHash, items: manifest.items },
+            idempotencyKey: `project:${projectId}:package:${manifestHash}:retry:${existing.updatedAt.getTime()}`,
+            artifactHash: manifestHash,
+            estimatedCost: String(Math.max(manifest.items.length, 1)),
+          }).returning();
+          await tx.insert(jobRequirements).values({
+            jobId: retryJob.id,
+            requirements: {
+              requiredClasses: ["io"], requiredJobTypes: ["zip_project"], requiredModels: {},
+              minimumRamBytes: 0, minimumScratchBytes: 0, workspaceConcurrencyLimit: 1,
+            },
+          });
+          const [retriedPackage] = await tx.update(projectPackages).set({
+            jobId: retryJob.id,
+            status: "queued",
+            error: null,
+            updatedAt: new Date(),
+          }).where(eq(projectPackages.id, existing.id)).returning();
+          return { package: retriedPackage, reused: false };
+        }
+
+        const [projectPackage] = await tx.insert(projectPackages).values({
+          workspaceId,
+          projectId,
+          manifestHash,
+          manifest,
+          createdBy: userId,
+        }).returning();
+        const [job] = await tx.insert(jobs).values({
+          workspaceId,
+          projectId,
+          type: "zip_project",
+          class: "io",
+          payload: {
+            packageId: projectPackage.id,
+            manifestHash,
+            items: manifest.items,
+          },
+          idempotencyKey: `project:${projectId}:package:${manifestHash}`,
+          artifactHash: manifestHash,
+          estimatedCost: String(Math.max(manifest.items.length, 1)),
+        }).returning();
+        await tx.insert(jobRequirements).values({
+          jobId: job.id,
+          requirements: {
+            requiredClasses: ["io"],
+            requiredJobTypes: ["zip_project"],
+            requiredModels: {},
+            minimumRamBytes: 0,
+            minimumScratchBytes: 0,
+            workspaceConcurrencyLimit: 1,
+          },
+        });
+        const [updatedPackage] = await tx.update(projectPackages).set({ jobId: job.id, updatedAt: new Date() })
+          .where(eq(projectPackages.id, projectPackage.id)).returning();
+        return { package: updatedPackage, reused: false };
+      },
+    });
+    return reply.code(result.replayed || result.value.reused ? 200 : 202).send(result.value);
+  });
+
+  app.get("/v1/projects/:projectId/packages/:packageId", { preHandler: app.requireWorkspace }, async (request) => {
+    const { projectId, packageId } = request.params as { projectId: string; packageId: string };
+    const { workspaceId } = request.authContext!;
+    const [row] = await app.db.select({ projectPackage: projectPackages, media: mediaObjects })
+      .from(projectPackages)
+      .leftJoin(mediaObjects, eq(mediaObjects.id, projectPackages.mediaObjectId))
+      .where(and(
+        eq(projectPackages.id, packageId),
+        eq(projectPackages.projectId, projectId),
+        eq(projectPackages.workspaceId, workspaceId),
+      ))
+      .limit(1);
+    if (!row) throw app.httpErrors.notFound("Project package not found");
+    const expiresIn = row.projectPackage.status === "ready" && row.media && !row.media.deletedAt
+      ? 900
+      : undefined;
+    return {
+      package: row.projectPackage,
+      ...(expiresIn && row.media ? {
+        download: {
+          url: await signDownload(row.media.bucket, row.media.objectKey, expiresIn),
+          mimeType: row.media.mimeType,
+          expiresIn,
+        },
+      } : {}),
     };
   });
 
@@ -830,13 +1180,80 @@ export async function projectRoutes(app: FastifyInstance) {
       .where(and(eq(clips.id, clipId), eq(projects.id, projectId), eq(projects.workspaceId, workspaceId)))
       .limit(1);
     if (!row) throw app.httpErrors.notFound("Clip version is not ready for rerender");
-    const edlRange = (row.version.edl as { range?: { startMs?: number; endMs?: number } }).range ?? {};
-    const subtitleCues = await buildSubtitleCues(
+    let renderEdl = clipEdlSchema.parse(row.version.edl);
+    const edlRange = renderEdl.range;
+    let subtitleCues = await buildSubtitleCues(
       app.db,
       row.source.id,
       Number(edlRange.startMs ?? 0),
       Number(edlRange.endMs ?? 0),
+      typeof (row.version.edl as { transcriptRevision?: unknown }).transcriptRevision === "number"
+        ? Number((row.version.edl as { transcriptRevision: number }).transcriptRevision)
+        : undefined,
     );
+    let resolvedPlan: Record<string, unknown> | undefined;
+    let renderAssets: Array<Record<string, unknown>> = [];
+    if (row.version.documentV2) {
+      const document = clipDocumentV2Schema.parse(row.version.documentV2);
+      if (document.sourceRefs.length !== 1 || document.sourceRefs[0]?.sourceId !== row.source.id) {
+        throw app.httpErrors.conflict("HVE-2 document does not match this clip source");
+      }
+      try {
+        // A V2 document must rerender through the same compositor planner as
+        // its editor commit.  Using the old HVE-2 adapter here would silently
+        // discard resolved layout/text layers and resurrect the old EDL
+        // subtitle styling.
+        const staticAssets = await loadVerifiedHveRenderAssets({
+          db: app.db,
+          workspaceId,
+          document,
+        });
+        const requiresPerception = hveDocumentRequiresPerception(document);
+        let perceptionContext = null;
+        if (requiresPerception) {
+          if (!row.source.fingerprint) throw app.httpErrors.conflict("HVE5_SOURCE_FINGERPRINT_REQUIRED");
+          try {
+            perceptionContext = await loadVerifiedHvePerceptionContext({
+              db: app.db,
+              workspaceId,
+              sourceId: row.source.id,
+              sourceHash: row.source.fingerprint,
+              analysisId: document.analysisId,
+              probe: (row.source.metadata as { probe?: unknown }).probe,
+            });
+          } catch {
+            // An artifact hash/manifest mismatch must be visible as an
+            // actionable unavailable-analysis state, never as a 500 and never
+            // as a silent static-crop fallback.
+            throw app.httpErrors.conflict("HVE5_ANALYSIS_ARTIFACT_INVALID");
+          }
+          if (!perceptionContext) throw app.httpErrors.conflict("HVE5_ANALYSIS_ARTIFACT_REQUIRED");
+        }
+        const transcriptWords = await readTimingTranscriptWords(app.db, row.source.id);
+        const execution = requiresPerception
+          ? await resolveHve5ExecutionPlan(document, transcriptWords, perceptionContext!, hveAssetResolverForPlan(staticAssets))
+          : await resolveHve3ExecutionPlan(document, transcriptWords, hveAssetResolverForPlan(staticAssets));
+        resolvedPlan = execution.resolvedPlan;
+        subtitleCues = execution.subtitleCues;
+        renderEdl = materializeHveRenderEdl(document, renderEdl);
+        renderAssets = renderAssetsForResolvedPlan(execution.resolvedPlan, staticAssets);
+      } catch (error) {
+        if (error instanceof Hve2PlanNotExecutableError || error instanceof Hve3PlanNotExecutableError || error instanceof Hve5PlanNotExecutableError) {
+          throw app.httpErrors.conflict(`${error.code}: ${error.message}`);
+        }
+        if (error instanceof Error && [
+          "HVE_ASSET_NOT_AVAILABLE",
+          "HVE_BRAND_ASSET_INVALID",
+          "HVE5_ANALYSIS_ARTIFACT_REQUIRED",
+          "HVE5_ANALYSIS_ARTIFACT_INVALID",
+          "HVE5_SOURCE_FINGERPRINT_REQUIRED",
+        ].includes(error.message)) throw app.httpErrors.conflict(error.message);
+        throw error;
+      }
+    }
+    const probe = row.source.metadata.probe;
+    const sourceHasAudio = typeof probe === "object" && probe !== null && !Array.isArray(probe)
+      && "audio" in probe && Boolean(probe.audio);
     const [job] = await app.db.insert(jobs).values({
       workspaceId,
       projectId,
@@ -845,15 +1262,17 @@ export async function projectRoutes(app: FastifyInstance) {
       class: "cpu_heavy",
       payload: {
         clipVersionId: row.version.id,
-        edl: row.version.edl,
+        edl: renderEdl,
         source: { kind: "s3", bucket: row.media.bucket, key: row.media.objectKey },
+        sourceHasAudio,
         subtitleCues,
+        ...(resolvedPlan ? { resolvedPlan } : {}),
+        ...(renderAssets.length ? { renderAssets } : {}),
       },
       idempotencyKey: key,
       artifactHash: row.version.renderHash,
       estimatedCost: String(Math.max(
-        Number((row.version.edl as { range?: { endMs?: number; startMs?: number } }).range?.endMs ?? 0)
-          - Number((row.version.edl as { range?: { endMs?: number; startMs?: number } }).range?.startMs ?? 0),
+        Number(renderEdl.range.endMs) - Number(renderEdl.range.startMs),
         1,
       ) / 1000),
     }).returning();

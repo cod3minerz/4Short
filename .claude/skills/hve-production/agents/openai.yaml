@@ -1,0 +1,4 @@
+interface:
+  display_name: "HVE Production"
+  short_description: "Production workflow for HVE and clip editor"
+  default_prompt: "Use $hve-production to implement the next verified HVE production slice."

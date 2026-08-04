@@ -43,6 +43,41 @@
       "when": 1785462039717,
       "tag": "0005_add_clip_social_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1785690000000,
+      "tag": "0006_hve_v2_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1785710000000,
+      "tag": "0007_brand_assets_static_images",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1785890000000,
+      "tag": "0008_project_packages",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1785900000000,
+      "tag": "0009_hve_editor_metadata",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1785910000000,
+      "tag": "0010_workspace_queue_fairness",
+      "breakpoints": true
     }
   ]
 }
