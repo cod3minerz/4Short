@@ -22,8 +22,11 @@ class Settings(BaseSettings):
     # active customer job. It is deliberately local to the worker volume: a
     # benchmark or maintenance window should not need a privileged database
     # mutation or a control-plane restart.
-    drain_file: Path = Path("/var/lib/4short/worker-drain")
-    active_job_file: Path = Path("/var/lib/4short/worker-active-job.json")
+    # The container root filesystem is intentionally read-only.  Keep mutable
+    # coordination markers in the dedicated writable job volume instead of
+    # `/var/lib/4short` itself.
+    drain_file: Path = Path("/var/lib/4short/jobs/worker-drain")
+    active_job_file: Path = Path("/var/lib/4short/jobs/worker-active-job.json")
     # A 100 GB NVMe worker must retain enough scratch for the active job and
     # one safe retry.  Below 20 GB heavy jobs wait; below 12 GB nothing starts.
     minimum_scratch_free_bytes: int = 12 * 1024**3
