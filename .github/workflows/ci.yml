@@ -104,7 +104,7 @@ jobs:
             test "$(id -u)" = "10002"
             test "$HVE_EVALUATOR_MODE" = "1"
             python -m pip check
-            python -c "import hve_evaluator, fourshort_worker.active_speaker_evidence; print('evaluator boundary import ok')"
+            python -c "import hve_evaluator, fourshort_worker.active_speaker_evidence; print(\"evaluator boundary import ok\")"
           '
       - name: Execute evaluator provenance suite inside its isolated image
         # The host-only suite cannot detect a dependency-resolution failure in
