@@ -18,21 +18,24 @@
  */
 .dash-shell,
 .editor-focus-shell {
+  --ink: #fff;
+  --white: #fff;
   --dash-text-micro: 10px;
   --dash-text-xs: 12px;
   --dash-text-sm: 13px;
   --dash-text-md: 14px;
   --dash-text-lg: 16px;
-  color: var(--ink);
-  --dash-bg: #eef0f3;
-  --dash-surface: #fff;
-  --dash-surface-subtle: #f6f7f9;
-  --dash-surface-muted: #e7eaee;
-  --dash-border: #dfe3e8;
-  --dash-border-strong: #cbd1d8;
-  --dash-text-muted: #737b86;
-  --dash-accent-soft: color-mix(in oklch, var(--accent) 18%, white);
-  --dash-accent-faint: color-mix(in oklch, var(--accent) 8%, white);
+  color: var(--ds-text);
+  --dash-bg: #09090a;
+  --dash-surface: #111112;
+  --dash-surface-subtle: #171718;
+  --dash-surface-muted: #242427;
+  --dash-media: #0d0d0f;
+  --dash-border: #2c2c2f;
+  --dash-border-strong: #4a4a4f;
+  --dash-text-muted: rgba(255, 255, 255, .56);
+  --dash-accent-soft: rgba(255, 255, 255, .16);
+  --dash-accent-faint: rgba(255, 255, 255, .06);
   --dash-control-sm: 32px;
   --dash-control-md: 36px;
   --dash-control-lg: 40px;
@@ -53,21 +56,21 @@
    * dozens of near-identical one-off values. Declared once here so the sweep
    * below can collapse them.
    */
-  --dash-accent-ink: var(--accent-strong); /* accent text/icons on light surfaces */
-  --dash-accent-tint: color-mix(in oklch, var(--accent) 35%, white); /* accent borders and dividers */
-  --dash-accent-wash: color-mix(in oklch, var(--accent) 6%, white); /* accent-tinted backgrounds */
-  --dash-ink-soft: #172129; /* secondary headings */
-  --dash-ink-muted: #343a41; /* body text on light surfaces */
-  --dash-text-soft: #536168; /* primary muted text */
-  --dash-text-dim: #657279; /* secondary muted text */
-  --dash-text-faint: #8a929a; /* meta text and timestamps */
-  --dash-success-ink: #177344; /* success text */
-  --dash-success-surface: #dff7e8; /* success background */
-  --dash-danger-ink: #a12a2a; /* danger text */
-  --dash-danger-surface: #ffebeb; /* danger background */
-  --dash-danger-border: #f2b9b9; /* danger hairline */
-  --dash-warning-ink: #9b5c09; /* warning text */
-  --dash-warning-surface: #fff7e2; /* warning background */
+  --dash-accent-ink: #fff;
+  --dash-accent-tint: rgba(255, 255, 255, .28);
+  --dash-accent-wash: rgba(255, 255, 255, .06);
+  --dash-ink-soft: #fff;
+  --dash-ink-muted: rgba(255, 255, 255, .84);
+  --dash-text-soft: rgba(255, 255, 255, .72);
+  --dash-text-dim: rgba(255, 255, 255, .62);
+  --dash-text-faint: rgba(255, 255, 255, .46);
+  --dash-success-ink: #6ee7a3;
+  --dash-success-surface: rgba(34, 197, 94, .13);
+  --dash-danger-ink: #ff9494;
+  --dash-danger-surface: rgba(239, 68, 68, .12);
+  --dash-danger-border: rgba(239, 68, 68, .34);
+  --dash-warning-ink: #f4c76c;
+  --dash-warning-surface: rgba(245, 158, 11, .12);
   --dash-brand-youtube: #ff0033; /* YouTube brand red — not a semantic token */
 
   /*
@@ -82,24 +85,26 @@
   --field-radius: var(--dash-radius-control);
   --border-width: 1px;
   --surface: var(--dash-surface);
-  --surface-foreground: var(--ink);
+  --surface-foreground: var(--ds-text);
   --surface-secondary: var(--dash-surface-subtle);
-  --surface-secondary-foreground: var(--ink);
+  --surface-secondary-foreground: var(--ds-text);
   --surface-tertiary: var(--dash-surface-muted);
-  --surface-tertiary-foreground: var(--ink);
+  --surface-tertiary-foreground: var(--ds-text);
   --overlay: var(--dash-surface);
-  --overlay-foreground: var(--ink);
+  --overlay-foreground: var(--ds-text);
   --muted: var(--dash-text-muted);
   --default: var(--dash-surface-muted);
-  --default-foreground: var(--ink);
+  --default-foreground: var(--ds-text);
   --border: var(--dash-border);
   --separator: var(--dash-border);
-  --accent-foreground: white;
+  --accent: #fff;
+  --accent-strong: #fff;
+  --accent-foreground: #000;
   --field-background: var(--dash-surface);
-  --field-foreground: var(--ink);
+  --field-foreground: var(--ds-text);
   --field-border: var(--dash-border);
   --field-placeholder: var(--dash-text-muted);
-  --focus: var(--accent);
+  --focus: #fff;
   --success: #22a06b;
   --success-foreground: var(--white);
   --warning: #e2a324;
@@ -607,7 +612,7 @@
   padding: 6px 6px 6px 14px;
   border: 1px solid var(--dash-border);
   border-radius: var(--dash-radius-lg);
-  background: white;
+  background: var(--dash-surface);
   display: grid;
   align-items: center;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -741,7 +746,7 @@
 }
 .wizard-source-ready__info dl div {
   border-radius: var(--dash-radius-md);
-  background: white;
+  background: var(--dash-surface);
   padding: 9px 12px;
   border: 1px solid var(--dash-border);
 }
@@ -1172,7 +1177,7 @@
 }
 .wizard-style-options button {
   border: 1px solid var(--dash-border);
-  background: white;
+  background: var(--dash-surface);
   text-align: left;
   position: relative;
   display: flex;
@@ -1182,7 +1187,7 @@
 .wizard-control-card {
   gap: 18px;
   border: 1px solid var(--dash-border);
-  background: white;
+  background: var(--dash-surface);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1258,7 +1263,7 @@
 .wizard-processing__card {
   width: min(100%, 720px);
   border: 1px solid var(--dash-border);
-  background: white;
+  background: var(--dash-surface);
   text-align: center; max-width: 680px; padding: 28px; border-radius: var(--dash-radius-lg); box-shadow: none; }
 
 /* Project list */
@@ -1414,8 +1419,8 @@
 /* The row passes tone-${project.accent} ("sky" | "ink" | "soft"); without
    these the tone class matched nothing and the white brand mark rendered
    invisible on the pale fallback background. */
-.project-row__thumb.tone-sky { background: var(--accent); }
-.project-row__thumb.tone-ink { background: var(--ink); }
+.project-row__thumb.tone-sky { background: var(--dash-media); }
+.project-row__thumb.tone-ink { background: var(--dash-media); }
 .project-row__thumb.tone-soft { background: var(--dash-accent-soft); }
 .project-row__thumb.tone-soft .dash-media-mark { color: var(--accent); }
 
@@ -1449,7 +1454,7 @@
 .project-workspace {
   min-height: 100dvh;
   padding-bottom: 70px;
-  background: white;
+  background: var(--dash-surface);
   width: 100%;
   padding: 24px 28px 40px;
 }
@@ -1498,7 +1503,7 @@
 .moment-row {
   gap: 13px;
   border: 1px solid var(--dash-border);
-  background: white;
+  background: var(--dash-surface);
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center; min-height: 74px; padding: 12px; border-radius: 0; }
@@ -1644,8 +1649,8 @@
   aspect-ratio: 9 / 16;
   overflow: hidden;
   /* Neutral video stand-in — never the style's own text colour. */
-  background: var(--ink);
-  color: white;
+  background: var(--dash-media);
+  color: var(--ds-text);
   border-radius: var(--dash-radius-lg);
 }
 
@@ -1818,7 +1823,7 @@
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 1.1fr; gap: 8px; }
 .billing-packages__grid > button, .billing-purchase-summary {
   border: 1px solid var(--dash-border);
-  background: white;
+  background: var(--dash-accent-soft);
   color: var(--ink);
   text-align: left;
   position: relative;
@@ -1840,14 +1845,14 @@
   padding: 6px 9px;
   border-radius: var(--dash-radius-pill);
   background: var(--accent);
-  color: white;
+  color: var(--accent-foreground);
   font-weight: 850;
   text-transform: uppercase;
   position: absolute;
   top: -10px;
   left: 20px; font-size: 9px; }
 .billing-history__table {
-  background: white; overflow: hidden; border: 1px solid var(--dash-border); border-radius: var(--dash-radius-md); }
+  background: var(--dash-surface); overflow: hidden; border: 1px solid var(--dash-border); border-radius: var(--dash-radius-md); }
 .billing-history__table > div {
   gap: 12px;
   padding-inline: 17px;
@@ -2479,7 +2484,7 @@
   min-width: 158px;
   padding-inline: 22px;
   border: 1px solid var(--dash-border);
-  background: white;
+  background: var(--dash-surface);
 }
 
 .dash-input {
@@ -2517,8 +2522,8 @@
 .media-thumb--16x9 { aspect-ratio: 16 / 9; }
 .media-thumb--9x16 { aspect-ratio: 9 / 16; }
 .media-thumb--1x1 { aspect-ratio: 1 / 1; }
-.media-thumb--accent { background: var(--accent); }
-.media-thumb--ink { background: var(--ink); }
+.media-thumb--accent { background: var(--dash-media); }
+.media-thumb--ink { background: var(--dash-media); }
 .media-thumb--soft { background: var(--dash-accent-soft); }
 .media-thumb__image {
   position: absolute;
@@ -2578,7 +2583,7 @@
   justify-content: center;
   border: 1px dashed var(--dash-border-strong);
   border-radius: var(--dash-radius-xl);
-  background: white;
+  background: var(--dash-surface);
   text-align: center;
 }
 
@@ -2728,7 +2733,7 @@
   inset: auto 8% 7%;
   padding: 10px;
   border-radius: var(--dash-radius-md);
-  background: white;
+  background: rgba(17, 17, 18, .78);
   color: var(--ink);
   font-size: var(--dash-text-xs);
   font-weight: 900;
@@ -3054,7 +3059,7 @@
   padding: 9px 12px;
   border: 1px solid var(--dash-border);
   border-radius: var(--dash-radius-md);
-  background: white;
+  background: var(--dash-surface);
   font-size: var(--dash-text-sm);
   font-weight: 750;
 }
@@ -3066,7 +3071,7 @@
   place-items: center;
   border: 1px solid #cedadd;
   border-radius: var(--dash-radius-sm);
-  background: white;
+  background: var(--dash-surface);
   color: var(--dash-text-muted);
   font-size: var(--dash-text-sm);
   font-weight: 850;
@@ -3238,7 +3243,7 @@
   padding: 8px;
   border: 1px solid var(--dash-border);
   border-radius: var(--dash-radius-lg);
-  background: white;
+  background: var(--dash-surface);
   text-align: left;
 }
 
@@ -3264,7 +3269,7 @@
   right: 12px;
   padding: 2px;
   border-radius: 50%;
-  background: white;
+  background: var(--dash-surface-muted);
   color: var(--dash-accent-ink);
 }
 
@@ -3525,7 +3530,7 @@
   padding: 30px;
   border: 1px dashed var(--dash-border-strong);
   border-radius: 24px;
-  background: white;
+  background: var(--dash-surface);
   text-align: center;
 }
 
@@ -4266,7 +4271,7 @@
     gap: 4px;
     padding: 7px 10px;
     border-bottom: 1px solid var(--dash-border);
-    background: white;
+    background: var(--dash-surface);
   }
 
   .clip-editor__mobile-tabs button {
@@ -4527,7 +4532,7 @@
 }
 
 .wizard-style-options svg {
-  position: absolute; top: 17px; right: 17px; padding: 2px; border-radius: 50%; background: white; color: var(--dash-accent-ink);
+  position: absolute; top: 17px; right: 17px; padding: 2px; border-radius: 50%; background: var(--dash-surface-muted); color: var(--dash-accent-ink);
 }
 
 .wizard-control-card > div {
@@ -4620,7 +4625,7 @@
 }
 
 .style-library-add > svg {
-  width: 40px; height: 40px; padding: 10px; border-radius: var(--dash-radius-md); background: white;
+  width: 40px; height: 40px; padding: 10px; border-radius: var(--dash-radius-md); background: var(--dash-surface-muted);
 }
 
 .style-library-add span {
@@ -4699,7 +4704,7 @@
 }
 
 .help-contact > span {
-  width: 49px; aspect-ratio: 1; display: grid; place-items: center; border-radius: var(--dash-radius-lg); background: white;
+  width: 49px; aspect-ratio: 1; display: grid; place-items: center; border-radius: var(--dash-radius-lg); background: var(--dash-surface-muted);
 }
 
 .help-contact > a {
@@ -5245,4 +5250,142 @@
   font-size: var(--dash-text-micro);
   font-weight: 700;
   white-space: nowrap;
+}
+
+/* Dark-system colour bridge. This intentionally changes only paint values:
+   the original dashboard grid, sidebar and right-side container stay intact. */
+.dash-shell :is(
+  .wizard-url-input,
+  .wizard-source-ready__info dl div,
+  .wizard-style-options button,
+  .wizard-control-card,
+  .wizard-processing__card,
+  .project-workspace,
+  .moment-row,
+  .billing-history__table,
+  .dash-secondary-link,
+  .dash-empty-state,
+  .moment-list__head > button,
+  .moment-check,
+  .project-drawer-styles button,
+  .project-empty-results,
+  .clip-editor__mobile-tabs
+) { background: var(--dash-surface); }
+
+.dash-shell :is(
+  .wizard-phone-preview__banner,
+  .style-editor__preview > small,
+  .wizard-style-options svg,
+  .project-drawer-styles svg,
+  .style-library-add > svg
+) {
+  background: rgba(17, 17, 18, .78);
+  color: #fff;
+}
+
+.dash-shell .moment-check { border-color: var(--dash-border-strong); }
+.dash-shell .moment-check.is-selected,
+.dash-shell .is-selected .billing-package-check { background: var(--accent); color: var(--accent-foreground); }
+
+/* Surface depth for the existing right-hand container. The geometry remains
+   untouched; a subdued light on the canvas is what makes its blur meaningful. */
+.dash-shell {
+  background:
+    radial-gradient(720px 440px at 78% 3%, rgba(255, 255, 255, .075), transparent 67%),
+    radial-gradient(520px 360px at 32% 96%, rgba(255, 255, 255, .035), transparent 72%),
+    var(--dash-bg);
+}
+
+.dash-main {
+  background:
+    linear-gradient(rgba(17, 17, 18, .82), rgba(17, 17, 18, .9)),
+    rgba(17, 17, 18, .78);
+  backdrop-filter: blur(22px) saturate(110%);
+  -webkit-backdrop-filter: blur(22px) saturate(110%);
+}
+
+.dash-topbar__logo .brand-logo img { filter: grayscale(1) brightness(0) invert(1); }
+.dash-topbar__balance { background: rgba(255, 255, 255, .07); color: var(--dash-text-muted); }
+.dash-topbar__balance span { color: var(--ds-text); }
+.dash-profile-menu__avatar { background: var(--dash-surface-muted); color: var(--ds-text); }
+
+.wizard-footer {
+  border-color: var(--dash-border);
+  background: rgba(17, 17, 18, .9);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.wizard-url-input { border-radius: var(--dash-radius-pill); }
+.wizard-url-input .button { border-radius: var(--dash-radius-pill); }
+
+/* Shell states that were still inheriting the light dashboard palette. */
+.dash-nav a { color: var(--dash-text-muted); }
+.dash-nav a:hover { background: var(--dash-accent-wash); color: var(--ds-text); }
+.dash-nav a.is-active,
+.dash-nav--utility a.is-active { background: var(--dash-surface); color: var(--ds-text); box-shadow: inset 0 1px rgba(255,255,255,.05); }
+.dash-profile-menu summary:hover { background: var(--dash-accent-wash); }
+.dash-compact-primary,
+.help-contact > a { background: var(--accent); color: var(--accent-foreground); }
+
+/* The editor is a separate root, but belongs to the same dark system. */
+.editor-focus-shell,
+.clip-editor { background: var(--dash-bg); color: var(--ds-text); }
+.clip-editor__header {
+  border-color: var(--dash-border);
+  background: rgba(17, 17, 18, .9);
+  color: var(--ds-text);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+.clip-editor__header > div > small { color: var(--dash-text-muted); }
+.clip-editor__header .button--primary { background: var(--accent); color: var(--accent-foreground); }
+.clip-editor__notice,
+.clip-trim,
+.clip-editor__mobile-tabs { background: var(--dash-surface); color: var(--ds-text); }
+.clip-editor__notice { border-color: var(--dash-border); box-shadow: 0 10px 28px rgba(0,0,0,.36); }
+.clip-phone-preview__play,
+.moment-preview > button,
+.wizard-source-ready__media > span:last-child { background: var(--dash-surface-muted); color: var(--ds-text); }
+
+/* HeroUI portals mount on <body>, outside .dash-shell. Give dialogs and
+   drawers their own complete token scope instead of falling back to white. */
+:where([data-slot="modal-backdrop"], [data-slot="drawer-backdrop"]) {
+  --dash-surface: #111112;
+  --dash-surface-subtle: #171718;
+  --dash-surface-muted: #242427;
+  --dash-border: #2c2c2f;
+  --dash-text-muted: rgba(255,255,255,.56);
+  --dash-text: #fff;
+  background: rgba(0, 0, 0, .66) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+:where([data-slot="modal-dialog"], .dash-drawer-dialog) {
+  border: 1px solid #2c2c2f !important;
+  border-radius: 16px;
+  background: rgba(17,17,18,.96) !important;
+  color: #fff !important;
+  box-shadow: 0 24px 80px rgba(0,0,0,.5);
+}
+
+:where([data-slot="modal-header"], [data-slot="modal-footer"], [data-slot="drawer-header"], [data-slot="drawer-footer"]) { border-color: #2c2c2f !important; }
+:where([data-slot="modal-heading"], [data-slot="drawer-heading"]) { color: #fff; }
+:where([data-slot="modal-body"], [data-slot="drawer-body"], .dash-drawer-dialog) { color: rgba(255,255,255,.78); }
+:where([data-slot="modal-close-trigger"], [data-slot="drawer-close-trigger"]) { background: #242427 !important; color: #fff !important; }
+
+:where([data-slot="modal-dialog"], .dash-drawer-dialog) .button {
+  border-radius: 999px;
+  border-color: #2c2c2f;
+  background: var(--ds-text);
+  color: var(--ds-canvas);
+}
+:where([data-slot="modal-dialog"], .dash-drawer-dialog) .button--outline { background: transparent; color: #fff; }
+:where([data-slot="modal-dialog"], .dash-drawer-dialog) .button--danger { border-color: rgba(239,68,68,.35); background: #ff9494; color: #250708; }
+
+@media (max-width: 900px) {
+  .dash-mobile-nav,
+  .clip-editor__mobile-tabs { border-color: var(--dash-border); background: rgba(17,17,18,.92); box-shadow: 0 14px 35px rgba(0,0,0,.36); }
+  .dash-mobile-nav > .is-active { color: var(--ds-text); }
 }

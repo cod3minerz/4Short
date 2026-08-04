@@ -1,15 +1,39 @@
-@import "@fontsource-variable/manrope";
 @import "tailwindcss";
 @import "@heroui/styles";
 
 @font-face {
-  font-family: "Ermilov";
-  src: url("/fonts/Ermilov-bold.otf") format("opentype");
-  font-weight: 700;
+  font-family: "Geist Variable";
+  src: url("/fonts/geist-latin-wght-normal.woff2") format("woff2");
   font-display: swap;
+  font-style: normal;
+  font-weight: 100 900;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2190-21FF, U+2212, U+2215;
+}
+
+@font-face {
+  font-family: "Geist Variable";
+  src: url("/fonts/geist-cyrillic-wght-normal.woff2") format("woff2");
+  font-display: swap;
+  font-style: normal;
+  font-weight: 100 900;
+  unicode-range: U+0400-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
 }
 
 :root {
+  /* Shared Hashpix system primitives. Marketing consumes the dark family now;
+     dashboard can map its existing semantic --dash-* roles in a later pass
+     without changing its sidebar/content information architecture. */
+  --ds-font-sans: "Geist Variable", Arial, sans-serif;
+  --ds-canvas: #000000;
+  --ds-surface: #171718;
+  --ds-surface-raised: #27272A;
+  --ds-text: #FFFFFF;
+  --ds-text-muted: rgba(255, 255, 255, 0.58);
+  --ds-line: #27272A;
+  --ds-line-subtle: rgba(255, 255, 255, 0.12);
+  --ds-radius-panel: 16px;
+  --ds-radius-inner: 12px;
+  --ds-radius-pill: 999px;
   --accent: #3153FF;
   --accent-strong: color-mix(in oklch, #3153FF 80%, black);
   --ink: oklch(19% 0.02 242);
@@ -26,7 +50,7 @@
   --shadow-soft: 0 24px 70px rgba(21, 62, 78, 0.1);
   --background: var(--white);
   --foreground: var(--ink);
-  --font-manrope: "Manrope Variable";
+  --font-manrope: var(--ds-font-sans);
   --font-sans: var(--font-manrope);
 }
 
@@ -72,7 +96,7 @@ p {
 
 h1,
 h2 {
-  font-family: "Ermilov", var(--font-manrope), sans-serif;
+  font-family: var(--font-manrope), Arial, sans-serif;
   letter-spacing: -0.04em;
   text-wrap: balance;
 }

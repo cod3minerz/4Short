@@ -432,7 +432,7 @@
   padding: 0 11px;
   border: 1px solid #cfdbde;
   border-radius: 11px;
-  background: #fff;
+  background: var(--admin-surface);
   color: var(--admin-ink);
   font-size: 12px;
 }
@@ -690,7 +690,7 @@
   padding: 54px;
   border: 1px solid #dbe5e8;
   border-radius: 36px;
-  background: #fff;
+  background: var(--admin-surface);
   text-align: center;
 }
 
@@ -786,7 +786,7 @@
     gap: 12px;
     padding: 0 16px;
     border-bottom: 1px solid var(--admin-line);
-    background: #fff;
+    background: var(--admin-surface);
   }
 
   .admin-mobile-header > button {
@@ -868,7 +868,7 @@
     padding: 6px 16px;
     border: 1px solid var(--admin-line);
     border-radius: 20px;
-    background: #fff;
+    background: var(--admin-surface);
   }
 
   .admin-table td {
