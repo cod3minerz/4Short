@@ -14,6 +14,7 @@
     "prebuild:vercel": "npm run build:contracts",
     "build:contracts": "tsc -p packages/contracts/tsconfig.build.json",
     "audit:dark-surfaces": "node scripts/audit-dark-surfaces.mjs app/landing.css app/dashboard/dashboard.css",
+    "release:check-domain": "node scripts/check-domain-readiness.mjs",
     "build:api": "tsc -p services/control-api/tsconfig.json",
     "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
     "start:api": "node services/control-api/dist/services/control-api/src/server.js",

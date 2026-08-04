@@ -105,6 +105,14 @@ Verify from a clean browser session:
 5. Legacy `4short.ru` redirects to Hashpix; do not redirect `api.4short.ru`
    until workers and payment callbacks use the new API host.
 
+The repository also has a repeatable public check. Run it only after DNS and
+Caddy have been changed; it deliberately fails while the migration is not yet
+live:
+
+```bash
+npm run release:check-domain
+```
+
 Rollback is DNS/Vercel routing plus restoring the saved server environment and
 Caddyfile. Do not roll back the database schema or S3 object data for a domain
 problem.
