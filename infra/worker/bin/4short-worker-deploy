@@ -5,13 +5,14 @@ umask 027
 
 release_sha="${1:-}"
 archive_path="${2:-}"
+token_stage_path="${3:-}"
 release_root="/opt/4short/releases"
 current_link="/opt/4short/current-worker"
 worker_project="4short-worker"
 worker_service="media-worker"
 drain_file="/var/lib/4short/worker-drain"
 active_job_file="/var/lib/4short/worker-active-job.json"
-staged_worker_token_env="/tmp/4short-worker-api-token.env"
+staged_worker_token_env="${token_stage_path:-/tmp/4short-worker-api-token.env}"
 worker_token_env="/etc/4short/worker-api-token.env"
 
 find_running_worker() {
@@ -162,7 +163,7 @@ if [[ ! "${release_sha}" =~ ^[0-9a-f]{40}$ ]]; then
   exit 2
 fi
 
-expected_archive="/tmp/4short-worker-${release_sha}.tar.gz"
+expected_archive="$(dirname "${archive_path}")/4short-worker-${release_sha}.tar.gz"
 if [[ "${archive_path}" != "${expected_archive}" || ! -f "${archive_path}" ]]; then
   echo "Release archive path is invalid." >&2
   exit 2

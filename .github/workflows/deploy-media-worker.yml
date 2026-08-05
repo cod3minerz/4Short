@@ -58,20 +58,27 @@ jobs:
           chmod 0600 ~/.ssh/id_ed25519
           chmod 0600 /tmp/4short-worker-api-token.env
 
+          mkdir -p /tmp
+
       - name: Upload release
         env:
           WORKER_HOST: ${{ secrets.WORKER_HOST }}
+          WORKER_STAGING_DIR: /home/deploy/.shortpix-worker-staging
         run: |
+          ssh -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=yes "deploy@${WORKER_HOST}" \
+            "mkdir -p '${WORKER_STAGING_DIR}' && chmod 700 '${WORKER_STAGING_DIR}'"
+
           scp -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=yes \
             "/tmp/4short-worker-${GITHUB_SHA}.tar.gz" "/tmp/4short-worker-api-token.env" \
-            "deploy@${WORKER_HOST}:/tmp/"
+            "deploy@${WORKER_HOST}:${WORKER_STAGING_DIR}/"
 
       - name: Activate release
         env:
           WORKER_HOST: ${{ secrets.WORKER_HOST }}
+          WORKER_STAGING_DIR: /home/deploy/.shortpix-worker-staging
         run: |
           ssh -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=yes "deploy@${WORKER_HOST}" \
-            "sudo /usr/local/sbin/4short-worker-deploy '${GITHUB_SHA}' '/tmp/4short-worker-${GITHUB_SHA}.tar.gz'"
+            "sudo /usr/local/sbin/4short-worker-deploy '${GITHUB_SHA}' '${WORKER_STAGING_DIR}/4short-worker-${GITHUB_SHA}.tar.gz' '${WORKER_STAGING_DIR}/4short-worker-api-token.env'"
 
       - name: Verify running HVE worker
         env:
@@ -85,4 +92,7 @@ jobs:
         if: always()
         env:
           WORKER_HOST: ${{ secrets.WORKER_HOST }}
-        run: ssh -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=yes "deploy@${WORKER_HOST}" "rm -f /tmp/4short-worker-api-token.env" || true
+          WORKER_STAGING_DIR: /home/deploy/.shortpix-worker-staging
+        run: |
+          ssh -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=yes "deploy@${WORKER_HOST}" \
+            "rm -f '${WORKER_STAGING_DIR}/4short-worker-api-token.env' '${WORKER_STAGING_DIR}/4short-worker-${GITHUB_SHA}.tar.gz'" || true

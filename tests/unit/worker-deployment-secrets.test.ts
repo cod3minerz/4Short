@@ -12,7 +12,7 @@ test("worker Compose uses a persistent API-token env file, never a workflow temp
 
 test("privileged worker deploy atomically installs and validates the staged API token", async () => {
   const deployer = await readFile(new URL("infra/worker/bin/4short-worker-deploy", root), "utf8");
-  assert.match(deployer, /staged_worker_token_env="\/tmp\/4short-worker-api-token\.env"/);
+  assert.match(deployer, /staged_worker_token_env="\$\{token_stage_path:-\/tmp\/4short-worker-api-token\.env\}"/);
   assert.match(deployer, /worker_token_env="\/etc\/4short\/worker-api-token\.env"/);
   assert.match(deployer, /must contain exactly one token line/);
   assert.match(deployer, /install -m 0640 -o root -g deploy/);

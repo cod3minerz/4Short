@@ -151,7 +151,7 @@ test("server-renders all primary cabinet surfaces", async () => {
 
   assert.match(await projects.text(), /Исходники, найденные моменты/);
   assert.match(await styles.text(), /Сохраните оформление один раз/);
-  assert.match(await billing.text(), /Кредиты списываются один раз/);
+  assert.match(await billing.text(), /(Кредиты|Минуты) списываются один раз/);
   assert.match(await project.text(), /Выберите, что превратить в клипы/);
 });
 

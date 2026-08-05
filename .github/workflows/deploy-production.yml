@@ -56,21 +56,30 @@ jobs:
       - name: Upload release
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_STAGING_DIR: /home/deploy/.shortpix-worker-staging
         run: |
+          ssh -o BatchMode=yes \
+            "deploy@${DEPLOY_HOST}" \
+            "mkdir -p '${DEPLOY_STAGING_DIR}' && chmod 700 '${DEPLOY_STAGING_DIR}'"
+
           scp \
             -o BatchMode=yes \
             "/tmp/4short-${GITHUB_SHA}.tar.gz" "/tmp/4short-worker-api-token.env" \
-            "deploy@${DEPLOY_HOST}:/tmp/"
+            "deploy@${DEPLOY_HOST}:${DEPLOY_STAGING_DIR}/"
 
       - name: Activate release
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_STAGING_DIR: /home/deploy/.shortpix-worker-staging
         run: |
           ssh -o BatchMode=yes "deploy@${DEPLOY_HOST}" \
-            "sudo /usr/local/sbin/4short-deploy '${GITHUB_SHA}' '/tmp/4short-${GITHUB_SHA}.tar.gz'"
+            "sudo /usr/local/sbin/4short-deploy '${GITHUB_SHA}' '${DEPLOY_STAGING_DIR}/4short-${GITHUB_SHA}.tar.gz'"
 
       - name: Remove staged secret
         if: always()
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-        run: ssh -o BatchMode=yes "deploy@${DEPLOY_HOST}" "rm -f /tmp/4short-worker-api-token.env" || true
+          DEPLOY_STAGING_DIR: /home/deploy/.shortpix-worker-staging
+        run: |
+          ssh -o BatchMode=yes "deploy@${DEPLOY_HOST}" \
+            "rm -f '${DEPLOY_STAGING_DIR}/4short-worker-api-token.env' '${DEPLOY_STAGING_DIR}/4short-${GITHUB_SHA}.tar.gz'" || true
