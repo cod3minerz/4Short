@@ -28,7 +28,7 @@ const subtitlePresets = [
   { id: "word_pop", label: "Word Pop", description: "Короткое увеличение на произнесённом слове" },
   { id: "minimal_box", label: "Minimal Box", description: "Сдержанная подложка за строкой субтитров" },
   { id: "speaker_colors", label: "По спикерам", description: "Разные цвета для распознанных участников" },
-] as const;
+] as const satisfies ReadonlyArray<{ id: StylePreset["subtitlePreset"]; label: string; description: string }>;
 
 const framingOptions = [
   "Автоматически",
@@ -203,10 +203,10 @@ export function StylesView() {
                 <>
                   <label className="style-field">
                     <span><strong>Оформление</strong><small>{activeSubtitlePreset.description}</small></span>
-                    <Select
+                      <Select
                       options={subtitlePresets.map(({ id, label }) => ({ id, label }))}
                       value={active.subtitlePreset}
-                      onChange={(value) => patch({ subtitlePreset: value })}
+                      onChange={(value) => patch({ subtitlePreset: value as StylePreset["subtitlePreset"] })}
                       aria-label="Оформление субтитров"
                       fullWidth
                     />
