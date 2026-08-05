@@ -600,7 +600,7 @@ export const engineCapabilitySchema = z.object({
   // concrete job type the scheduler fail-closes on workers that don't report
   // this field instead of leasing an unknown task.
   jobTypes: z.array(z.enum([
-    "probe", "youtube_import", "extract_audio", "speech_to_text", "generate_proxy", "verify_brand_video",
+    "source_preview", "probe", "youtube_import", "extract_audio", "speech_to_text", "generate_proxy", "verify_brand_video",
     "find_moments", "analyze_visual", "analyze_clip_visual", "face_track", "render_clip",
     "validate_render", "zip_project", "cleanup",
   ])).min(1).optional(),
@@ -628,7 +628,7 @@ export const jobRequirementsSchema = z.object({
   minimumScratchBytes: z.number().int().nonnegative().default(0),
   requiredClasses: z.array(z.enum(["io", "provider", "cpu_light", "cpu_medium", "cpu_heavy"])).min(1).default(["cpu_light"]),
   requiredJobTypes: z.array(z.enum([
-    "probe", "youtube_import", "extract_audio", "speech_to_text", "generate_proxy", "verify_brand_video",
+    "source_preview", "probe", "youtube_import", "extract_audio", "speech_to_text", "generate_proxy", "verify_brand_video",
     "find_moments", "analyze_visual", "analyze_clip_visual", "face_track", "render_clip",
     "validate_render", "zip_project", "cleanup",
   ])).max(8).default([]),

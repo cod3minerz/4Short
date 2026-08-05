@@ -260,7 +260,7 @@ export const defaultClipEditorState: ClipEditorState = {
   fontSize: 58,
   subtitlePosition: "bottom",
   primaryColor: "#ffffff",
-  activeColor: "#10b8f4",
+  activeColor: "#f5f5f2",
   titleEnabled: true,
   titlePosition: "top",
   bannerEnabled: false,
@@ -286,12 +286,12 @@ export const styles: StylePreset[] = [
     logo: false,
     banner: false,
     safeZones: ["shorts", "reels", "tiktok", "vk"],
-    // Fill must stay readable against the fixed #06131a outline (the ASS
+    // Fill must stay readable against the fixed #0a0a0b outline (the ASS
     // render default — see subtitles.py write_ass / packages/contracts
-    // media.ts outlineColor) — this used to be #06131a too, so fill and
+    // media.ts outlineColor) — this used to be near-black too, so fill and
     // outline were identical: a solid near-black blob, invisible on any
     // video darker than itself. White fill is what actually contrasts.
-    colors: ["#ffffff", "#10b8f4"],
+    colors: ["#ffffff", "#f5f5f2"],
   },
   {
     id: "expert",
@@ -307,7 +307,7 @@ export const styles: StylePreset[] = [
     logo: true,
     banner: true,
     safeZones: ["shorts", "reels", "tiktok", "vk"],
-    colors: ["#ffffff", "#0d86b5"],
+    colors: ["#ffffff", "#d5d5d0"],
   },
   {
     id: "minimal",
@@ -323,7 +323,7 @@ export const styles: StylePreset[] = [
     logo: false,
     banner: false,
     safeZones: ["shorts", "reels", "tiktok", "vk"],
-    colors: ["#ffffff", "#111820"],
+    colors: ["#ffffff", "#a5a5ae"],
   },
 ];
 

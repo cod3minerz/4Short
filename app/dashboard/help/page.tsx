@@ -13,7 +13,7 @@ const guides = [
   { category: "Начало работы", title: "Создать первый проект", text: "Источник, поиск моментов и запуск обработки.", href: "/dashboard" },
   { category: "Настройки", title: "Оформить клипы", text: "Кадрирование, субтитры, заголовки и баннеры.", href: "/dashboard/styles" },
   { category: "Проекты", title: "Проверить найденные моменты", text: "Границы, транскрипт и повторный поиск.", href: "/dashboard/projects" },
-  { category: "Оплата", title: "Как списываются кредиты", text: "Резерв, списание и автоматический возврат.", href: "/dashboard/billing" },
+  { category: "Оплата", title: "Как списываются минуты", text: "Резерв, списание и автоматический возврат.", href: "/dashboard/billing" },
 ];
 
 const supportEmail = "hello@hashpix.ru";

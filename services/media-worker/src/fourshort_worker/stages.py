@@ -10,11 +10,12 @@ import subprocess
 import threading
 import time
 import zipfile
+from collections.abc import Callable
 
 from .config import Settings
 from .control_api import Job
 from .errors import JobError
-from .media import create_browser_proxy, extract_audio, probe_media, validate_render, verify_timed_brand_video
+from .media import create_browser_proxy, create_source_thumbnail, extract_audio, probe_media, validate_render, verify_timed_brand_video
 from .moments import (
     chunk_transcript,
     compact_transcript,
@@ -32,9 +33,16 @@ from .vision import SparseSourcePerception, YuNetFaceTracker
 
 
 class StageRunner:
-    def __init__(self, settings: Settings, storage: Storage):
+    def __init__(
+        self,
+        settings: Settings,
+        storage: Storage,
+        *,
+        progress_reporter: Callable[[Job, dict], None] | None = None,
+    ):
         self.settings = settings
         self.storage = storage
+        self.progress_reporter = progress_reporter
 
     def source_url(self, payload: dict) -> str:
         source = payload.get("source") or payload.get("input")
@@ -51,6 +59,22 @@ class StageRunner:
         if cancellation_event is not None and cancellation_event.is_set():
             raise JobError("JOB_CANCELLED", "Job lease was cancelled or reassigned", retryable=False)
 
+    def _report_measured_progress(self, job: Job, progress: dict) -> None:
+        """Report optional observational progress without risking paid work.
+
+        Lease renewal is handled by the dedicated heartbeat. A temporary
+        control-plane error while displaying downloaded bytes must never make
+        yt-dlp abandon a source that is otherwise downloading correctly.
+        """
+        if self.progress_reporter is None:
+            return
+        try:
+            self.progress_reporter(job, progress)
+        except Exception:
+            # The next regular lease heartbeat still decides ownership. This
+            # sample is UX telemetry only, not a transactional checkpoint.
+            return
+
     def run(
         self,
         job: Job,
@@ -61,9 +85,15 @@ class StageRunner:
         started = time.monotonic()
         self._assert_not_cancelled(cancellation_event)
         if job.type == "probe":
-            result = self.probe(job, cancellation_event=cancellation_event)
+            # Keep the dispatch keyword-based: it makes the stage boundary
+            # explicit and preserves lightweight probe adapters used by
+            # resource verification without weakening the production method
+            # signature.
+            result = self.probe(job, job_dir=job_dir, cancellation_event=cancellation_event)
+        elif job.type == "source_preview":
+            result = self.source_preview(job, job_dir, cancellation_event=cancellation_event)
         elif job.type == "youtube_import":
-            result = self.youtube_import(job)
+            result = self.youtube_import(job, job_dir, cancellation_event=cancellation_event)
         elif job.type == "extract_audio":
             result = self.extract_audio(job, job_dir, cancellation_event=cancellation_event)
         elif job.type == "generate_proxy":
@@ -99,15 +129,158 @@ class StageRunner:
             **(execution_metrics if isinstance(execution_metrics, dict) else {}),
         }
 
-    def probe(self, job: Job, *, cancellation_event: threading.Event | None = None) -> dict:
+    def _store_source_thumbnail(
+        self,
+        job: Job,
+        job_dir: Path,
+        input_url: str,
+        *,
+        cancellation_event: threading.Event | None = None,
+    ) -> dict | None:
+        """Create the durable poster used by the source library and wizard.
+
+        The result is deliberately an internal object descriptor, never a
+        signed link. The control API owns signing it at read time, which keeps
+        a source preview usable after a reload without leaking S3 credentials
+        or retaining a public third-party image URL.
+        """
+        source_id = str(job.payload.get("sourceId") or "").strip()
+        if not source_id:
+            return None
+        try:
+            poster_path = job_dir / "source-thumbnail.jpg"
+            create_source_thumbnail(
+                self.settings,
+                input_url,
+                poster_path,
+                cancellation_event=cancellation_event,
+            )
+            if not poster_path.is_file() or poster_path.stat().st_size <= 0:
+                return None
+            poster_key = self.settings.object_key(
+                "derived",
+                f"{job.workspace_id}/sources/{source_id}/thumbnail-v1.jpg",
+            )
+            return self.storage.upload_file(
+                poster_path,
+                self.settings.effective_derived_bucket,
+                poster_key,
+                "image/jpeg",
+            )
+        except JobError:
+            # A damaged input may still be safe to process, and a thumbnail
+            # must never block that workflow. The UI renders an explicit
+            # unavailable state instead of an invented brand placeholder.
+            return None
+
+    def probe(
+        self,
+        job: Job,
+        job_dir: Path,
+        *,
+        cancellation_event: threading.Event | None = None,
+    ) -> dict:
         source = job.payload["source"]
         url = self.source_url(job.payload)
         result = probe_media(self.settings, url, cancellation_event=cancellation_event)
         if source.get("kind") == "s3":
             result["fingerprint"] = self.storage.sha256_object(source["bucket"], source["key"])
+            thumbnail = self._store_source_thumbnail(job, job_dir, url, cancellation_event=cancellation_event)
+            if thumbnail:
+                result["thumbnail"] = thumbnail
         return result
 
-    def youtube_import(self, job: Job) -> dict:
+    def source_preview(
+        self,
+        job: Job,
+        job_dir: Path,
+        *,
+        cancellation_event: threading.Event | None = None,
+    ) -> dict:
+        """Read public extractor metadata without downloading media.
+
+        This is the source-of-truth preflight used by the product wizard. It
+        keeps a project out of the queue until duration, title and thumbnail
+        are known, so pricing and range selection are truthful before launch.
+        """
+        self._assert_not_cancelled(cancellation_event)
+        source = job.payload.get("source")
+        # Uploaded files live in private S3. Probe them with ffprobe rather
+        # than sending a browser hint through the charging path.
+        if isinstance(source, dict) and source.get("kind") == "s3":
+            probe = probe_media(self.settings, self.source_url(job.payload), cancellation_event=cancellation_event)
+            duration_ms = int(probe.get("durationMs") or 0)
+            if duration_ms <= 0:
+                raise JobError("SOURCE_DURATION_UNKNOWN", "Не удалось определить длительность видео", retryable=False)
+            thumbnail = self._store_source_thumbnail(
+                job,
+                job_dir,
+                self.source_url(job.payload),
+                cancellation_event=cancellation_event,
+            )
+            return {
+                "url": None,
+                "sourceId": str(job.payload.get("sourceId") or ""),
+                "title": str(job.payload.get("title") or "Загруженное видео").strip()[:180] or "Загруженное видео",
+                "authorName": None,
+                "thumbnail": thumbnail,
+                "thumbnailUrl": None,
+                "durationSeconds": int(math.ceil(duration_ms / 1000)),
+            }
+
+        url = self.source_url(job.payload)
+        hostname = url.split("/", 3)[2].lower() if url.startswith("https://") else ""
+        allowed_hosts = {
+            "youtube.com", "www.youtube.com", "m.youtube.com", "youtu.be",
+            "vk.com", "www.vk.com", "vkvideo.ru", "www.vkvideo.ru",
+            "rutube.ru", "www.rutube.ru",
+            "twitch.tv", "www.twitch.tv", "clips.twitch.tv", "m.twitch.tv",
+        }
+        if hostname not in allowed_hosts:
+            raise JobError("IMPORT_DOMAIN_DENIED", "Import is only allowed from YouTube, VK, RuTube or Twitch", retryable=False)
+        try:
+            completed = subprocess.run(
+                [
+                    self.settings.ytdlp_path,
+                    "--no-playlist", "--no-warnings", "--skip-download",
+                    "--dump-single-json", "--no-simulate", url,
+                ],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=45,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as error:
+            raise JobError("SOURCE_PREVIEW_TIMEOUT", "Не удалось быстро получить данные видео", retryable=True) from error
+        if completed.returncode != 0:
+            raise JobError("SOURCE_PREVIEW_FAILED", "Не удалось получить данные видео — проверьте ссылку и доступ", retryable=False)
+        try:
+            metadata = json.loads(completed.stdout)
+        except json.JSONDecodeError as error:
+            raise JobError("SOURCE_PREVIEW_INVALID", "Источник вернул некорректные данные", retryable=False) from error
+        duration = metadata.get("duration")
+        duration_seconds = int(math.ceil(float(duration))) if isinstance(duration, (int, float)) and duration > 0 else 0
+        if duration_seconds <= 0:
+            raise JobError("SOURCE_DURATION_UNKNOWN", "Не удалось определить длительность видео", retryable=False)
+        title = str(metadata.get("title") or "Видео без названия").strip()[:180]
+        thumbnail = metadata.get("thumbnail")
+        return {
+            "url": url,
+            "title": title or "Видео без названия",
+            "authorName": str(metadata.get("uploader") or metadata.get("channel") or "").strip()[:180] or None,
+            "thumbnailUrl": str(thumbnail) if isinstance(thumbnail, str) and thumbnail.startswith("https://") else None,
+            "durationSeconds": duration_seconds,
+        }
+
+    def youtube_import(
+        self,
+        job: Job,
+        job_dir: Path,
+        *,
+        cancellation_event: threading.Event | None = None,
+    ) -> dict:
         url = str(job.payload.get("source", {}).get("url", ""))
         hostname = url.split("/", 3)[2].lower() if url.startswith("https://") else ""
         # Mirrors SUPPORTED_SOURCE_HOSTS in packages/contracts/src/api.ts — yt-dlp
@@ -122,48 +295,89 @@ class StageRunner:
         if hostname not in allowed_hosts:
             raise JobError("IMPORT_DOMAIN_DENIED", "Import is only allowed from YouTube, VK, RuTube or Twitch", retryable=False)
         key = self.settings.object_key("raw", f"{job.workspace_id}/{job.payload['sourceId']}/source.mp4")
-        process = subprocess.Popen(
-            [
+        # A single stdout stream is friendly to tiny disks, but it makes a
+        # normal progressive YouTube MP4 strictly serial. On the 12 GB/100 GB
+        # HVE worker that trade-off is backwards: source imports should use
+        # the spare scratch capacity to get the customer to transcription as
+        # quickly as possible. yt-dlp can fetch separate DASH tracks in
+        # parallel and aria2c can parallelise a progressive fallback. The
+        # finished file is still bounded by the same 10 GB product limit and
+        # is deleted immediately after S3 confirms it.
+        job_dir.mkdir(parents=True, exist_ok=True)
+        output_template = str(job_dir / "source.%(ext)s")
+        command = [
                 self.settings.ytdlp_path,
                 "--no-playlist",
                 "--no-progress",
                 "--no-warnings",
-                "--format", "best[ext=mp4][vcodec^=avc1][acodec^=mp4a]/best[ext=mp4]",
-                "--output", "-",
+                "--no-part",
+                "--retries", "3",
+                "--fragment-retries", "3",
+                "--socket-timeout", "30",
+                "--concurrent-fragments", "8",
+                # A lot of long YouTube sources are a single progressive
+                # stream, so --concurrent-fragments alone is ineffective.
+                # Keep requests below YouTube's documented 10 MiB throttle
+                # boundary. yt-dlp can then re-extract a throttled URL instead
+                # of letting a customer stare at an import that makes no
+                # meaningful progress for many minutes.
+                "--http-chunk-size", "8M",
+                "--throttled-rate", "250K",
+                "--merge-output-format", "mp4",
+                # HVE exports at 1080×1920. Keep that ceiling, but prefer
+                # independently downloadable H.264 video + AAC audio tracks.
+                # This unlocks true concurrent DASH retrieval; if absent, a
+                # single compatible MP4 stays an explicit fallback.
+                "--format", "bestvideo[height<=1080][vcodec^=avc1]+bestaudio[acodec^=mp4a]/best[height<=1080][ext=mp4][vcodec^=avc1][acodec^=mp4a]/best[height<=1080][ext=mp4]",
+                "--output", output_template,
                 url,
-            ],
+            ]
+        downloader = getattr(self.settings, "ytdlp_external_downloader", "")
+        if downloader and shutil.which(downloader):
+            command[1:1] = [
+                "--downloader", downloader,
+                "--downloader-args", f"{downloader}:-x 8 -s 8 -k 4M --file-allocation=none",
+            ]
+        process = subprocess.Popen(
+            command,
             stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
+            stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
             shell=False,
         )
-        if process.stdout is None:
-            raise JobError("IMPORT_PIPE_FAILED", "Could not open YouTube import stream", retryable=True)
-
-        class HashingReader:
-            def __init__(self, raw):
-                self.raw = raw
-                self.digest = hashlib.sha256()
-
-            def read(self, size=-1):
-                chunk = self.raw.read(size)
-                if chunk:
-                    self.digest.update(chunk)
-                return chunk
-
-        reader = HashingReader(process.stdout)
+        last_reported_bytes = -1
+        last_progress_report_at = 0.0
         try:
-            artifact = self.storage.upload_stream(
-                reader,
-                self.settings.effective_raw_bucket,
-                key,
-                "video/mp4",
-            )
-        except Exception as error:
+            while process.poll() is None:
+                self._assert_not_cancelled(cancellation_event)
+                # yt-dlp and aria2 create one or more `source.*` partial
+                # files depending on whether the extractor chose DASH tracks
+                # or a progressive MP4. Their total is an objective received
+                # byte count even when the remote source does not disclose a
+                # reliable final size. Do not fabricate a percentage.
+                downloaded_bytes = sum(
+                    path.stat().st_size
+                    for path in job_dir.glob("source.*")
+                    if path.is_file()
+                )
+                now = time.monotonic()
+                if downloaded_bytes != last_reported_bytes and now - last_progress_report_at >= 2:
+                    self._report_measured_progress(job, {
+                        "completed": downloaded_bytes,
+                        "unit": "bytes",
+                    })
+                    last_reported_bytes = downloaded_bytes
+                    last_progress_report_at = now
+                time.sleep(0.5)
+        except JobError:
+            # A reassigned lease must not leave yt-dlp/aria2 consuming the
+            # worker's network and disk after the application has stopped
+            # owning the job.
             process.kill()
-            raise JobError("YOUTUBE_IMPORT_UPLOAD_FAILED", "Could not persist imported video", retryable=True) from error
+            process.wait(timeout=5)
+            raise
         stderr = process.stderr.read().decode("utf-8", errors="replace")[-2000:] if process.stderr else ""
-        return_code = process.wait(timeout=60)
+        return_code = process.wait(timeout=5)
         if return_code != 0:
             raise JobError(
                 "YOUTUBE_IMPORT_FAILED",
@@ -171,9 +385,37 @@ class StageRunner:
                 retryable=return_code in {1, 2},
                 details={"returnCode": return_code, "stderr": stderr},
             )
-        source_url = self.storage.signed_get(artifact["bucket"], artifact["key"], expires=3600)
-        probe = probe_media(self.settings, source_url)
-        return {**artifact, **probe, "fingerprint": reader.digest.hexdigest()}
+        candidates = sorted(path for path in job_dir.glob("source.*") if path.is_file())
+        source_path = next((path for path in candidates if path.suffix.lower() == ".mp4"), candidates[0] if candidates else None)
+        if source_path is None:
+            raise JobError("YOUTUBE_IMPORT_OUTPUT_MISSING", "Импорт не создал совместимый видеофайл", retryable=True)
+        max_bytes = int(getattr(self.settings, "source_import_max_bytes", 10 * 1024 * 1024 * 1024))
+        if source_path.stat().st_size > max_bytes:
+            source_path.unlink(missing_ok=True)
+            raise JobError("SOURCE_TOO_LARGE", "Видео превышает лимит 10 ГБ", retryable=False)
+        try:
+            self._report_measured_progress(job, {
+                "completed": source_path.stat().st_size,
+                "total": source_path.stat().st_size,
+                "unit": "bytes",
+            })
+            artifact = self.storage.upload_file(
+                source_path,
+                self.settings.effective_raw_bucket,
+                key,
+                "video/mp4",
+            )
+            source_url = self.storage.signed_get(artifact["bucket"], artifact["key"], expires=3600)
+            probe = probe_media(self.settings, source_url, cancellation_event=cancellation_event)
+            thumbnail = self._store_source_thumbnail(job, job_dir, source_url, cancellation_event=cancellation_event)
+            return {
+                **artifact,
+                **probe,
+                "fingerprint": artifact["sha256"],
+                **({"thumbnail": thumbnail} if thumbnail else {}),
+            }
+        finally:
+            source_path.unlink(missing_ok=True)
 
     def extract_audio(
         self,
@@ -183,7 +425,21 @@ class StageRunner:
         cancellation_event: threading.Event | None = None,
     ) -> dict:
         output = job_dir / "audio.mp3"
-        extract_audio(self.settings, self.source_url(job.payload), output, cancellation_event=cancellation_event)
+        source_range = job.payload.get("sourceRange")
+        start_ms = 0
+        end_ms = None
+        if isinstance(source_range, dict):
+            start_ms = int(source_range.get("startMs") or 0)
+            raw_end = source_range.get("endMs")
+            end_ms = int(raw_end) if raw_end is not None else None
+        extract_audio(
+            self.settings,
+            self.source_url(job.payload),
+            output,
+            start_ms=start_ms,
+            end_ms=end_ms,
+            cancellation_event=cancellation_event,
+        )
         key = self.settings.object_key(
             "derived",
             f"{job.workspace_id}/{job.project_id}/{job.id}/audio.mp3",
@@ -195,7 +451,7 @@ class StageRunner:
             "audio/mpeg",
         )
         artifact["expiresInHours"] = 24
-        return {"audio": artifact}
+        return {"audio": artifact, "sourceOffsetMs": start_ms}
 
     def generate_proxy(
         self,
@@ -306,7 +562,41 @@ class StageRunner:
             job_dir,
             cancellation_event=cancellation_event,
         )
+        source_offset_ms = int(job.payload.get("sourceOffsetMs") or 0)
+        if source_offset_ms:
+            result["response"] = self._shift_transcript_to_source_time(result["response"], source_offset_ms)
         return {"provider": provider.name, **result}
+
+    @staticmethod
+    def _shift_transcript_to_source_time(response: dict, offset_ms: int) -> dict:
+        """Convert a trimmed-audio transcript back to absolute source time.
+
+        Faster-Whisper necessarily starts at zero for the extracted audio.
+        HVE candidates, trims and rendering use source time, so keeping that
+        offset private would create clips from the wrong part of the original.
+        """
+        output = dict(response)
+        offset_seconds = offset_ms / 1000
+        for segment in output.get("segments", []):
+            if isinstance(segment, dict):
+                for key in ("start", "end"):
+                    if isinstance(segment.get(key), (int, float)):
+                        segment[key] = float(segment[key]) + offset_seconds
+        for word in output.get("words", []):
+            if isinstance(word, dict):
+                for key in ("start", "end"):
+                    if isinstance(word.get(key), (int, float)):
+                        word[key] = float(word[key]) + offset_seconds
+                for key in ("startMs", "endMs"):
+                    if isinstance(word.get(key), (int, float)):
+                        word[key] = int(word[key]) + offset_ms
+        for interval in output.get("speechIntervals", []):
+            if isinstance(interval, dict):
+                for key in ("startMs", "endMs"):
+                    if isinstance(interval.get(key), (int, float)):
+                        interval[key] = int(interval[key]) + offset_ms
+        output["sourceOffsetMs"] = offset_ms
+        return output
 
     def find_moments(
         self,

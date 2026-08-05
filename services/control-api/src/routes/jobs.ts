@@ -147,7 +147,7 @@ export async function jobRoutes(app: FastifyInstance) {
     // A terminal pipeline failure must be visible as a terminal project
     // state. Leaving the project in `probing` made the client render a
     // fictitious indefinitely-running first stage after a worker error.
-    if (job.projectId && job.status === "failed") {
+    if (job.projectId && !job.clipId && job.status === "failed") {
       await app.db.update(projects).set({
         status: "failed",
         errorCode: body.code,

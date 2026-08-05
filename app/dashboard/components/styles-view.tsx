@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy, Palette, Plus } from "lucide-react";
+import { Check, Copy, Palette, Plus, Subtitles } from "lucide-react";
 import { useState } from "react";
 import { ControlApiError } from "../lib/control-api";
 import { trackApp } from "../lib/track-app";
@@ -17,20 +17,17 @@ import { PageHeading } from "./page-heading";
 import { ActionButton } from "./ui/ActionButton";
 import { ColorField } from "./ui/ColorField";
 import { LockedField } from "./ui/LockedField";
-import { MediaThumb } from "./ui/MediaThumb";
-import { OptionCard } from "./ui/OptionCard";
 import { Select } from "./ui/Select";
-import { SubtitlePreviewOverlay } from "./ui/SubtitlePreviewOverlay";
 import { Switch } from "./ui/Switch";
 
 const subtitlePresets = [
-  ["clean", "Clean", "Без затемнения и анимаций"],
-  ["bold", "Bold", "Крупный текст с сильным акцентом"],
-  ["karaoke", "Karaoke", "Слово подчёркивается по ходу речи"],
-  ["active_word", "Active Word", "Текущее слово выделяется цветом"],
-  ["word_pop", "Word Pop", "Слово увеличивается при озвучке"],
-  ["minimal_box", "Minimal Box", "Светлая плашка под текстом"],
-  ["speaker_colors", "Speaker Colors", "Свой цвет под каждого спикера"],
+  { id: "clean", label: "Clean", description: "Спокойный текст без подложки и анимации" },
+  { id: "bold", label: "Bold", description: "Контрастный крупный текст для коротких фраз" },
+  { id: "karaoke", label: "Karaoke", description: "Активное слово двигается вместе с речью" },
+  { id: "active_word", label: "Активное слово", description: "Текущее слово выделяется выбранным цветом" },
+  { id: "word_pop", label: "Word Pop", description: "Короткое увеличение на произнесённом слове" },
+  { id: "minimal_box", label: "Minimal Box", description: "Сдержанная подложка за строкой субтитров" },
+  { id: "speaker_colors", label: "По спикерам", description: "Разные цвета для распознанных участников" },
 ] as const;
 
 const framingOptions = [
@@ -62,6 +59,8 @@ export function StylesView() {
   const activeFramingOptions = active && !framingOptions.some((option) => option.id === active.framing)
     ? [{ id: active.framing, label: `${active.framing} — настраивается в редакторе` }, ...framingOptions]
     : framingOptions;
+  const activeSubtitlePreset = subtitlePresets.find((preset) => preset.id === active?.subtitlePreset)
+    ?? subtitlePresets[0];
 
   const patch = (value: Parameters<typeof updateStyle>[1]) => {
     if (!active) return;
@@ -128,7 +127,6 @@ export function StylesView() {
               key={style.id}
               onClick={() => setActiveOverride(style.id)}
             >
-              <MediaThumb aspect="9:16" tone="ink" className="style-library-card__thumb" alt={style.name} />
               <span className="style-library-card__body">
                 <span className="style-library-card__title">
                   <b>{style.name}</b>
@@ -139,9 +137,9 @@ export function StylesView() {
                 <span className="style-library-card__meta">
                   {style.captions !== "Выключены" ? style.captions : "Без субтитров"} · {style.framing}
                 </span>
-                <span className="style-library-card__swatches" aria-hidden="true">
-                  <i style={{ background: style.colors[0] }} />
-                  <i style={{ background: style.colors[1] }} />
+                <span className="style-library-card__tag">
+                  <Subtitles size={13} aria-hidden="true" />
+                  {style.captions === "Выключены" ? "Без субтитров" : style.captions}
                 </span>
               </span>
             </button>
@@ -153,31 +151,7 @@ export function StylesView() {
         </section>
 
         <div className="styles-editor-column">
-        <div className="style-editor">
-          <div
-            className="style-editor__preview"
-            style={{
-              "--style-a": active.colors[0],
-              "--style-b": active.colors[1],
-              // The preview used to hardcode the font and pin captions to the
-              // bottom, so the font and position pickers had no visible effect.
-              "--style-font": active.fontFamily,
-            } as React.CSSProperties}
-          >
-            <span className="dash-media-mark">HP</span>
-            {active.captions !== "Выключены" ? (
-              <SubtitlePreviewOverlay
-                text="ОДНА МЫСЛЬ СТАНОВИТСЯ ЦЕЛЫМ КЛИПОМ"
-                preset={active.subtitlePreset}
-                fontFamily={active.fontFamily}
-                position={active.subtitlePosition}
-                color={active.colors[0]}
-                activeColor={active.colors[1]}
-              />
-            ) : null}
-            {active.banner ? <small>ВАШ БАННЕР</small> : null}
-          </div>
-
+          <div className="style-editor">
           <div className="style-editor__main">
             <header className="style-editor__head">
               <div>
@@ -227,18 +201,16 @@ export function StylesView() {
 
               {active.captions !== "Выключены" ? (
                 <>
-                  <div className="option-card-grid style-preset-grid">
-                    {subtitlePresets.map(([id, label, description]) => (
-                      <OptionCard
-                        key={id}
-                        icon={<b className={`preset-sample preset-${id}`}>ABC</b>}
-                        title={label}
-                        description={description}
-                        selected={active.subtitlePreset === id}
-                        onSelect={() => patch({ subtitlePreset: id })}
-                      />
-                    ))}
-                  </div>
+                  <label className="style-field">
+                    <span><strong>Оформление</strong><small>{activeSubtitlePreset.description}</small></span>
+                    <Select
+                      options={subtitlePresets.map(({ id, label }) => ({ id, label }))}
+                      value={active.subtitlePreset}
+                      onChange={(value) => patch({ subtitlePreset: value })}
+                      aria-label="Оформление субтитров"
+                      fullWidth
+                    />
+                  </label>
 
                   <div className="style-field-row">
                     <label className="style-field">
@@ -324,7 +296,7 @@ export function StylesView() {
               ) : null}
             </section>
           </div>
-        </div>
+          </div>
 
         <div className="style-editor__footer">
           {active.id !== defaultStyleId ? (

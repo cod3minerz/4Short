@@ -150,7 +150,7 @@ export function buildHveDraftSync(input: HveDraftSyncInput): HveDraftSyncResult 
     safeMarginPx: 160,
     color: state.primaryColor,
     activeColor: state.activeColor,
-    outlineColor: "#06131a",
+    outlineColor: "#0a0a0b",
     outlinePx: 4,
     background: state.subtitlePreset === "minimal_box",
   };

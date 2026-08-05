@@ -44,6 +44,7 @@ import type { ClipResult, MomentCandidate } from "../types";
 import { ActionButton, IconButton } from "./ui/ActionButton";
 import { Drawer } from "./ui/Drawer";
 import { LockedField } from "./ui/LockedField";
+import { MediaThumb } from "./ui/MediaThumb";
 import { ProcessingCard } from "./ui/ProcessingCard";
 import { Select } from "./ui/Select";
 import { SubtitlePreviewOverlay } from "./ui/SubtitlePreviewOverlay";
@@ -97,7 +98,11 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
   const [activeId, setActiveId] = useState(demoMoments[0].id);
   const [renderState, setRenderState] = useState<RenderState>("review");
   const [projectStatus, setProjectStatus] = useState<string | null>(null);
-  const [sourceInfo, setSourceInfo] = useState<{ kind: "upload" | "youtube"; durationMs: number | null } | null>(null);
+  const [sourceInfo, setSourceInfo] = useState<{
+    kind: "upload" | "youtube";
+    durationMs: number | null;
+    thumbnailUrl: string | null;
+  } | null>(null);
   const [search, setSearch] = useState("");
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [editingTranscript, setEditingTranscript] = useState(false);
@@ -140,7 +145,13 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
     return getProject(projectId).then((response) => {
       setProjectTitle(response.project.title);
       setProjectStatus(response.project.status);
-      setSourceInfo(response.source ? { kind: response.source.kind, durationMs: response.source.durationMs } : null);
+      setSourceInfo(response.source ? {
+        kind: response.source.kind,
+        durationMs: response.source.durationMs,
+        thumbnailUrl: typeof response.source.metadata.thumbnailUrl === "string"
+          ? response.source.metadata.thumbnailUrl
+          : null,
+      } : null);
       const apiMoments = response.moments.map<MomentCandidate>((moment) => ({
         id: moment.id,
         title: moment.title,
@@ -195,7 +206,7 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
   // The one-shot fetch above can catch a project mid-analysis; poll its
   // status live so this page reflects completion without a manual reload,
   // matching the wizard's own processing screen (see ProcessingCard below).
-  const { status: liveStatus, processingIndex, secondsInStage } = useProjectProcessing(canUseApi ? projectId : null);
+  const { status: liveStatus, processingIndex, secondsInStage, progress: processingProgress } = useProjectProcessing(canUseApi ? projectId : null);
   useEffect(() => {
     if (!liveStatus || activeProcessingStatuses.has(liveStatus)) return;
     // Status just left the "still analyzing" set — re-fetch so the real
@@ -564,6 +575,7 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
               status={liveStatus}
               processingIndex={processingIndex}
               secondsInStage={secondsInStage}
+              progress={processingProgress}
             />
           </div>
         ) : (
@@ -620,7 +632,12 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
 
           <aside className="moment-inspector">
             <div className="moment-preview">
-              <span className="dash-media-mark">HP</span>
+              <MediaThumb
+                className="moment-preview__source"
+                src={sourceInfo?.thumbnailUrl ?? undefined}
+                alt={projectTitle}
+                tone="ink"
+              />
               <SubtitlePreviewOverlay
                 text={active.title.toUpperCase()}
                 preset={currentStyle.subtitlePreset}
@@ -677,17 +694,22 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
           </div>
           {clips.length ? (
             <div className="result-clip-grid">
-              {clips.map((clip, index) => (
+              {clips.map((clip) => (
                 <article className="result-clip" key={clip.id}>
-                  <div className={`result-clip__media result-tone-${index % 3}`}>
+                  <MediaThumb
+                    className="result-clip__media"
+                    src={sourceInfo?.thumbnailUrl ?? undefined}
+                    alt={clip.title}
+                    aspect="9:16"
+                    tone="ink"
+                  >
                     <StatusBadge tone={clip.status === "ready" ? "success" : clip.status === "failed" ? "danger" : "accent"}>
                       {clip.status === "ready" ? <Check size={13} /> : clip.status === "failed" ? <AlertTriangle size={13} /> : <LoaderCircle className="is-spinning" size={13} />}
                       {clip.status === "ready" ? "Готово" : clip.status === "failed" ? "Ошибка клипа" : "В очереди"}
                     </StatusBadge>
-                    <span className="dash-media-mark">HP</span>
-                    <div><span>ОДНА МЫСЛЬ</span><strong>СТАНОВИТСЯ</strong><span>ЦЕЛЫМ КЛИПОМ</span></div>
+                    <span className="result-clip__source-label">Кадр исходника</span>
                     <small>{clip.duration}</small>
-                  </div>
+                  </MediaThumb>
                   <h3>{clip.title}</h3>
                   <p>{clip.topic} · версия {clip.version || "готовится"}</p>
                   <div className="result-clip__actions">
@@ -866,7 +888,7 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                       setSilence(style.silenceRemoval);
                     }}
                   >
-                    <span style={{ background: `linear-gradient(135deg, ${style.colors[0]} 50%, ${style.colors[1]} 50%)` }} />
+                    <span className="project-drawer-styles__mark" aria-hidden="true"><Subtitles size={15} /></span>
                     <b>{style.name}</b>
                     {styleId === style.id ? <Check size={15} /> : null}
                   </button>

@@ -59,13 +59,23 @@ def extract_audio(
     input_url: str,
     output: Path,
     *,
+    start_ms: int = 0,
+    end_ms: int | None = None,
     cancellation_event: threading.Event | None = None,
 ) -> None:
+    start_ms = max(0, int(start_ms))
+    duration_ms = (int(end_ms) - start_ms) if end_ms is not None else None
+    if duration_ms is not None and duration_ms <= 0:
+        raise JobError("SOURCE_RANGE_INVALID", "Selected source range is invalid", retryable=False)
+    seek_args = ["-ss", f"{start_ms / 1000:.3f}"] if start_ms else []
+    duration_args = ["-t", f"{duration_ms / 1000:.3f}"] if duration_ms is not None else []
     run_command([
         settings.ffmpeg_path,
         "-hide_banner", "-nostdin", "-y",
         *ffmpeg_thread_args(settings),
+        *seek_args,
         "-i", input_url,
+        *duration_args,
         "-vn",
         "-ac", "1",
         "-ar", "16000",
@@ -73,6 +83,39 @@ def extract_audio(
         "-b:a", "48k",
         str(output),
     ], timeout_seconds=4 * 60 * 60, cancellation_event=cancellation_event)
+
+
+def create_source_thumbnail(
+    settings: Settings,
+    input_url: str,
+    output: Path,
+    *,
+    cancellation_event: threading.Event | None = None,
+) -> None:
+    """Extract one modest JPEG frame for a private source-library preview.
+
+    A source preview is product data, not decorative UI.  We make it from the
+    stored media so an uploaded file has the same durable thumbnail behaviour
+    as an imported link.  The frame is bounded to 960px wide and is small
+    enough to serve through a short-lived signed URL.  Failure to extract a
+    frame must not make an otherwise valid source impossible to process.
+    """
+    output.parent.mkdir(parents=True, exist_ok=True)
+    run_command([
+        settings.ffmpeg_path,
+        "-hide_banner", "-nostdin", "-y",
+        *ffmpeg_thread_args(settings),
+        # Seeking before input avoids decoding a long GOP from the beginning
+        # of a recording.  0.8s also avoids most black opening frames.
+        "-ss", "0.8",
+        "-i", input_url,
+        "-map", "0:v:0",
+        "-frames:v", "1",
+        "-vf", "scale='min(960,iw)':-2",
+        "-c:v", "mjpeg",
+        "-q:v", "4",
+        str(output),
+    ], timeout_seconds=90, cancellation_event=cancellation_event)
 
 
 def create_browser_proxy(

@@ -28,8 +28,10 @@ and use a safe test account before release. Do not mark the route verified.
 
 1. Structural: intended shell, no overflow, sensible container width, correct
    panel collapse at 360/768/1024/1440 px.
-2. System: only semantic tokens, shared primitives, correct radius family,
-   no accidental white surfaces, glass only over media/ambient content.
+2. System: only semantic tokens and shared primitives; compact controls use
+   the same 14px optical control radius at every height; no accidental blue product chrome;
+   glass only over media/ambient content. A media card contains a real retained
+   thumbnail or the explicit unavailable state—never brand art or fake output.
 3. Interaction: click every visible actionable control; confirm an actual state
    change, API request or intentionally locked reason.
 4. States: hover does not change meaning; focus is visible; pressed/loading
@@ -37,6 +39,8 @@ and use a safe test account before release. Do not mark the route verified.
 5. Accessibility: logical heading order, labels, aria names for icon controls,
    keyboard navigation, Escape and focus return for overlays.
 6. Reliability: loading, error, empty and offline state guide the next action.
+7. Billing gate: source duration, selected range, exact minutes and remaining
+   balance agree; a user below the balance cannot advance or launch analysis.
 
 ## Evidence
 

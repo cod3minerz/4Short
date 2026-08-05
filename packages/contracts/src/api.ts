@@ -39,11 +39,21 @@ export const youtubeUrlSchema = z.string().url().refine((value) => {
 export const createProjectSchema = z.object({
   title: z.string().trim().min(1).max(180),
   source: z.discriminatedUnion("kind", [
-    z.object({ kind: z.literal("youtube"), url: youtubeUrlSchema }),
+    z.object({
+      kind: z.literal("youtube"),
+      url: youtubeUrlSchema,
+      // A worker-verified preflight is required for fresh remote media. It
+      // provides the duration and poster before a project can reserve time.
+      preflightJobId: z.string().uuid(),
+    }),
     z.object({
       kind: z.literal("upload"),
       uploadId: z.string().uuid(),
       originalFileName: z.string().min(1).max(512),
+      // The uploaded object is probed before a project exists. This means the
+      // client cannot turn a local duration hint into a charge: the control
+      // plane is the authority for range and balance validation.
+      preflightJobId: z.string().uuid(),
     }),
     z.object({
       kind: z.literal("existing"),
@@ -224,7 +234,7 @@ export const reserveMinutesSchema = z.object({
 });
 
 export const jobTypeSchema = z.enum([
-  "probe", "youtube_import", "extract_audio", "speech_to_text", "generate_proxy",
+  "source_preview", "probe", "youtube_import", "extract_audio", "speech_to_text", "generate_proxy",
   "verify_brand_video", "find_moments", "analyze_visual", "analyze_clip_visual", "face_track",
   "render_clip", "validate_render", "zip_project", "cleanup",
 ]);

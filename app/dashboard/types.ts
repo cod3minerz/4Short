@@ -24,6 +24,8 @@ export type Project = {
   style: string;
   updatedAt: string;
   accent: "sky" | "ink" | "soft";
+  /** Signed source still when it exists. Never a generated brand placeholder. */
+  thumbnailUrl?: string | null;
 };
 
 export type MomentCandidate = {

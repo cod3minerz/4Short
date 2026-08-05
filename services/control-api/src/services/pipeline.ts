@@ -75,6 +75,39 @@ async function mediaExpiry(db: Database, workspaceId: string, kind: "source" | "
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 }
 
+/**
+ * Source posters follow the source retention policy and are written as real
+ * media rows. Keeping the descriptor in source metadata avoids a public URL,
+ * while the media row makes lifecycle cleanup and storage accounting see it.
+ */
+async function persistSourceThumbnail(
+  db: Database,
+  workspaceId: string,
+  thumbnail: unknown,
+) {
+  if (!thumbnail || typeof thumbnail !== "object" || Array.isArray(thumbnail)) return null;
+  const artifact = thumbnail as Record<string, unknown>;
+  const bucket = typeof artifact.bucket === "string" ? artifact.bucket : null;
+  const objectKey = typeof artifact.key === "string" ? artifact.key : null;
+  const byteSize = Number(artifact.byteSize);
+  if (!bucket || !objectKey || !Number.isSafeInteger(byteSize) || byteSize <= 0) return null;
+  const expiresAt = await mediaExpiry(db, workspaceId, "source");
+  await db.insert(mediaObjects).values({
+    workspaceId,
+    bucket,
+    objectKey,
+    kind: "source_thumbnail",
+    mimeType: typeof artifact.mimeType === "string" ? artifact.mimeType : "image/jpeg",
+    byteSize,
+    sha256: typeof artifact.sha256 === "string" ? artifact.sha256 : null,
+    expiresAt,
+  }).onConflictDoUpdate({
+    target: [mediaObjects.bucket, mediaObjects.objectKey],
+    set: { expiresAt, deletedAt: null, updatedAt: new Date() },
+  });
+  return { bucket, key: objectKey };
+}
+
 async function projectSource(db: Database, projectId: string) {
   const [row] = await db.select({
     project: projects,
@@ -127,6 +160,36 @@ function sourceMediaFacts(result: Record<string, unknown>, durationMs: number) {
 
 export async function advancePipeline(db: Database, completedJob: typeof jobs.$inferSelect) {
   const result = completedJob.result ?? {};
+
+  // A freshly uploaded file is checked before there is a project. Persisting
+  // this worker measurement turns the wizard's displayed cost and range into
+  // a server-verified contract, rather than a File API best guess.
+  if (completedJob.type === "source_preview" && !completedJob.projectId) {
+    const sourceId = typeof completedJob.payload.sourceId === "string" ? completedJob.payload.sourceId : null;
+    if (sourceId) {
+      const resultSourceId = typeof result.sourceId === "string" ? result.sourceId : null;
+      const durationSeconds = Number(result.durationSeconds);
+      if (resultSourceId !== sourceId || !Number.isSafeInteger(durationSeconds) || durationSeconds <= 0) {
+        throw new Error("SOURCE_PREVIEW_RESULT_INVALID");
+      }
+      const thumbnail = await persistSourceThumbnail(db, completedJob.workspaceId, result.thumbnail);
+      await db.update(sources).set({
+        durationMs: durationSeconds * 1000,
+        metadata: {
+          ...(await db.select({ metadata: sources.metadata }).from(sources).where(eq(sources.id, sourceId)).limit(1))[0]?.metadata,
+          preflightJobId: completedJob.id,
+          preflightDurationSeconds: durationSeconds,
+          // A thumbnail is a worker-generated, private object.  The API
+          // signs it only when it is shown; a presigned URL is never stored.
+          ...(thumbnail
+            ? { thumbnail }
+            : {}),
+        },
+        updatedAt: new Date(),
+      }).where(and(eq(sources.id, sourceId), eq(sources.workspaceId, completedJob.workspaceId)));
+    }
+    return;
+  }
 
   // Asset verification has no project by design. A brand video cannot enter
   // a document until this exact worker-verified result has been bound to the
@@ -318,20 +381,45 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
         .set({ expiresAt: await mediaExpiry(db, completedJob.workspaceId, "source") })
         .where(eq(mediaObjects.id, originalMediaId));
     }
+    const thumbnail = await persistSourceThumbnail(db, completedJob.workspaceId, result.thumbnail);
     await db.update(sources).set({
       originalMediaId,
       fingerprint,
       durationMs,
-      metadata: { ...sourceRow.source.metadata, probe: result },
+      metadata: {
+        ...sourceRow.source.metadata,
+        probe: result,
+        ...(thumbnail ? { thumbnail } : {}),
+      },
       updatedAt: new Date(),
     }).where(eq(sources.id, sourceRow.source.id));
 
+    const [projectVersion] = await db.select().from(projectVersions)
+      .where(and(
+        eq(projectVersions.projectId, completedJob.projectId),
+        eq(projectVersions.version, sourceRow.project.currentVersion),
+      ))
+      .limit(1);
+    const configuredRange = projectVersion?.settings
+      && typeof projectVersion.settings === "object"
+      && !Array.isArray(projectVersion.settings)
+      && typeof (projectVersion.settings as Record<string, unknown>).momentSettings === "object"
+      ? ((projectVersion.settings as Record<string, unknown>).momentSettings as Record<string, unknown>).sourceRange
+      : null;
+    const rangeStart = configuredRange && typeof configuredRange === "object"
+      ? Number((configuredRange as Record<string, unknown>).startSeconds) : 0;
+    const rangeEnd = configuredRange && typeof configuredRange === "object"
+      ? Number((configuredRange as Record<string, unknown>).endSeconds) : durationMs / 1000;
+    const processedSeconds = Number.isFinite(rangeStart) && Number.isFinite(rangeEnd)
+      && rangeStart >= 0 && rangeEnd > rangeStart && rangeEnd <= durationMs / 1000
+      ? Math.ceil(rangeEnd - rangeStart)
+      : Math.ceil(durationMs / 1000);
     const reservation = await reserveMinutes({
       db,
       workspaceId: completedJob.workspaceId,
       projectId: completedJob.projectId,
       sourceFingerprint: fingerprint,
-      seconds: Math.ceil(durationMs / 1000),
+      seconds: processedSeconds,
       idempotencyKey: `project:${completedJob.projectId}:source:${fingerprint}:reserve`,
     });
     await db.update(projects).set({ status: "transcribing", updatedAt: new Date() })
@@ -349,9 +437,13 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
         sourceId: sourceRow.source.id,
         source: { kind: "s3", bucket: media[0].bucket, key: media[0].objectKey },
         reservationId: reservation.reservationId,
+        // Extract only the user-selected range. It is both the exact charged
+        // interval and the interval passed to STT; the worker shifts timings
+        // back to absolute source time before candidates are generated.
+        sourceRange: { startMs: Math.round(rangeStart * 1000), endMs: Math.round(rangeEnd * 1000) },
       },
       idempotencyKey: `project:${completedJob.projectId}:extract-audio:v1`,
-      estimatedCost: String(durationMs / 1000),
+      estimatedCost: String(processedSeconds),
       queueWeight: completedJob.queueWeight,
     });
     // A review proxy is a separate convenience artifact.  It must not hold up
@@ -396,6 +488,7 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
         audio: result.audio,
         language: "auto",
         reservationId: completedJob.payload.reservationId,
+        sourceOffsetMs: Number(completedJob.result?.sourceOffsetMs ?? 0),
       },
       idempotencyKey: `project:${completedJob.projectId}:stt:v1`,
       estimatedCost: completedJob.estimatedCost,

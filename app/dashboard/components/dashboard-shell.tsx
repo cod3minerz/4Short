@@ -31,7 +31,7 @@ const primaryItems = [
 ];
 
 const utilityItems = [
-  { href: "/dashboard/billing", label: "Кредиты и тариф", icon: ReceiptText },
+  { href: "/dashboard/billing", label: "Минуты и тариф", icon: ReceiptText },
   { href: "/dashboard/help", label: "Помощь", icon: CircleHelp },
 ];
 
@@ -134,7 +134,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <Link
               className="dash-topbar__balance"
               href="/dashboard/billing"
-              aria-label={availableMinutes === null ? "Баланс загружается" : `${availableMinutes} кредитов доступно`}
+              aria-label={availableMinutes === null ? "Баланс загружается" : `${availableMinutes} минут доступно`}
             >
               <span className="dash-topbar__balance-icon" aria-hidden="true"><Zap size={14} fill="currentColor" strokeWidth={2.25} /></span>
               <span>{availableMinutes === null ? "…" : availableMinutes}</span>

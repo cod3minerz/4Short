@@ -167,7 +167,7 @@ export function HveCompositionPreview({
     if (!context) return;
     context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     context.clearRect(0, 0, logicalWidth, logicalHeight);
-    context.fillStyle = "#080d10";
+    context.fillStyle = "#0a0a0b";
     context.fillRect(0, 0, logicalWidth, logicalHeight);
     if (!frame || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || !video.videoWidth || !video.videoHeight) return;
 

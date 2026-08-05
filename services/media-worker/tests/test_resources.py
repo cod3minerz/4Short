@@ -1,10 +1,11 @@
+import io
 import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import threading
 from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 
@@ -138,6 +139,80 @@ class ResourceTests(unittest.TestCase):
             ("stt", cancelled),
             ("moments", cancelled),
         ])
+
+    def test_youtube_import_uses_parallel_tracks_and_bounded_scratch(self):
+        """Long sources must use the worker's scratch deliberately.
+
+        The first stage needs parallel DASH/progressive import, not a slow
+        stdout pipe. The temporary video is bounded and disappears once S3
+        accepts the durable source.
+        """
+        with TemporaryDirectory() as directory:
+            runner = object.__new__(StageRunner)
+            uploaded = {}
+            runner.settings = SimpleNamespace(
+                ytdlp_path="yt-dlp",
+                ytdlp_external_downloader="",
+                source_import_max_bytes=10 * 1024 * 1024,
+                effective_raw_bucket="raw",
+                object_key=lambda _kind, key: f"raw/{key}",
+            )
+            runner.progress_reporter = None
+            runner.storage = SimpleNamespace(
+                upload_file=lambda path, bucket, key, content_type: (
+                    uploaded.update({"bytes": path.read_bytes(), "bucket": bucket, "key": key, "contentType": content_type})
+                    or {"bucket": bucket, "key": key, "byteSize": len(uploaded["bytes"]), "mimeType": content_type, "sha256": "a" * 64}
+                ),
+                signed_get=lambda _bucket, _key, expires=0: "https://storage.invalid/source.mp4",
+            )
+            runner._store_source_thumbnail = lambda *_args, **_kwargs: None
+            process = MagicMock()
+            process.stderr = io.BytesIO(b"")
+            process.poll.return_value = 0
+            process.wait.return_value = 0
+            job = SimpleNamespace(
+                workspace_id="workspace-1",
+                payload={
+                    "sourceId": "source-1",
+                    "source": {"url": "https://www.youtube.com/watch?v=example"},
+                },
+            )
+            (Path(directory) / "source.mp4").write_bytes(b"video-bytes")
+            with patch("fourshort_worker.stages.subprocess.Popen", return_value=process) as popen, patch(
+                "fourshort_worker.stages.probe_media",
+                return_value={"durationMs": 1_000},
+            ):
+                result = runner.youtube_import(job, Path(directory))
+            args = popen.call_args.args[0]
+            self.assertIn("--http-chunk-size", args)
+            self.assertEqual(args[args.index("--http-chunk-size") + 1], "8M")
+            self.assertIn("--throttled-rate", args)
+            self.assertEqual(args[args.index("--throttled-rate") + 1], "250K")
+            self.assertIn("bestvideo[height<=1080][vcodec^=avc1]+bestaudio[acodec^=mp4a]", args[args.index("--format") + 1])
+            self.assertEqual(args[args.index("--concurrent-fragments") + 1], "8")
+            self.assertEqual(uploaded["bytes"], b"video-bytes")
+            self.assertFalse((Path(directory) / "source.mp4").exists())
+            self.assertEqual(result["durationMs"], 1_000)
+
+    def test_optional_import_progress_never_aborts_a_media_stage(self):
+        """Progress is a customer-facing observation, not a failure path.
+
+        A temporary API/database failure while reporting received bytes must
+        not kill a valid source download; regular lease heartbeat owns job
+        safety separately.
+        """
+        reported = []
+        runner = object.__new__(StageRunner)
+        runner.progress_reporter = lambda _job, progress: reported.append(progress)
+        runner._report_measured_progress(SimpleNamespace(id="job-1"), {"completed": 8, "unit": "bytes"})
+        self.assertEqual(reported, [{"completed": 8, "unit": "bytes"}])
+
+        def unavailable_progress_reporter(*_args):
+            raise RuntimeError("control plane unavailable")
+
+        runner.progress_reporter = unavailable_progress_reporter
+        # Must remain a no-op, not re-raise the observability failure.
+        runner._report_measured_progress(SimpleNamespace(id="job-1"), {"completed": 9, "unit": "bytes"})
 
     def test_visual_analysis_does_not_publish_graph_after_lease_cancellation(self):
         """A stale visual pass can be expensive, but it must stay private.

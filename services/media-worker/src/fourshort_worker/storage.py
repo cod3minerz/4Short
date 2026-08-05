@@ -7,6 +7,7 @@ from botocore.config import Config
 from botocore.exceptions import BotoCoreError, ClientError
 from boto3.s3.transfer import TransferConfig
 from pathlib import Path
+from collections.abc import Callable
 
 from .config import Settings
 from .errors import JobError
@@ -210,7 +211,29 @@ class Storage:
             raise ValueError("HVE_PACKAGE_ARTIFACT_HASH_MISMATCH")
         return total
 
-    def upload_stream(self, stream, bucket: str, key: str, content_type: str) -> dict:
+    def upload_stream(
+        self,
+        stream,
+        bucket: str,
+        key: str,
+        content_type: str,
+        *,
+        on_progress: Callable[[int], None] | None = None,
+    ) -> dict:
+        """Persist a streamed import and expose only measured transferred bytes.
+
+        ``upload_fileobj`` invokes its callback after S3 has accepted a
+        chunk. This makes the number user-visible progress instead of a
+        guessed percentage based on an unknown remote source size.
+        """
+        uploaded_bytes = 0
+
+        def report_transferred(chunk_bytes: int) -> None:
+            nonlocal uploaded_bytes
+            uploaded_bytes += int(chunk_bytes)
+            if on_progress is not None:
+                on_progress(uploaded_bytes)
+
         try:
             self.client.upload_fileobj(
                 stream,
@@ -223,6 +246,7 @@ class Storage:
                     max_concurrency=1,
                     use_threads=False,
                 ),
+                Callback=report_transferred,
             )
             head = self.client.head_object(Bucket=bucket, Key=key)
         except (BotoCoreError, ClientError, S3UploadFailedError, OSError) as error:

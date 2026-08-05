@@ -18,6 +18,7 @@ export function useProjectProcessing(projectId: string | null) {
   const [processingIndex, setProcessingIndex] = useState(0);
   const [stageStartedAt, setStageStartedAt] = useState<number | null>(null);
   const [secondsInStage, setSecondsInStage] = useState(0);
+  const [progress, setProgress] = useState<{ completed?: number; total?: number; unit?: "bytes" | "milliseconds" | "frames" | "steps" } | null>(null);
   const [pollError, setPollError] = useState("");
 
   useEffect(() => {
@@ -32,6 +33,7 @@ export function useProjectProcessing(projectId: string | null) {
         if (cancelled) return;
         const nextStatus = response.project.status;
         setStatus(nextStatus);
+        setProgress(response.processing?.progress ?? null);
         const nextIndex = stageByStatus[nextStatus] ?? 0;
         // Also covers the very first poll: stageStartedAt starts null, which
         // never equals nextIndex's "previous" value, so it always seeds here.
@@ -65,5 +67,5 @@ export function useProjectProcessing(projectId: string | null) {
     return () => window.clearInterval(timer);
   }, [projectId, stageStartedAt]);
 
-  return { status, processingIndex, secondsInStage, pollError };
+  return { status, processingIndex, secondsInStage, progress, pollError };
 }

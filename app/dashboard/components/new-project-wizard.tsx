@@ -30,11 +30,11 @@ import {
   ControlApiError,
   createMultipartUpload,
   createProject,
-  getYoutubeMetadata,
+  createSourcePreview,
+  getSourcePreview,
   isControlApiConfigured,
   listSources,
 } from "../lib/control-api";
-import { sourceLibrary } from "../data";
 import { layoutOptions, layoutToApi } from "../lib/layout-options";
 import { trackApp } from "../lib/track-app";
 import { useProjectProcessing } from "../lib/use-project-processing";
@@ -51,7 +51,6 @@ import { ActionButton } from "./ui/ActionButton";
 import { SegmentedControl } from "./ui/SegmentedControl";
 import { Select } from "./ui/Select";
 import { Stepper } from "./ui/Stepper";
-import { SubtitlePreviewOverlay } from "./ui/SubtitlePreviewOverlay";
 import { Switch } from "./ui/Switch";
 import { ValueBadge } from "./ui/ValueBadge";
 
@@ -138,6 +137,48 @@ function readLocalVideoDuration(file: File): Promise<number | null> {
 }
 
 /**
+ * Creates a real local poster before multipart upload starts. It is only a
+ * temporary browser URL: the worker later persists its own poster artifact
+ * for retained sources. A failed frame extraction stays visibly empty.
+ */
+function createLocalVideoPoster(file: File): Promise<string | null> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const video = document.createElement("video");
+    const cleanup = () => {
+      URL.revokeObjectURL(url);
+      video.removeAttribute("src");
+    };
+    video.muted = true;
+    video.preload = "metadata";
+    video.onloadedmetadata = () => {
+      video.currentTime = Math.min(Math.max(0.2, video.duration * 0.08), 2);
+    };
+    video.onseeked = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const context = canvas.getContext("2d");
+        if (!context || !canvas.width || !canvas.height) throw new Error("frame unavailable");
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const image = canvas.toDataURL("image/jpeg", 0.82);
+        cleanup();
+        resolve(image);
+      } catch {
+        cleanup();
+        resolve(null);
+      }
+    };
+    video.onerror = () => {
+      cleanup();
+      resolve(null);
+    };
+    video.src = url;
+  });
+}
+
+/**
  * Four stages, shown from the very first screen so the whole path is visible
  * up front: three configuration steps plus the processing/result stage the
  * wizard actually ends on.
@@ -164,7 +205,7 @@ export function NewProjectWizard({
   const [sourceLibraryOpen, setSourceLibraryOpen] = useState(false);
   const [step, setStepState] = useState(Math.min(3, Math.max(1, initialStep)));
   const [url, setUrl] = useState(initialSource);
-  const [sourceReady, setSourceReady] = useState(Boolean(initialSource) || initialUpload);
+  const [sourceReady, setSourceReady] = useState(false);
   const [sourceType, setSourceType] = useState<"url" | "file" | "existing">(initialUpload ? "file" : "url");
   /** Which of the 4 supported platforms the pasted URL matched — drives the icon/label shown, never hardcoded. */
   const [sourcePlatform, setSourcePlatform] = useState<(typeof SUPPORTED_PLATFORMS)[number] | null>(null);
@@ -177,6 +218,7 @@ export function NewProjectWizard({
   const [sourceAuthor, setSourceAuthor] = useState<string | null>(null);
   const [sourceThumbnail, setSourceThumbnail] = useState<string | null>(null);
   const [sourceDurationSeconds, setSourceDurationSeconds] = useState<number | null>(null);
+  const [sourcePreflightJobId, setSourcePreflightJobId] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [trimStartSeconds, setTrimStartSeconds] = useState(0);
   const [trimEndSeconds, setTrimEndSeconds] = useState<number | null>(null);
@@ -200,7 +242,7 @@ export function NewProjectWizard({
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [processingProjectId, setProcessingProjectId] = useState<string | null>(null);
-  const { status: processingStatus, processingIndex, secondsInStage, pollError } = useProjectProcessing(processingProjectId);
+  const { status: processingStatus, processingIndex, secondsInStage, progress: processingProgress, pollError } = useProjectProcessing(processingProjectId);
   const [uploadId, setUploadId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [launchError, setLaunchError] = useState("");
@@ -242,22 +284,21 @@ export function NewProjectWizard({
     setSourcePlatform(platform);
     trackApp("source_url_submit", { platform: platform.label });
     try {
-      if (platform.host === "youtube.com") {
-        // Only YouTube has a metadata endpoint (oEmbed) today — see
-        // backend-capability-map. Other platforms are accepted and import
-        // for real, but their preview is confirmed once processing starts
-        // rather than faked here.
-        const metadata = await getYoutubeMetadata(trimmed);
-        setSourceName(metadata.title ?? trimmed);
-        setSourceAuthor(metadata.authorName);
-        setSourceThumbnail(metadata.thumbnailUrl);
-        setSourceDurationSeconds(metadata.durationSeconds);
-      } else {
-        setSourceName(trimmed);
-        setSourceAuthor(null);
-        setSourceThumbnail(null);
-        setSourceDurationSeconds(null);
+      const created = await createSourcePreview({ url: trimmed });
+      let preview = created;
+      for (let attempt = 0; preview.status === "queued" || preview.status === "leased"; attempt += 1) {
+        if (attempt >= 45) throw new Error("Проверка ссылки занимает больше минуты. Попробуйте ещё раз.");
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 800));
+        preview = await getSourcePreview(created.id);
       }
+      if (preview.status !== "succeeded" || !preview.result) {
+        throw new ControlApiError(preview.error?.message ?? "Не удалось получить данные видео", 422, preview.error?.code);
+      }
+      setSourceName(preview.result.title);
+      setSourceAuthor(preview.result.authorName);
+      setSourceThumbnail(preview.result.thumbnailUrl);
+      setSourceDurationSeconds(preview.result.durationSeconds);
+      setSourcePreflightJobId(preview.id);
       setSourceType("url");
       setSourceReady(true);
       trackApp("source_probe_complete", { source: platform.label });
@@ -278,6 +319,7 @@ export function NewProjectWizard({
     setSourceThumbnail(null);
     setSourceDurationSeconds(null);
     setSourcePlatform(null);
+    setSourcePreflightJobId(null);
     setExistingSourceId(null);
     setExistingSourceDuration(null);
     setTrimStartSeconds(0);
@@ -298,19 +340,28 @@ export function NewProjectWizard({
     setUploading(true);
     setError("");
     trackApp("source_upload_start", { fileType: file.type });
-    // Free, local, no backend/API-key involved: the browser can read a
-    // video's real duration from its metadata as soon as the file is
-    // picked, without waiting for the upload. Unlike YouTube (where
-    // duration needs a paid Data API key we don't configure — see
-    // `backend-capability-map`), this costs nothing and is always
-    // available, so there's no reason to leave file uploads on the same
-    // honest-but-avoidable "по факту длительности" fallback.
-    void readLocalVideoDuration(file).then((seconds) => {
+    // This only makes the picked file feel immediate. The server probes the
+    // uploaded object before Continue becomes available: duration and balance
+    // are never trusted from the browser.
+    void Promise.all([readLocalVideoDuration(file), createLocalVideoPoster(file)]).then(([seconds, poster]) => {
       if (seconds !== null) setSourceDurationSeconds(Math.round(seconds));
+      if (poster) setSourceThumbnail(poster);
     });
     try {
       const upload = await createMultipartUpload(file);
       setUploadId(upload.uploadId);
+      const created = await createSourcePreview({ sourceId: upload.sourceId });
+      let preview = created;
+      for (let attempt = 0; preview.status === "queued" || preview.status === "leased"; attempt += 1) {
+        if (attempt >= 45) throw new Error("Проверка файла занимает больше минуты. Попробуйте ещё раз.");
+        await new Promise<void>((resolve) => window.setTimeout(resolve, 800));
+        preview = await getSourcePreview(created.id);
+      }
+      if (preview.status !== "succeeded" || !preview.result) {
+        throw new ControlApiError(preview.error?.message ?? "Не удалось проверить файл", 422, preview.error?.code);
+      }
+      setSourceDurationSeconds(preview.result.durationSeconds);
+      setSourcePreflightJobId(preview.id);
       setSourceReady(true);
       trackApp("source_upload_complete");
     } catch (uploadError) {
@@ -344,8 +395,21 @@ export function NewProjectWizard({
     : Math.max(0, effectiveEndSeconds - trimStartSeconds);
 
   /** Pure arithmetic, no AI call: charge is the source duration we process, rounded up to the minute. */
-  const estimatedCost = rangeSeconds === null ? null : Math.ceil(rangeSeconds / 60);
+  // An already processed source is charged once per workspace. Its selected
+  // range still constrains the next search, but reopening it never creates a
+  // second minutes charge.
+  const sourceNeedsCharge = sourceType !== "existing";
+  const estimatedCost = rangeSeconds === null ? null : sourceNeedsCharge ? Math.ceil(rangeSeconds / 60) : 0;
   const notEnoughCredits = estimatedCost !== null && availableCredits !== null && estimatedCost > availableCredits;
+  // Reused sources still need a known duration: the first processing pass may
+  // already be paid, but a selected range must never enter the pipeline with
+  // an unknown boundary or an unverified credit check.
+  // Launching a new source without a known balance would turn an exact quote
+  // into a best guess. Reused sources do not spend minutes again, but every
+  // new source must have both a measured range and an available balance before
+  // the user can proceed.
+  const sourceCostKnown = sourceDurationSeconds !== null
+    && (!sourceNeedsCharge || availableCredits !== null);
 
   /** Also arithmetic: how many clips of the chosen length fit into the range. */
   const estimatedClips = rangeSeconds === null
@@ -358,33 +422,41 @@ export function NewProjectWizard({
   const launchProject = async () => {
     setLaunchError("");
     if (!isControlApiConfigured()) {
-      setLaunchError("Российский control API не подключён. Проект не запущен и кредиты не списаны.");
+      setLaunchError("Control API не подключён. Проект не запущен и минуты не списаны.");
       return;
     }
     if (!currentStyle?.versionId) {
       setLaunchError("Сначала сохраните выбранный стиль на сервере.");
       return;
     }
-    if (sourceType === "file" && !uploadId) {
-      setLaunchError("Дождитесь завершения загрузки файла.");
+    if (sourceType === "file" && (!uploadId || !sourcePreflightJobId)) {
+      setLaunchError("Дождитесь завершения загрузки и проверки файла.");
       return;
     }
     if (sourceType === "existing" && !existingSourceId) {
       setLaunchError("Выберите сохранённый исходник.");
       return;
     }
+    if (sourceType === "url" && !sourcePreflightJobId) {
+      setLaunchError("Сначала дождитесь проверки ссылки.");
+      return;
+    }
+    if (!sourceCostKnown) {
+      setLaunchError("Сначала нужно определить длительность видео, чтобы точно посчитать списание.");
+      return;
+    }
     if (notEnoughCredits) {
-      setLaunchError("Кредитов не хватает на весь диапазон. Уменьшите его или добавьте кредиты.");
+      setLaunchError("Минут не хватает на весь диапазон. Уменьшите его или пополните баланс.");
       return;
     }
     try {
       const response = await createProject({
         title: sourceName,
         source: sourceType === "url"
-          ? { kind: "youtube", url }
+          ? { kind: "youtube", url, preflightJobId: sourcePreflightJobId! }
           : sourceType === "existing"
             ? { kind: "existing", sourceId: existingSourceId! }
-            : { kind: "upload", uploadId: uploadId!, originalFileName: sourceName },
+            : { kind: "upload", uploadId: uploadId!, originalFileName: sourceName, preflightJobId: sourcePreflightJobId! },
         momentSettings: {
           mode: (cuttingMode === "smart" ? intent : cuttingMode) as
             "best" | "opinions" | "tips" | "stories" | "qa" | "product" | "custom" | "uniform" | "manual",
@@ -425,6 +497,7 @@ export function NewProjectWizard({
           status={processingStatus}
           processingIndex={processingIndex}
           secondsInStage={secondsInStage}
+          progress={processingProgress}
           errorMessage={launchError || pollError}
           action={
             processingProjectId
@@ -552,7 +625,8 @@ export function NewProjectWizard({
                   isOpen={sourceLibraryOpen}
                   onOpenChange={setSourceLibraryOpen}
                   title="Прошлые исходники"
-                  description="Повторная загрузка и списание кредитов не нужны."
+                  description="Повторная загрузка и списание минут не нужны."
+                  className="wizard-source-dialog"
                 >
                   {isControlApiConfigured() ? (
                     realSourceLibrary === null ? (
@@ -575,11 +649,18 @@ export function NewProjectWizard({
                                 setExistingSourceId(source.id);
                                 setExistingSourceDuration(durationLabel);
                                 setSourceName(title);
+                                setSourceThumbnail(typeof source.metadata.thumbnailUrl === "string" ? source.metadata.thumbnailUrl : null);
+                                setSourceDurationSeconds(source.durationMs ? Math.round(source.durationMs / 1000) : null);
                                 setSourceReady(true);
                                 setSourceLibraryOpen(false);
                                 trackApp("source_reuse", { sourceId: source.id });
                               }}
                             >
+                              <MediaThumb
+                                src={typeof source.metadata.thumbnailUrl === "string" ? source.metadata.thumbnailUrl : undefined}
+                                alt=""
+                                className="wizard-source-library__media"
+                              />
                               <span><strong>{title}</strong><small>{source.kind === "youtube" ? "YouTube" : "Файл"} · {durationLabel}</small></span>
                               <ArrowRight size={16} />
                             </button>
@@ -590,26 +671,9 @@ export function NewProjectWizard({
                       <p className="dash-empty-note">Прошлых исходников пока нет — они появятся здесь после первой обработки.</p>
                     )
                   ) : (
-                    <div className="wizard-source-library">
-                      {sourceLibrary.map((source) => (
-                        <button
-                          type="button"
-                          key={source.id}
-                          onClick={() => {
-                            setSourceType("existing");
-                            setExistingSourceId(source.id);
-                            setExistingSourceDuration(source.duration);
-                            setSourceName(source.title);
-                            setSourceReady(true);
-                            setSourceLibraryOpen(false);
-                            trackApp("source_reuse", { sourceId: source.id });
-                          }}
-                        >
-                          <span><strong>{source.title}</strong><small>{source.source} · {source.duration}</small></span>
-                          <ArrowRight size={16} />
-                        </button>
-                      ))}
-                    </div>
+                    <p className="dash-empty-note">
+                      Медиатека появится после подключения рабочего API. Мы не показываем демонстрационные исходники вместо ваших видео.
+                    </p>
                   )}
                 </Dialog>
               </div>
@@ -627,10 +691,10 @@ export function NewProjectWizard({
                   </span>
                 </MediaThumb>
                 <div className="wizard-source-ready__info">
-                  <span className="dash-status tone-success"><Check size={14} /> Это видео?</span>
+                  <span className="dash-status tone-success"><Check size={14} /> Источник готов</span>
                   <h2>{sourceName}</h2>
                   {sourceAuthor ? <p className="wizard-source-ready__author">{sourceAuthor}</p> : null}
-                  <dl>
+                  <dl className="wizard-source-ready__facts">
                     <div>
                       <dt>Источник</dt>
                       <dd>{sourceType === "url" ? (sourcePlatform?.label ?? "Ссылка") : sourceType === "existing" ? "Медиатека" : "Файл загружен"}</dd>
@@ -642,30 +706,24 @@ export function NewProjectWizard({
                           ? existingSourceDuration
                           : sourceDurationSeconds !== null
                             ? formatDuration(sourceDurationSeconds)
-                            : "Определим при обработке"}
+                            : "Определяем длительность"}
                       </dd>
                     </div>
                     <div>
-                      <dt>Результат</dt>
-                      <dd>{estimatedClips === null ? "Определим после анализа" : `≈ ${estimatedClips}–${estimatedClips + 2} клипов`}</dd>
+                      <dt>К обработке</dt>
+                      <dd>
+                        {rangeSeconds === null ? "Определяем диапазон" : formatDuration(rangeSeconds)}
+                      </dd>
                     </div>
                     <div>
                       <dt>Списание</dt>
-                      <dd>
-                        {sourceType === "existing"
-                          ? "Исходник уже оплачен"
-                          : estimatedCost === null
-                            ? "По фактической длительности"
-                            : `≈ ${estimatedCost} кред.`}
-                      </dd>
+                      <dd>{estimatedCost === null ? "Определяем" : sourceNeedsCharge ? `${estimatedCost} мин.` : "Не требуется"}</dd>
                     </div>
                     <div>
-                      <dt>Останется</dt>
+                      <dt>Баланс после запуска</dt>
                       <dd>
-                        {sourceType === "existing"
-                          ? availableCredits === null ? "—" : `${availableCredits} мин.`
-                          : estimatedCost === null || availableCredits === null
-                            ? "После проверки"
+                        {estimatedCost === null || availableCredits === null
+                            ? "—"
                             : `${Math.max(0, availableCredits - estimatedCost)} мин.`}
                       </dd>
                     </div>
@@ -676,7 +734,7 @@ export function NewProjectWizard({
             )}
 
             <div className="wizard-footer wizard-footer--source">
-              <ActionButton isDisabled={!sourceReady} onPress={() => setStep(2)}>
+              <ActionButton isDisabled={!sourceReady || !sourceCostKnown} onPress={() => setStep(2)}>
                 Продолжить
                 <ArrowRight size={18} />
               </ActionButton>
@@ -818,12 +876,12 @@ export function NewProjectWizard({
                 <span>Спишем за обработку</span>
                 <strong>
                   <Zap size={16} fill="currentColor" />
-                  {estimatedCost === null ? "по факту длительности" : `${estimatedCost} кред.`}
+                  {estimatedCost === null ? "определяем длительность" : `${estimatedCost} мин.`}
                 </strong>
               </div>
               <div className="wizard-cost__row wizard-cost__row--muted">
                 <span>Ваш баланс</span>
-                <strong>{availableCredits === null ? "…" : `${availableCredits} кред.`}</strong>
+                <strong>{availableCredits === null ? "…" : `${availableCredits} мин.`}</strong>
               </div>
 
               {sourceDurationSeconds !== null ? (
@@ -854,7 +912,7 @@ export function NewProjectWizard({
 
               {notEnoughCredits ? (
                 <InfoPanel tone="warning">
-                  Кредитов не хватает на весь диапазон. Сократите его выше или пополните баланс.
+                  Минут не хватает на весь диапазон. Сократите его выше или пополните баланс.
                 </InfoPanel>
               ) : null}
             </div>
@@ -916,10 +974,11 @@ export function NewProjectWizard({
 
             <div className="wizard-footer">
               <button className="wizard-back" type="button" onClick={() => setStep(1)}>Назад</button>
-              <ActionButton onPress={() => setStep(3)}>
+              <ActionButton isDisabled={notEnoughCredits || !sourceCostKnown} onPress={() => setStep(3)}>
                 Выбрать оформление
                 <ArrowRight size={18} />
               </ActionButton>
+              {notEnoughCredits ? <span className="wizard-footer__notice" role="status">Сократите диапазон или пополните баланс.</span> : null}
             </div>
           </section>
         ) : null}
@@ -946,28 +1005,6 @@ export function NewProjectWizard({
             />
 
             <div className="wizard-style-layout">
-              <div
-                className="wizard-phone-preview"
-                style={{
-                  "--preview-bg": currentStyle.colors[0],
-                  "--preview-accent": currentStyle.colors[1],
-                } as React.CSSProperties}
-              >
-                <div className="wizard-phone-preview__safe"><span>Безопасная зона</span></div>
-                <span className="dash-media-mark">HP</span>
-                {captions ? (
-                  <SubtitlePreviewOverlay
-                    text="ОДНА МЫСЛЬ МОЖЕТ СТАТЬ ЦЕЛЫМ КЛИПОМ"
-                    preset={currentStyle.subtitlePreset}
-                    fontFamily={currentStyle.fontFamily}
-                    position={currentStyle.subtitlePosition}
-                    color={currentStyle.colors[0]}
-                    activeColor={currentStyle.colors[1]}
-                  />
-                ) : null}
-                {banner ? <div className="wizard-phone-preview__banner">ВАШ БАННЕР</div> : null}
-              </div>
-
               <div className="wizard-style-controls">
                 {styleMode === "auto" ? (
                   <InfoPanel
@@ -991,9 +1028,9 @@ export function NewProjectWizard({
                         key={style.id}
                         onClick={() => chooseStyle(style.id)}
                       >
-                        <span style={{ background: `linear-gradient(135deg, ${style.colors[0]} 50%, ${style.colors[1]} 50%)` }} />
+                        <span className="wizard-style-options__mark" aria-hidden="true"><Subtitles size={16} /></span>
                         <b>{style.name}</b>
-                        <small>{style.captions}</small>
+                        <small>{style.captions === "Выключены" ? "Без субтитров" : `${style.captions} · ${style.framing}`}</small>
                         {styleId === style.id ? <Check size={17} /> : null}
                       </button>
                     ))}
@@ -1069,14 +1106,14 @@ export function NewProjectWizard({
                       ? "0 — исходник уже оплачен"
                       : estimatedCost === null
                         ? "После проверки длительности"
-                        : `${estimatedCost} кред.`}
+                        : `${estimatedCost} мин.`}
                   </strong>
                   <small>Один исходник оплачивается один раз. Поиск, правки и ререндер — без нового списания.</small>
                 </div>
                 <ActionButton
                   fullWidth
                   size="lg"
-                  isDisabled={notEnoughCredits}
+                  isDisabled={notEnoughCredits || !sourceCostKnown}
                   onPress={() => void launchProject()}
                 >
                   Найти моменты

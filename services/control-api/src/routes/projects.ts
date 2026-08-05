@@ -16,6 +16,7 @@ import {
   clipVersions,
   clips,
   jobAttempts,
+  jobEvents,
   jobRequirements,
   jobs,
   mediaObjects,
@@ -39,6 +40,7 @@ import {
 import { getIdempotencyKey } from "../lib/http.js";
 import { signDownload } from "../lib/s3.js";
 import { runIdempotent } from "../services/idempotency.js";
+import { getMinuteBalance } from "../services/minutes.js";
 import { buildSubtitleCues } from "../services/subtitles.js";
 import { readTimingTranscriptWords } from "../services/transcript.js";
 import {
@@ -113,7 +115,23 @@ export async function projectRoutes(app: FastifyInstance) {
       .where(eq(sources.workspaceId, workspaceId))
       .orderBy(desc(sources.lastProcessedAt), desc(sources.createdAt))
       .limit(24);
-    return { items: rows };
+    const items = await Promise.all(rows.map(async (row) => {
+      const metadata = { ...row.metadata };
+      const thumbnail = metadata.thumbnail;
+      if (
+        thumbnail && typeof thumbnail === "object" && !Array.isArray(thumbnail)
+        && typeof (thumbnail as Record<string, unknown>).bucket === "string"
+        && typeof (thumbnail as Record<string, unknown>).key === "string"
+      ) {
+        metadata.thumbnailUrl = await signDownload(
+          (thumbnail as Record<string, string>).bucket,
+          (thumbnail as Record<string, string>).key,
+          15 * 60,
+        );
+      }
+      return { ...row, metadata };
+    }));
+    return { items };
   });
 
   app.get("/v1/projects", { preHandler: app.requireWorkspace }, async (request) => {
@@ -129,6 +147,7 @@ export async function projectRoutes(app: FastifyInstance) {
       project: projects,
       sourceKind: sources.kind,
       sourceDurationMs: sources.durationMs,
+      sourceMetadata: sources.metadata,
       clipsTotal: sql<number>`coalesce(clip_stats.total, 0)::int`,
       clipsReady: sql<number>`coalesce(clip_stats.ready, 0)::int`,
       momentsFound: sql<number>`coalesce(moment_stats.total, 0)::int`,
@@ -156,16 +175,31 @@ export async function projectRoutes(app: FastifyInstance) {
       .where(and(...clauses))
       .orderBy(desc(projects.updatedAt))
       .limit(100);
-    return {
-      items: rows.map((row) => ({
+    const items = await Promise.all(rows.map(async (row) => {
+      const metadata = { ...(row.sourceMetadata ?? {}) } as Record<string, unknown>;
+      const thumbnail = metadata.thumbnail;
+      const sourceThumbnailUrl = typeof metadata.thumbnailUrl === "string"
+        ? metadata.thumbnailUrl
+        : thumbnail && typeof thumbnail === "object" && !Array.isArray(thumbnail)
+          && typeof (thumbnail as Record<string, unknown>).bucket === "string"
+          && typeof (thumbnail as Record<string, unknown>).key === "string"
+          ? await signDownload(
+            (thumbnail as Record<string, string>).bucket,
+            (thumbnail as Record<string, string>).key,
+            15 * 60,
+          )
+          : null;
+      return {
         ...row.project,
         sourceKind: row.sourceKind,
         sourceDurationMs: row.sourceDurationMs,
+        sourceThumbnailUrl,
         clipsTotal: row.clipsTotal,
         clipsReady: row.clipsReady,
         momentsFound: row.momentsFound,
-      })),
-    };
+      };
+    }));
+    return { items };
   });
 
   app.get("/v1/projects/:projectId", { preHandler: app.requireWorkspace }, async (request) => {
@@ -197,11 +231,54 @@ export async function projectRoutes(app: FastifyInstance) {
     const [transcript] = source
       ? await app.db.select().from(transcripts).where(eq(transcripts.sourceId, source.id)).limit(1)
       : [];
+    const [activeJob] = await app.db.select({
+      id: jobs.id,
+      type: jobs.type,
+      status: jobs.status,
+      checkpoint: jobs.checkpoint,
+      startedAt: jobs.startedAt,
+      updatedAt: jobs.updatedAt,
+    }).from(jobs)
+      .where(and(
+        eq(jobs.projectId, project.id),
+        inArray(jobs.status, ["queued", "leased", "waiting_provider"]),
+      ))
+      .orderBy(desc(jobs.updatedAt))
+      .limit(1);
+    const [progressEvent] = activeJob
+      ? await app.db.select({ payload: jobEvents.payload, createdAt: jobEvents.createdAt })
+        .from(jobEvents)
+        .where(and(eq(jobEvents.jobId, activeJob.id), eq(jobEvents.type, "job.progress")))
+        .orderBy(desc(jobEvents.id))
+        .limit(1)
+      : [];
+    const responseSource = source ? { ...source, metadata: { ...source.metadata } } : null;
+    const sourceThumbnail = responseSource?.metadata.thumbnail;
+    if (
+      responseSource
+      && sourceThumbnail && typeof sourceThumbnail === "object" && !Array.isArray(sourceThumbnail)
+      && typeof (sourceThumbnail as Record<string, unknown>).bucket === "string"
+      && typeof (sourceThumbnail as Record<string, unknown>).key === "string"
+    ) {
+      responseSource.metadata.thumbnailUrl = await signDownload(
+        (sourceThumbnail as Record<string, string>).bucket,
+        (sourceThumbnail as Record<string, string>).key,
+        15 * 60,
+      );
+    }
     return {
       project,
-      source: source ?? null,
+      source: responseSource,
       currentVersion: version ?? null,
       transcript: transcript ? { id: transcript.id, revision: transcript.currentRevision, language: transcript.language } : null,
+      processing: activeJob ? {
+        type: activeJob.type,
+        status: activeJob.status,
+        checkpoint: activeJob.checkpoint,
+        startedAt: activeJob.startedAt,
+        progress: progressEvent?.payload ?? null,
+        progressUpdatedAt: progressEvent?.createdAt ?? null,
+      } : null,
       moments: candidates,
       clips: projectClips,
     };
@@ -362,11 +439,29 @@ export async function projectRoutes(app: FastifyInstance) {
             .limit(1);
           if (!upload?.sourceId) throw app.httpErrors.badRequest("Upload is not completed");
           sourceId = upload.sourceId;
-          const [uploadedSource] = await tx.select({ durationMs: sources.durationMs })
-            .from(sources)
-            .where(eq(sources.id, upload.sourceId))
-            .limit(1);
-          knownDurationMs = uploadedSource?.durationMs ?? null;
+          const [preflight] = await tx.select().from(jobs).where(and(
+            eq(jobs.id, body.source.preflightJobId),
+            eq(jobs.workspaceId, workspaceId),
+            eq(jobs.type, "source_preview"),
+            eq(jobs.status, "succeeded"),
+          )).limit(1);
+          const preview = preflight?.result as Record<string, unknown> | null;
+          const previewSourceId = typeof preview?.sourceId === "string" ? preview.sourceId : null;
+          const durationSeconds = Number(preview?.durationSeconds);
+          if (!preflight || previewSourceId !== sourceId || !Number.isSafeInteger(durationSeconds) || durationSeconds <= 0) {
+            throw app.httpErrors.badRequest("Сначала дождитесь проверки загруженного файла");
+          }
+          const selectedSeconds = body.momentSettings.sourceRange
+            ? body.momentSettings.sourceRange.endSeconds - body.momentSettings.sourceRange.startSeconds
+            : durationSeconds;
+          if (body.momentSettings.sourceRange && body.momentSettings.sourceRange.endSeconds > durationSeconds) {
+            throw app.httpErrors.badRequest("Выбранный диапазон выходит за длительность видео");
+          }
+          const balance = await getMinuteBalance(tx, workspaceId);
+          if (balance.availableSeconds < selectedSeconds) {
+            throw app.httpErrors.conflict("Кредитов не хватает на выбранный диапазон. Сократите его или пополните баланс.");
+          }
+          knownDurationMs = durationSeconds * 1000;
           const [media] = await tx.select()
             .from(mediaObjects)
             .where(eq(mediaObjects.id, upload.mediaObjectId))
@@ -395,14 +490,45 @@ export async function projectRoutes(app: FastifyInstance) {
             .limit(1);
           reusableTranscript = transcript ?? null;
         } else {
+          const normalizedUrl = new URL(body.source.url).toString();
+          const [preflight] = await tx.select().from(jobs).where(and(
+            eq(jobs.id, body.source.preflightJobId),
+            eq(jobs.workspaceId, workspaceId),
+            eq(jobs.type, "source_preview"),
+            eq(jobs.status, "succeeded"),
+          )).limit(1);
+          const preview = preflight?.result as Record<string, unknown> | null;
+          const previewUrl = typeof preview?.url === "string" ? preview.url : null;
+          const durationSeconds = Number(preview?.durationSeconds);
+          if (!preflight || previewUrl !== normalizedUrl || !Number.isSafeInteger(durationSeconds) || durationSeconds <= 0) {
+            throw app.httpErrors.badRequest("Сначала проверьте ссылку, чтобы узнать длительность и стоимость");
+          }
+          const selectedSeconds = body.momentSettings.sourceRange
+            ? body.momentSettings.sourceRange.endSeconds - body.momentSettings.sourceRange.startSeconds
+            : durationSeconds;
+          if (body.momentSettings.sourceRange && body.momentSettings.sourceRange.endSeconds > durationSeconds) {
+            throw app.httpErrors.badRequest("Выбранный диапазон выходит за длительность видео");
+          }
+          const balance = await getMinuteBalance(tx, workspaceId);
+          if (balance.availableSeconds < selectedSeconds) {
+            throw app.httpErrors.conflict("Кредитов не хватает на выбранный диапазон. Сократите его или пополните баланс.");
+          }
           const [source] = await tx.insert(sources).values({
             workspaceId,
             kind: "youtube",
-            providerRef: body.source.url,
-            metadata: { preliminaryFingerprint: preliminaryFingerprint(body.source.url) },
+            providerRef: normalizedUrl,
+            durationMs: durationSeconds * 1000,
+            metadata: {
+              preliminaryFingerprint: preliminaryFingerprint(normalizedUrl),
+              title: typeof preview?.title === "string" ? preview.title : body.title,
+              authorName: typeof preview?.authorName === "string" ? preview.authorName : null,
+              thumbnailUrl: typeof preview?.thumbnailUrl === "string" ? preview.thumbnailUrl : null,
+              preflightJobId: preflight.id,
+            },
           }).returning();
           sourceId = source.id;
-          sourcePayload = { kind: "youtube", url: body.source.url };
+          knownDurationMs = durationSeconds * 1000;
+          sourcePayload = { kind: "youtube", url: normalizedUrl };
         }
 
         const [workspace] = await tx.select({ planCode: workspaces.planCode })
@@ -456,7 +582,9 @@ export async function projectRoutes(app: FastifyInstance) {
           // link stays nominal until the probe reports the true duration.
           estimatedCost: reusableTranscript
             ? "1"
-            : String(knownDurationMs !== null ? Math.max(knownDurationMs / 1000, 1) : 1),
+            : String(body.momentSettings.sourceRange
+              ? body.momentSettings.sourceRange.endSeconds - body.momentSettings.sourceRange.startSeconds
+              : knownDurationMs !== null ? Math.max(knownDurationMs / 1000, 1) : 1),
           queueWeight: String(weight),
         }).returning();
         return { project, job };

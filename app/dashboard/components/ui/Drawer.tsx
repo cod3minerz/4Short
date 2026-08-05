@@ -34,7 +34,7 @@ export function Drawer({
     <HeroDrawer>
       <HeroDrawer.Backdrop isOpen={isOpen} onOpenChange={onOpenChange}>
         <HeroDrawer.Content placement={placement} className="dash-drawer-content">
-          <HeroDrawer.Dialog className={className ? `dash-drawer-dialog ${className}` : "dash-drawer-dialog"}>
+          <HeroDrawer.Dialog className={className ? `hp-overlay-scope dash-drawer-dialog ${className}` : "hp-overlay-scope dash-drawer-dialog"}>
             <HeroDrawer.CloseTrigger aria-label="Закрыть" />
             <HeroDrawer.Header>
               <HeroDrawer.Heading>{title}</HeroDrawer.Heading>

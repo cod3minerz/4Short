@@ -207,7 +207,7 @@ def _speaker_color(speaker_id: str | None, config: dict) -> str | None:
     if not speaker_id or str(config.get("preset")) != "speaker_colors":
         return None
     palette = [
-        config.get("activeColor", "#10b8f4"),
+        config.get("activeColor", "#f2f2ed"),
         "#ffd166", "#8ce99a", "#ff8fab", "#c0a7ff",
     ]
     index = sum(ord(character) for character in speaker_id) % len(palette)
@@ -227,8 +227,8 @@ def write_ass(
     margin_v = int(config.get("safeMarginPx", 160))
     alignment = {"top": 8, "center": 5, "bottom": 2}.get(config.get("position"), 2)
     primary = ass_color(config.get("color", "#ffffff"))
-    active = ass_color(config.get("activeColor", "#10b8f4"))
-    outline = ass_color(config.get("outlineColor", "#06131a"))
+    active = ass_color(config.get("activeColor", "#f2f2ed"))
+    outline = ass_color(config.get("outlineColor", "#0a0a0b"))
     style = _style_values(config)
     header = f"""[Script Info]
 ScriptType: v4.00+
@@ -319,7 +319,7 @@ Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
         font_size = min(240, max(16, int(style_data.get("fontSizePx", 72))))
         font_weight = -1 if int(style_data.get("fontWeight", 700)) >= 600 else 0
         primary = ass_color(str(style_data.get("color", "#ffffff")), f"{round((1 - opacity) * 255):02X}")
-        outline = ass_color(str(style_data.get("outlineColor", "#06131a")))
+        outline = ass_color(str(style_data.get("outlineColor", "#0a0a0b")))
         outline_px = min(24, max(0, float(style_data.get("outlinePx", 3))))
         background = bool(style_data.get("background", True))
         # ASS styles must be declared before [Events]. Rather than depend on a

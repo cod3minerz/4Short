@@ -23,6 +23,49 @@ for (const token of requiredTokens) {
   if (!rootBlock.includes(`${token}:`)) failures.push(`Missing canonical token on :root: ${token}`);
 }
 
+// These values are not taste-level defaults. They prevent the public blue
+// marketing accent from silently leaking back into the dark product after a
+// portal, HeroUI update, or one-off component refactor.
+for (const [token, value] of [
+  ["--hp-brand", "#f5f5f2"],
+  ["--hp-brand-hover", "#e6e6e2"],
+  ["--hp-brand-foreground", "#0b0b0c"],
+  ["--hp-radius-control", "14px"],
+  ["--hp-radius-surface", "18px"],
+]) {
+  const declaration = new RegExp(`${token}:\\s*${value.replace(/[.#]/g, "\\$&")}`, "i");
+  if (!declaration.test(rootBlock)) failures.push(`Canonical token ${token} must be ${value}`);
+}
+
+if (!css.includes(".hp-overlay-scope")) {
+  failures.push("Missing portal token scope; dialogs and drawers would inherit the marketing accent");
+}
+
+// These names belonged to the old demo-only phone/preset artwork. A product
+// source can show a real thumbnail or an explicit unavailable state, but it
+// must never restore an invented branded video preview just to fill space.
+for (const forbiddenSelector of [
+  "wizard-phone-preview",
+  "style-editor__preview",
+  "style-library-card__sample",
+  "style-preset-grid",
+  "preset-sample",
+]) {
+  if (css.includes(forbiddenSelector)) {
+    failures.push(`Deprecated fake preview selector is still present: ${forbiddenSelector}`);
+  }
+}
+
+// Generic product affordances are monochrome in the dark system. A future
+// blue application action is almost always an accidental leak from the old
+// marketing palette; user media and creator-defined subtitle colours are
+// intentionally outside this stylesheet check.
+for (const forbiddenValue of ["#3458ff", "#3152ff", "#2f5bff", "#335dff", "#2563eb", "#3b82f6"]) {
+  if (css.toLowerCase().includes(forbiddenValue)) {
+    failures.push(`Legacy blue product colour is still present: ${forbiddenValue}`);
+  }
+}
+
 for (const className of [".hp-action", ".hp-selectable-row"]) {
   if (!css.includes(className)) failures.push(`Missing shared primitive styling: ${className}`);
 }

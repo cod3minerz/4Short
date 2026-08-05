@@ -1,10 +1,11 @@
+import { Clapperboard } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "../../lib/cn";
 
 export type MediaThumbTone = "accent" | "ink" | "soft";
 
 interface MediaThumbProps {
-  /** Real thumbnail once Step 1 fetches one (see the wizard's source-metadata work) — falls back to the brand mark. */
+  /** Real thumbnail once source metadata is available. Missing media is stated honestly, never replaced with a fake brand visual. */
   src?: string;
   alt?: string;
   tone?: MediaThumbTone;
@@ -32,8 +33,8 @@ const ASPECT_CLASS: Record<NonNullable<MediaThumbProps["aspect"]>, string> = {
  * class names — some (`tone-soft` on the project list) had no matching
  * CSS at all and silently rendered nothing.
  *
- * With no `src`, shows the brand mark as a placeholder — this is the slot
- * real thumbnails plug into once the wizard's Step 1 fetches one.
+ * With no `src`, it shows a quiet unavailable state. The component must not
+ * invent a logo, generated still, or "HP" monogram in place of real media.
  */
 export function MediaThumb({ src, alt, tone = "accent", aspect = "16:9", className, children }: MediaThumbProps) {
   return (
@@ -42,8 +43,9 @@ export function MediaThumb({ src, alt, tone = "accent", aspect = "16:9", classNa
         // eslint-disable-next-line @next/next/no-img-element -- thumbnails come from arbitrary source hosts, not next/image's static set
         <img src={src} alt={alt ?? ""} className="media-thumb__image" />
       ) : (
-        <span className="media-thumb__mark" aria-hidden="true">
-          HP
+        <span className="media-thumb__empty" role="img" aria-label="Превью недоступно">
+          <Clapperboard size={18} aria-hidden="true" />
+          <small>Превью недоступно</small>
         </span>
       )}
       {children}

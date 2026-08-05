@@ -972,7 +972,9 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
         align: "center",
         color: state.primaryColor,
         activeColor: state.activeColor,
-        outlineColor: "#06131a",
+        // Canvas selection remains neutral in the dark product theme; blue is
+        // reserved for user media, never editor chrome.
+        outlineColor: "var(--hp-canvas)",
         outlinePx: 4,
         shadow: true,
         background: state.subtitlePreset === "minimal_box",

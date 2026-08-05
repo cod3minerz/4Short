@@ -13,33 +13,42 @@
 /* Canonical Hashpix product tokens. They live on :root so portals (Dialog,
    Drawer and Tooltip) inherit the exact same contract as the application. */
 :root {
-  --hp-canvas: #08090C;
-  --hp-surface: #101116;
-  --hp-surface-raised: #161820;
-  --hp-surface-subtle: #1B1E27;
-  --hp-media: #050609;
-  --hp-line: #2A2E38;
-  --hp-line-strong: #404653;
-  --hp-text: #F7F8FB;
-  --hp-text-muted: #AAB1BE;
-  --hp-text-subtle: #7E8796;
-  --hp-brand: #3153FF;
-  --hp-brand-hover: #4968FF;
-  --hp-brand-pressed: #253DDB;
-  --hp-action-light: #F7F8FB;
-  --hp-action-light-hover: #E9ECF2;
-  --hp-action-light-pressed: #DDE1E8;
+  --hp-canvas: #0a0a0b;
+  --hp-surface: #121214;
+  --hp-surface-raised: #18181b;
+  --hp-surface-subtle: #202024;
+  --hp-media: #09090a;
+  --hp-line: #2b2b30;
+  --hp-line-strong: #48484f;
+  --hp-text: #f5f5f2;
+  --hp-text-muted: #a5a5ae;
+  --hp-text-subtle: #777780;
+  /* Product actions are neutral in the dark theme. Blue belongs only to
+     user media/brand content, never to generic navigation or CTAs. */
+  --hp-brand: #f5f5f2;
+  --hp-brand-hover: #e6e6e2;
+  --hp-brand-pressed: #d5d5d0;
+  --hp-brand-foreground: #0b0b0c;
+  --hp-action-light: #f5f5f2;
+  --hp-action-light-hover: #e6e6e2;
+  --hp-action-light-pressed: #d5d5d0;
   --hp-success: #32C982;
   --hp-warning: #E8B34C;
   --hp-danger: #F06B73;
   --hp-control-sm: 32px;
   --hp-control-md: 36px;
   --hp-control-lg: 40px;
-  --hp-radius-action: 999px;
-  --hp-radius-field: 14px;
-  --hp-radius-overlay: 16px;
-  --hp-radius-panel: 20px;
+  /* Controls keep one optical corner regardless of their height. A fixed
+     radius is less noisy than turning every 32/36/40px control into a
+     differently proportioned pill. Browsers that support `corner-shape`
+     receive the same soft squircle finish without relying on it. */
+  --hp-radius-control: 14px;
+  --hp-radius-surface: 18px;
   --hp-radius-workspace: 24px;
+  --hp-radius-action: var(--hp-radius-control);
+  --hp-radius-field: var(--hp-radius-control);
+  --hp-radius-overlay: var(--hp-radius-surface);
+  --hp-radius-panel: var(--hp-radius-surface);
   --hp-space-1: 4px;
   --hp-space-2: 8px;
   --hp-space-3: 12px;
@@ -49,7 +58,7 @@
   --hp-space-7: 48px;
   --hp-motion-interactive: 160ms ease;
   --hp-motion-overlay: 120ms ease;
-  --hp-focus-ring: color-mix(in oklch, var(--hp-brand) 78%, white);
+  --hp-focus-ring: rgb(245 245 242 / .9);
 }
 
 /* The two roots consume the canonical token layer. `--dash-*` are transition
@@ -72,20 +81,20 @@
   --dash-border: var(--hp-line);
   --dash-border-strong: var(--hp-line-strong);
   --dash-text-muted: var(--hp-text-muted);
-  --dash-accent-soft: color-mix(in oklch, var(--hp-brand) 28%, transparent);
-  --dash-accent-faint: color-mix(in oklch, var(--hp-brand) 12%, transparent);
+  --dash-accent-soft: rgb(245 245 242 / .12);
+  --dash-accent-faint: rgb(245 245 242 / .07);
   --dash-control-sm: var(--hp-control-sm);
   --dash-control-md: var(--hp-control-md);
   --dash-control-lg: var(--hp-control-lg);
   --dash-mobile-nav-clearance: 74px;
-  --dash-radius-control: var(--hp-radius-field);
+  --dash-radius-control: var(--hp-radius-control);
   --dash-radius-card: var(--hp-radius-panel);
   /* Radius scale. Replaces 20+ one-off pixel values that had no relationship
      to each other; --dash-radius-control/-card stay as semantic aliases. */
-  --dash-radius-xs: 8px;
-  --dash-radius-sm: var(--hp-radius-field);
-  --dash-radius-md: var(--hp-radius-overlay);
-  --dash-radius-lg: var(--hp-radius-panel);
+  --dash-radius-xs: var(--hp-radius-control);
+  --dash-radius-sm: var(--hp-radius-control);
+  --dash-radius-md: var(--hp-radius-surface);
+  --dash-radius-lg: var(--hp-radius-surface);
   --dash-radius-xl: var(--hp-radius-workspace);
   --dash-radius-pill: var(--hp-radius-action);
 
@@ -94,9 +103,9 @@
    * dozens of near-identical one-off values. Declared once here so the sweep
    * below can collapse them.
    */
-  --dash-accent-ink: var(--hp-brand);
-  --dash-accent-tint: color-mix(in oklch, var(--hp-brand) 30%, transparent);
-  --dash-accent-wash: color-mix(in oklch, var(--hp-brand) 12%, transparent);
+  --dash-accent-ink: var(--hp-text);
+  --dash-accent-tint: rgb(245 245 242 / .16);
+  --dash-accent-wash: rgb(245 245 242 / .07);
   --dash-ink-soft: var(--hp-text);
   --dash-ink-muted: color-mix(in oklch, var(--hp-text) 84%, transparent);
   --dash-text-soft: color-mix(in oklch, var(--hp-text) 72%, transparent);
@@ -137,7 +146,7 @@
   --separator: var(--dash-border);
   --accent: var(--hp-brand);
   --accent-strong: var(--hp-brand-hover);
-  --accent-foreground: var(--hp-text);
+  --accent-foreground: var(--hp-brand-foreground);
   --field-background: var(--dash-surface);
   --field-foreground: var(--ds-text);
   --field-border: var(--dash-border);
@@ -153,6 +162,24 @@
   min-height: 100dvh;
   background: var(--dash-bg);
   font-family: var(--font-manrope), Manrope, sans-serif;
+}
+
+/* HeroUI overlays render in a portal below <body>, outside .dash-shell.
+   They therefore need the same semantic values explicitly or they fall back
+   to the marketing site's blue accent. */
+.hp-overlay-scope {
+  --accent: var(--hp-brand);
+  --accent-strong: var(--hp-brand-hover);
+  --accent-foreground: var(--hp-brand-foreground);
+  --surface: var(--hp-surface);
+  --surface-secondary: var(--hp-surface-raised);
+  --surface-tertiary: var(--hp-surface-subtle);
+  --overlay: var(--hp-surface);
+  --overlay-foreground: var(--hp-text);
+  --border: var(--hp-line);
+  --separator: var(--hp-line);
+  --focus: var(--hp-focus-ring);
+  color: var(--hp-text);
 }
 
 /*
@@ -277,7 +304,7 @@
   place-items: center;
   border-radius: var(--hp-radius-action);
   background: var(--hp-brand);
-  color: var(--hp-text);
+  color: var(--hp-brand-foreground);
 }
 
 .dash-profile-menu {
@@ -306,8 +333,8 @@
   display: grid;
   place-items: center;
   border-radius: var(--dash-radius-xs);
-  background: var(--accent);
-  color: white;
+  background: var(--dash-surface-muted);
+  color: var(--hp-text);
   font-size: 12px;
   font-weight: 850;
 }
@@ -383,14 +410,14 @@
   gap: 10px;
   padding-inline: 11px;
   border-radius: var(--dash-radius-sm);
-  color: #5f6772;
+  color: var(--hp-text-muted);
   font-size: 13px;
   font-weight: 650;
 }
 
 .dash-nav a:hover {
-  background: rgba(255, 255, 255, .56);
-  color: var(--ink);
+  background: var(--hp-surface-raised);
+  color: var(--hp-text);
 }
 
 .dash-nav a.is-active,
@@ -419,8 +446,8 @@
   /* clip:visible split (not plain `overflow: clip`) — the wizard stepper needs
      horizontal clipping (see the comment near .wizard-header__stepper below),
      but a shared non-visible value on BOTH axes silently disables every
-     `position: sticky` descendant dashboard-wide (.style-editor__preview,
-     .moment-inspector, …) because they no longer see the viewport as their
+     `position: sticky` descendant dashboard-wide (.moment-inspector, …)
+     because they no longer see the viewport as their
      nearest scrolling ancestor. `clip` (unlike `hidden`) can be split per-axis
      without the UA forcing the other axis to `auto`. */
   overflow-x: clip;
@@ -486,8 +513,8 @@
   gap: 7px;
   padding-inline: 13px;
   border-radius: var(--dash-radius-sm);
-  background: var(--accent);
-  color: white;
+  background: var(--hp-action-light);
+  color: var(--hp-canvas);
   font-size: 13px;
   font-weight: 760;
 }
@@ -721,8 +748,8 @@
 .wizard-file-cta {
   gap: 8px;
   padding-inline: 18px;
-  background: var(--accent);
-  color: white;
+  background: var(--hp-action-light);
+  color: var(--hp-canvas);
   font-weight: 800;
   display: inline-flex;
   align-items: center;
@@ -741,7 +768,7 @@
 }
 
 .wizard-source-library button {
-  min-height: 54px;
+  min-height: 66px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -754,7 +781,13 @@
   cursor: pointer;
 }
 
-.wizard-source-library button:hover { border-color: var(--accent); }
+.wizard-source-library button:hover { border-color: var(--dash-border-strong); background: var(--dash-surface-raised); }
+
+.wizard-source-library__media {
+  flex: 0 0 72px;
+  width: 72px;
+  border-radius: 10px;
+}
 
 .wizard-source-library button > span {
   display: flex;
@@ -772,22 +805,22 @@
   border: 1px solid var(--dash-border);
   background: var(--dash-surface-subtle);
   display: grid;
-  grid-template-columns: minmax(230px, .8fr) minmax(0, 1.2fr);
-  min-height: 250px;
+  grid-template-columns: minmax(250px, .9fr) minmax(0, 1.1fr);
+  min-height: 0;
   overflow: hidden;
   border-radius: var(--dash-radius-lg);
 }
 
 .wizard-source-ready__info {
   align-self: center;
-  padding: 14px 18px 14px 4px;
+  padding: 12px 16px 12px 2px;
 }
 
 .wizard-source-ready__info h2 {
   margin-top: 16px;
   letter-spacing: -.035em; font-size: 18px; }
 .wizard-source-ready__info dl {
-  margin: 22px 0 0;
+  margin: 18px 0 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
@@ -965,8 +998,8 @@
   position: absolute;
   inset-block: 0;
   border-radius: var(--dash-radius-xs);
-  background: color-mix(in oklch, var(--accent) 28%, white);
-  box-shadow: inset 0 0 0 1px var(--accent);
+  background: var(--hp-surface-raised);
+  box-shadow: inset 0 0 0 1px var(--hp-line-strong);
 }
 
 .range-timeline__playhead {
@@ -1060,7 +1093,7 @@
   font-weight: 700;
   letter-spacing: .01em;
 }
-.clip-phone-preview__source-review { background: rgba(6, 86, 123, .88); }
+.clip-phone-preview__source-review { background: rgb(10 10 11 / .86); }
 
 .clip-phone-preview__speaker small {
   display: block;
@@ -1121,7 +1154,7 @@
   margin: 24px -30px -48px;
   padding: 10px 30px;
   border-top: 1px solid var(--dash-border);
-  background: rgba(255,255,255,.94);
+  background: color-mix(in srgb, var(--hp-canvas) 92%, transparent);
   backdrop-filter: blur(12px);
 }
 
@@ -1187,28 +1220,17 @@
 .wizard-style-layout {
   margin-top: 38px;
   display: grid;
-  grid-template-columns: 220px minmax(280px, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 18px;
   align-items: start;
 }
 
-.wizard-phone-preview {
-  /* Height comes from the 9:16 aspect ratio alone — a fixed min-height here
-     fought the ratio and made the preview tall enough to push the summary
-     (which holds the primary CTA) below the fold. */
-  background: var(--preview-bg, var(--ink));
-  color: white;
-  position: sticky;
-  top: 24px;
-  aspect-ratio: 9 / 16;
-  overflow: hidden;
-  width: 220px;
-  border-radius: var(--dash-radius-lg);
-}
-
 .wizard-style-controls {
   display: flex;
-  flex-direction: column; gap: 8px; }
+  flex-direction: column;
+  width: min(100%, 760px);
+  gap: 8px;
+}
 .wizard-style-options {
   margin-bottom: 6px;
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
@@ -1522,7 +1544,7 @@
   letter-spacing: -.025em;
 }
 .project-header__title p {
-  color: #758288; margin-top: 4px; font-size: 12px; }
+  color: var(--hp-text-muted); margin-top: 4px; font-size: 12px; }
 .project-header__actions {
   display: flex;
   gap: 9px;
@@ -1601,12 +1623,6 @@
   background: var(--dash-surface-subtle);
 }
 
-.style-library-card__thumb {
-  flex: 0 0 auto;
-  width: 44px;
-  height: 62px;
-}
-
 .style-library-card__body {
   display: flex;
   flex-direction: column;
@@ -1645,19 +1661,6 @@
   white-space: nowrap;
 }
 
-.style-library-card__swatches {
-  display: flex;
-  gap: 4px;
-  margin-top: 1px;
-}
-
-.style-library-card__swatches i {
-  width: 12px;
-  height: 12px;
-  border-radius: var(--dash-radius-pill);
-  border: 1px solid rgba(9, 30, 39, 0.12);
-}
-
 .style-library-add {
   display: flex;
   align-items: center;
@@ -1679,34 +1682,14 @@
   gap: 16px;
 }
 
-.style-editor {
-  display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
-  gap: 24px;
-  align-items: start;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-
-.style-editor__preview {
-  position: sticky;
-  top: 16px;
-  width: 100%;
-  aspect-ratio: 9 / 16;
-  overflow: hidden;
-  /* Neutral video stand-in — never the style's own text colour. */
-  background: var(--dash-media);
-  color: var(--ds-text);
-  border-radius: var(--dash-radius-lg);
-}
+.style-editor { display: block; min-width: 0; }
 
 .style-editor__main {
   display: flex;
   flex-direction: column;
   gap: 20px;
   min-width: 0;
+  max-width: 780px;
 }
 
 .style-editor__head {
@@ -1758,7 +1741,7 @@
   min-height: var(--dash-control-md);
   padding-inline: 12px;
   border: 1px solid var(--dash-border);
-  border-radius: var(--dash-radius-md);
+  border-radius: var(--hp-radius-control);
   background: var(--dash-surface);
   font-size: var(--dash-text-md);
 }
@@ -1792,10 +1775,6 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-.style-preset-grid {
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 }
 
 .style-editor__colors {
@@ -2013,8 +1992,8 @@
   display: grid;
   grid-template-rows: 48px minmax(0, 1fr);
   overflow: hidden;
-  background: var(--dash-surface-muted);
-  color: var(--ink);
+  background: var(--hp-canvas);
+  color: var(--hp-text);
 }
 
 .clip-editor__header {
@@ -2026,7 +2005,7 @@
   justify-content: space-between;
   padding: 0 10px;
   border-bottom: 1px solid var(--dash-border);
-  background: rgba(255,255,255,.96);
+  background: color-mix(in srgb, var(--hp-canvas) 94%, transparent);
 }
 
 .clip-editor__header > div {
@@ -2065,7 +2044,7 @@
 .clip-editor__header input:focus { border-color: var(--dash-border); background: var(--dash-surface-subtle); outline: 0; }
 
 .clip-editor__header > div > small {
-  color: #7d858e;
+  color: var(--hp-text-subtle);
   font-size: 10px;
   white-space: nowrap;
 }
@@ -2083,7 +2062,7 @@
   max-width: calc(100% - 32px);
   min-height: 36px;
   transform: translateX(-50%);
-  border: 1px solid #cfe3d8;
+  border: 1px solid var(--hp-line);
   border-radius: var(--dash-radius-xs);
   background: var(--dash-surface);
   box-shadow: 0 8px 24px rgba(20,28,38,.08);
@@ -2355,7 +2334,7 @@
   border: 1px solid var(--dash-border);
   border-bottom: 0;
   border-radius: var(--dash-radius-sm) var(--dash-radius-sm) 0 0;
-  background: rgba(255,255,255,.94);
+  background: var(--hp-surface);
   box-shadow: none;
 }
 .clip-transport {
@@ -2471,8 +2450,16 @@
 .clip-switch-row > span { font-size: 11px; }
 .clip-field { gap: 5px; margin-top: 10px; font-size: 10px; }
 .clip-field :is(input, select, textarea) {
-  outline: 3px solid color-mix(in oklch, var(--accent) 42%, white);
-  outline-offset: 2px; min-height: 34px; padding: 7px 8px; border-radius: var(--dash-radius-xs); font-size: 11px; }
+  outline: 0;
+  min-height: 34px;
+  padding: 7px 8px;
+  border-radius: var(--dash-radius-xs);
+  font-size: 11px;
+}
+.clip-field :is(input, select, textarea):focus-visible {
+  outline: 2px solid var(--hp-focus-ring);
+  outline-offset: 2px;
+}
 .clip-upload-asset { min-height: 34px; margin-top: 10px; border-radius: var(--dash-radius-xs); font-size: 10px; }
 .clip-help-text { margin-top: 8px; font-size: 9px; }
 .clip-panel-status {
@@ -2551,8 +2538,8 @@
 .dash-primary-link {
   min-width: 158px;
   padding-inline: 22px;
-  background: var(--accent);
-  color: white;
+  background: var(--hp-action-light);
+  color: var(--hp-canvas);
 }
 
 .dash-secondary-link {
@@ -2577,7 +2564,7 @@
 .dash-field-error {
   display: block;
   margin: 8px 8px 0;
-  color: #ad2c2c;
+  color: var(--hp-danger);
   font-size: var(--dash-text-md);
   font-weight: 650;
 }
@@ -2591,7 +2578,7 @@
 .media-thumb {
   position: relative;
   overflow: hidden;
-  border-radius: var(--dash-radius-control);
+  border-radius: 10px;
   background: var(--dash-surface-muted);
 }
 .media-thumb--16x9 { aspect-ratio: 16 / 9; }
@@ -2617,6 +2604,17 @@
   transform: translate(-50%, -50%);
 }
 .media-thumb--soft .media-thumb__mark { color: var(--accent); }
+.media-thumb__empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 6px;
+  color: var(--dash-text-muted);
+  text-align: center;
+}
+.media-thumb__empty small { font-size: 10px; font-weight: 650; }
 
 .dash-media-mark {
   position: absolute;
@@ -2675,8 +2673,8 @@
    the 180px track entirely. Let the aspect-ratio (from .media-thumb--16x9)
    derive height from the actual column width instead. */
 .wizard-source-ready__media {
-  background: var(--accent);
-  color: white;
+  background: var(--hp-media);
+  color: var(--hp-text);
   position: relative;
   overflow: hidden;
   border-radius: var(--dash-radius-card);
@@ -2777,42 +2775,6 @@
   border-color: var(--accent);
   outline: 3px solid color-mix(in oklch, var(--accent) 42%, white);
   outline-offset: 2px;
-}
-
-/* Sits in the upper third so it never collides with the caption block,
-   which is anchored 23% from the bottom. */
-.wizard-phone-preview .dash-media-mark {
-  inset: 34% auto auto 50%;
-}
-
-.wizard-phone-preview__safe {
-  position: absolute;
-  z-index: 2;
-  inset: 8% 9%;
-  border: 1px dashed rgba(255,255,255,.32);
-  border-radius: var(--dash-radius-lg);
-}
-
-.wizard-phone-preview__safe span {
-  position: absolute;
-  top: 7px;
-  left: 8px;
-  color: rgba(255,255,255,.55);
-  font-size: var(--dash-text-xs);
-}
-
-.wizard-phone-preview__banner,
-.style-editor__preview > small {
-  position: absolute;
-  z-index: 3;
-  inset: auto 8% 7%;
-  padding: 10px;
-  border-radius: var(--dash-radius-md);
-  background: rgba(17, 17, 18, .78);
-  color: var(--ink);
-  font-size: var(--dash-text-xs);
-  font-weight: 900;
-  text-align: center;
 }
 
 .wizard-style-options button.is-selected {
@@ -3052,6 +3014,14 @@
   text-align: left;
 }
 
+.wizard-processing__truth {
+  max-width: 47ch;
+  margin: 14px auto 0;
+  color: var(--dash-text-muted);
+  font-size: var(--dash-text-xs);
+  line-height: 1.5;
+}
+
 .wizard-processing__skeletons {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3144,7 +3114,7 @@
   aspect-ratio: 1;
   display: grid;
   place-items: center;
-  border: 1px solid #cedadd;
+  border: 1px solid var(--dash-border);
   border-radius: var(--dash-radius-sm);
   background: var(--dash-surface);
   color: var(--dash-text-muted);
@@ -3191,16 +3161,20 @@
   position: relative;
   min-height: 410px;
   overflow: hidden;
-  background: var(--ink);
-  color: white;
+  background: var(--hp-media);
+  color: var(--hp-text);
 }
 
-.moment-preview::before {
-  content: "";
+.moment-preview__source {
   position: absolute;
-  inset: 17% 22% 0;
-  border-radius: 80px 80px 0 0;
-  background: #1a2b33;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+
+.moment-preview__source .media-thumb__image {
+  object-fit: cover;
 }
 
 .moment-preview > button {
@@ -3214,8 +3188,8 @@
   place-items: center;
   border: 0;
   border-radius: 50%;
-  background: rgba(255,255,255,.9);
-  color: var(--ink);
+  background: var(--hp-surface-raised);
+  color: var(--hp-text);
 }
 
 .moment-preview > small {
@@ -3323,14 +3297,24 @@
 }
 
 .project-drawer-styles button.is-selected {
-  border-color: var(--accent);
-  background: var(--dash-accent-faint);
+  border-color: var(--hp-text);
+  background: var(--hp-surface-subtle);
 }
 
-.project-drawer-styles button > span {
-  width: 100%;
+.project-drawer-styles__mark {
+  width: 32px;
   height: 32px;
-  border-radius: var(--dash-radius-xs);
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--hp-line);
+  border-radius: var(--hp-radius-control);
+  background: var(--hp-surface-raised);
+  color: var(--hp-text-muted);
+}
+.project-drawer-styles button.is-selected .project-drawer-styles__mark {
+  border-color: var(--hp-text);
+  background: var(--hp-text);
+  color: var(--hp-canvas);
 }
 
 .project-drawer-styles b {
@@ -3374,15 +3358,19 @@
   color: white;
 }
 
-.result-clip__media.result-tone-1 { background: var(--accent); }
-
-.result-clip__media.result-tone-2 { background: #26353c; }
-
 .result-clip__media .dash-status { position: absolute; z-index: 3; top: 11px; left: 11px; }
-
-.result-clip__media > div { position: absolute; z-index: 3; inset: auto 8% 20%; display: flex; flex-direction: column; align-items: center; font-family: var(--font-manrope); font-size: clamp(9px, 1.1vw, 16px); }
-
-.result-clip__media > div strong { padding: 2px 4px; background: var(--accent); color: white; }
+.result-clip__source-label {
+  position: absolute;
+  z-index: 2;
+  right: 10px;
+  bottom: 10px;
+  padding: 4px 7px;
+  border: 1px solid rgb(245 245 242 / .14);
+  border-radius: var(--hp-radius-control);
+  background: rgb(10 10 11 / .72);
+  color: var(--hp-text-muted);
+  font-size: var(--dash-text-micro);
+}
 
 .result-clip__media > small { position: absolute; right: 12px; bottom: 10px; font-size: var(--dash-text-xs); }
 
@@ -3406,7 +3394,7 @@
   font-weight: 800;
 }
 
-.style-upload-asset { min-height: 42px; display: flex; align-items: center; justify-content: center; gap: 7px; border: 1px dashed #b8c7cc; border-radius: var(--dash-radius-md); background: var(--dash-surface-subtle); font-size: var(--dash-text-xs); font-weight: 750; }
+.style-upload-asset { min-height: 42px; display: flex; align-items: center; justify-content: center; gap: 7px; border: 1px dashed var(--hp-line-strong); border-radius: var(--hp-radius-surface); background: var(--dash-surface-subtle); font-size: var(--dash-text-xs); font-weight: 750; }
 
 .billing-packages,
 .billing-history {
@@ -3444,10 +3432,10 @@
   gap: 12px;
   margin: 0 0 20px;
   padding: 12px 16px;
-  border: 1px solid color-mix(in oklab, var(--dash-accent, var(--accent)) 24%, var(--dash-border));
+  border: 1px solid var(--dash-border);
   border-radius: var(--dash-radius-lg);
-  background: color-mix(in oklab, var(--dash-accent, var(--accent)) 8%, white);
-  color: #30404a;
+  background: var(--hp-surface-raised);
+  color: var(--hp-text-muted);
   font-size: 13px;
 }
 
@@ -3661,28 +3649,6 @@
   justify-content: center;
 }
 
-.preset-sample {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: center;
-  border-radius: inherit;
-  background: var(--ink);
-  color: white;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.preset-sample.preset-karaoke { text-decoration: underline 3px var(--accent); }
-
-.preset-sample.preset-active_word { color: var(--accent); }
-
-.preset-sample.preset-word_pop { transform: none; font-size: 13px; }
-
-.preset-sample.preset-minimal_box { background: var(--dash-surface-muted); color: var(--ink); }
-
-.preset-sample.preset-speaker_colors { color: #ffcf67; }
-
 .clip-field,
 .clip-range-field {
   display: flex;
@@ -3752,8 +3718,7 @@
   .project-list__head > span:nth-child(4),
   .project-row > time { display: none; }
   .styles-layout { grid-template-columns: 200px minmax(0, 1fr); }
-  .style-editor { grid-template-columns: 220px minmax(0, 1fr); }
-  .style-editor__preview { width: 220px; }
+  .style-editor { grid-template-columns: minmax(0, 1fr); }
   .billing-packages__grid { grid-template-columns: repeat(3, 1fr); }
   .billing-purchase-summary { grid-column: 1 / -1; min-height: 0; }
 }
@@ -3851,7 +3816,7 @@
     grid-template-columns: repeat(3, 1fr);
     padding: 4px;
     border-top: 1px solid var(--dash-border);
-    background: rgba(255,255,255,.97);
+    background: var(--hp-surface);
   }
   .clip-editor__mobile-tabs button {
     border: 0;
@@ -3903,7 +3868,7 @@
     align-items: center;
     padding: 4px 10px max(4px, env(safe-area-inset-bottom));
     border-top: 1px solid var(--dash-border);
-    background: rgba(255,255,255,.96);
+    background: color-mix(in srgb, var(--hp-canvas) 94%, transparent);
     backdrop-filter: blur(16px);
   }
   .dash-mobile-nav a {
@@ -3923,8 +3888,8 @@
     height: 42px;
     justify-content: center;
     border-radius: var(--dash-radius-lg);
-    background: var(--accent);
-    color: white !important;
+    background: var(--hp-action-light);
+    color: var(--hp-canvas) !important;
     transform: translateY(-7px);
   }
   .dash-mobile-nav__new + a { grid-column: 3; }
@@ -3943,7 +3908,6 @@
   .wizard-footer > span { display: none; }
   .wizard-footer .button { margin-left: auto; }
   .wizard-style-layout { grid-template-columns: 1fr; }
-  .wizard-phone-preview { width: min(210px, 62vw); margin-inline: auto; }
   .wizard-style-options { grid-template-columns: repeat(2, 1fr); }
   .wizard-summary { grid-column: auto; }
   .wizard-summary dl { grid-template-columns: 1fr 1fr; }
@@ -3988,11 +3952,6 @@
   .style-library-card { min-width: 180px; scroll-snap-align: start; }
   .style-library-add { min-width: 170px; scroll-snap-align: start; }
   .style-editor { grid-template-columns: 1fr; }
-  /* `relative`, not `static`: it only needs to stop being sticky, and the
-     absolutely-positioned SubtitlePreviewOverlay needs this element as its
-     containing block or the captions escape to the top of the page. */
-  .style-editor__preview { position: relative; width: min(210px, 64vw); height: auto; margin-inline: auto; }
-
   .billing-hero { grid-template-columns: 1fr; }
   .billing-packages__grid { display: flex; overflow-x: auto; }
   .billing-packages__grid > button { min-width: 190px; }
@@ -4062,14 +4021,14 @@
     padding: 6px;
     border: 1px solid var(--dash-border);
     border-radius: var(--dash-radius-xl);
-    background: rgba(255,255,255,.94);
-    box-shadow: 0 20px 0 12px var(--dash-bg), 0 14px 35px rgba(14,39,49,.13);
+    background: color-mix(in srgb, var(--hp-surface) 90%, transparent);
+    box-shadow: 0 20px 0 12px var(--hp-canvas), 0 14px 35px rgb(0 0 0 / .28);
     backdrop-filter: blur(16px);
   }
   .dash-mobile-nav > a,
   .dash-mobile-nav > button { min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0; border: 0; border-radius: var(--dash-radius-lg); background: transparent; color: var(--dash-text-muted); font-size: var(--dash-text-xs); }
   .dash-mobile-nav > .is-active { color: var(--ink); }
-  .dash-mobile-nav__new { width: 50px; justify-self: center; border-radius: var(--dash-radius-lg) !important; background: var(--accent) !important; color: white !important; transform: translateY(-10px); }
+  .dash-mobile-nav__new { width: 50px; justify-self: center; border-radius: var(--dash-radius-control) !important; background: var(--hp-action-light) !important; color: var(--hp-canvas) !important; transform: translateY(-10px); }
   .dash-page { width: min(calc(100% - 32px), 820px); padding-block: 30px 110px; }
   .dash-page-heading { align-items: flex-start; }
   .dash-page-heading__actions { flex-shrink: 0; }
@@ -4118,7 +4077,6 @@
   .style-library-card { min-width: 180px; scroll-snap-align: start; }
   .style-library-add { min-width: 170px; scroll-snap-align: start; }
   .style-editor { grid-template-columns: 1fr; }
-  .style-editor__preview { position: relative; width: min(210px, 64vw); height: auto; margin-inline: auto; }
   .wizard-header { width: 100%; }
   .wizard-result-settings { grid-template-columns: 1fr; }
   .wizard-style-layout { grid-template-columns: minmax(230px, .65fr) 1.35fr; }
@@ -4209,14 +4167,13 @@
   .wizard-source-ready__media { min-height: 0; }
   .wizard-source-ready__info { padding: 18px 12px; }
   .wizard-source-ready__info dl { grid-template-columns: 1fr; }
-  .wizard-footer { position: sticky; z-index: 40; inset: auto; bottom: var(--dash-mobile-nav-clearance); min-height: 64px; margin: 24px 0 0; padding: 8px 0; border-top: 1px solid var(--dash-border); background: rgba(255,255,255,.94); backdrop-filter: blur(14px); }
+  .wizard-footer { position: sticky; z-index: 40; inset: auto; bottom: var(--dash-mobile-nav-clearance); min-height: 64px; margin: 24px 0 0; padding: 8px 0; border-top: 1px solid var(--dash-border); background: color-mix(in srgb, var(--hp-canvas) 92%, transparent); backdrop-filter: blur(14px); }
   .wizard-footer > span { display: none; }
   .wizard-footer .button { width: 100%; margin-left: 0; }
   .wizard-footer--source { position: static; bottom: auto; }
   .wizard-result-settings { margin-top: 16px; }
   .wizard-advanced-grid { grid-template-columns: 1fr; }
   .wizard-style-layout { grid-template-columns: 1fr; }
-  .wizard-phone-preview { position: relative; top: auto; width: min(72vw, 300px); min-height: 520px; margin-inline: auto; }
   .wizard-style-options { grid-template-columns: repeat(3, 1fr); overflow-x: auto; }
   .wizard-style-options button { min-width: 118px; display: flex; }
   .wizard-style-options button > span { height: 38px; }
@@ -4259,7 +4216,6 @@
   .result-clip__actions { align-items: stretch; flex-direction: column; }
   .styles-layout { gap: 14px; }
   .style-editor { grid-template-columns: 1fr; padding: 15px; }
-  .style-editor__preview { width: min(74vw, 280px); margin-inline: auto; }
   .style-field-row { grid-template-columns: 1fr; }
   .style-editor__colors { flex-direction: column; }
   .style-editor__footer { display: grid; grid-template-columns: 1fr; }
@@ -4506,8 +4462,9 @@
 }
 
 .dash-shell :is(button, a, input, select, textarea):focus-visible,
+.editor-focus-shell :is(button, a, input, select, textarea):focus-visible,
 .wizard :is(button, a, input, select, textarea):focus-visible {
-  outline: 3px solid color-mix(in oklch, var(--accent) 42%, white);
+  outline: 2px solid var(--hp-focus-ring);
   outline-offset: 2px;
 }
 
@@ -4551,7 +4508,8 @@
   width: 38px;
   aspect-ratio: 1;
   border-radius: var(--dash-radius-md);
-  background: rgba(255,255,255,.9);
+  background: var(--hp-surface-raised);
+  color: var(--hp-text);
 }
 
 .wizard-source-ready__info dt {
@@ -4597,15 +4555,6 @@
 
 .wizard-advanced-trigger svg.is-open {
   transform: rotate(180deg);
-}
-
-.wizard-phone-preview::before,
-.style-editor__preview::before {
-  content: "";
-  position: absolute;
-  inset: 18% 13% 0;
-  border-radius: 90px 90px 0 0;
-  background: var(--dash-ink-soft);
 }
 
 .wizard-style-options button > span {
@@ -4708,7 +4657,7 @@
 }
 
 .moment-inspector dt {
-  color: #7e898e; font-size: var(--dash-text-xs);
+  color: var(--hp-text-subtle); font-size: var(--dash-text-xs);
 }
 
 .moment-inspector dd {
@@ -4767,7 +4716,7 @@
 }
 
 .billing-packages__grid > button > p {
-  margin-top: 6px; color: #758288; font-size: var(--dash-text-xs);
+  margin-top: 6px; color: var(--hp-text-muted); font-size: var(--dash-text-xs);
 }
 
 .billing-packages__grid > button > b {
@@ -5221,8 +5170,8 @@
   height: 30px;
   padding-inline: 6px;
   border-radius: var(--dash-radius-xs);
-  background: #06131a;
-  color: #fff;
+  background: var(--hp-surface-subtle);
+  color: var(--hp-text);
   font-size: 11px;
   overflow: hidden;
 }
@@ -5364,8 +5313,6 @@
 ) { background: var(--dash-surface); }
 
 .dash-shell :is(
-  .wizard-phone-preview__banner,
-  .style-editor__preview > small,
   .wizard-style-options svg,
   .project-drawer-styles svg,
   .style-library-add > svg
@@ -5495,6 +5442,7 @@
   min-height: var(--hp-control-md);
   border: 1px solid transparent;
   border-radius: var(--hp-radius-action);
+  corner-shape: squircle;
   padding-inline: 14px;
   box-shadow: none;
   font-size: var(--dash-text-sm);
@@ -5504,7 +5452,7 @@
 
 .hp-action[data-focus-visible] { outline: 2px solid var(--hp-focus-ring); outline-offset: 2px; }
 .hp-action[data-disabled] { cursor: not-allowed; opacity: .48; }
-.hp-action--brand { background: var(--hp-brand); color: var(--hp-text); }
+.hp-action--brand { background: var(--hp-brand); color: var(--hp-brand-foreground); }
 .hp-action--brand[data-hovered] { background: var(--hp-brand-hover); }
 .hp-action--brand[data-pressed] { background: var(--hp-brand-pressed); }
 .hp-action--light { background: var(--hp-action-light); color: var(--hp-canvas); }
@@ -5583,4 +5531,286 @@
   .dash-mobile-nav,
   .clip-editor__mobile-tabs { border-color: var(--dash-border); background: rgba(17,17,18,.92); box-shadow: 0 14px 35px rgba(0,0,0,.36); }
   .dash-mobile-nav > .is-active { color: var(--ds-text); }
+}
+
+/* Product-surface guardrail. These are the legacy selectors that remain in
+   page layouts; their geometry and colour must resolve through the same
+   system as the reusable primitives above. Kept last so stale page rules
+   cannot turn a dark mobile surface white or a neutral CTA blue again. */
+.dash-shell :is(.wizard-file-cta, .wizard-footer .button, .dash-compact-primary, .clip-editor__header .button--primary, .dash-mobile-nav__new) {
+  background: var(--hp-brand) !important;
+  color: var(--hp-brand-foreground) !important;
+  border-radius: var(--hp-radius-control) !important;
+}
+.dash-shell :is(.wizard-file-cta, .wizard-footer .button, .dash-compact-primary, .clip-editor__header .button--primary, .dash-mobile-nav__new):hover {
+  background: var(--hp-brand-hover) !important;
+}
+.dash-shell :is(.dash-mobile-nav, .clip-editor__mobile-tabs, .wizard-footer) {
+  background: color-mix(in srgb, var(--hp-surface) 94%, transparent) !important;
+  border-color: var(--hp-line) !important;
+}
+.dash-shell :is(.dash-mobile-nav a, .clip-editor__mobile-tabs button) { color: var(--hp-text-muted); }
+.dash-shell :is(.dash-mobile-nav a.is-active, .clip-editor__mobile-tabs button.is-active) {
+  background: var(--hp-surface-raised);
+  color: var(--hp-text);
+}
+/* Form controls intentionally share the same optical radius at every height.
+   Cards/sheets retain --hp-radius-surface and are never mistaken for inputs. */
+.dash-shell :is(.dash-input, .dash-select, .wizard-url-input, .style-editor__name input, .dash-color-field, .clip-field input, .clip-field textarea, .clip-range-field input) {
+  border-radius: var(--hp-radius-control) !important;
+}
+.dash-shell :is(.option-card, .wizard-source-ready, .wizard-cost, .style-library-card, .style-library-add, .wizard-processing__card, .project-workspace, .moment-inspector) {
+  border-radius: var(--hp-radius-surface) !important;
+}
+
+/* Final visual contract. Dark product chrome remains neutral: blue is reserved
+   for a user's own media/brand choices, never for an application action. */
+.dash-shell :is(.wizard-file-cta, .wizard-footer .button, .dash-compact-primary, .clip-editor__header .button--primary, .dash-mobile-nav__new, .dash-primary-link) {
+  background: var(--hp-brand) !important;
+  color: var(--hp-brand-foreground) !important;
+}
+.dash-shell :is(.wizard-file-cta, .wizard-footer .button, .dash-compact-primary, .clip-editor__header .button--primary, .dash-mobile-nav__new, .dash-primary-link):hover {
+  background: var(--hp-brand-hover) !important;
+  color: var(--hp-brand-foreground) !important;
+}
+.dash-shell :is(.option-card, .style-library-card, .wizard-source-library button, .wizard-control-card, .wizard-style-options button) {
+  border-radius: var(--hp-radius-surface) !important;
+}
+.dash-shell :is(.wizard-source-ready__kind, .wizard-source-ready__media > span:last-child) {
+  border-radius: var(--hp-radius-control) !important;
+}
+.dash-shell .wizard-source-ready__media > span:last-child {
+  background: color-mix(in srgb, var(--hp-surface) 88%, transparent);
+  color: var(--hp-text);
+}
+
+/* --------------------------------------------------------------------------
+   Production polish pass — these rules intentionally sit after every legacy
+   responsive block. Product chrome is monochrome; brand colour belongs to a
+   creator's media, never to the product's primary controls. The small set of
+   semantic radii below is the only radius system dashboard code may use.
+   -------------------------------------------------------------------------- */
+.dash-shell {
+  --hp-radius-control: 14px;
+  --hp-radius-media: 12px;
+  --hp-radius-surface: 18px;
+  --hp-radius-workspace: 24px;
+}
+
+/* Do not allow legacy light/blue hover declarations to leak into the dark UI. */
+.dash-shell :is(.button, .hp-action, .dash-primary-link, .dash-secondary-link, .wizard-file-cta) {
+  transition: background-color var(--hp-motion-interactive), border-color var(--hp-motion-interactive), color var(--hp-motion-interactive), opacity var(--hp-motion-interactive);
+}
+.dash-shell :is(.button--primary, .dash-primary-link, .wizard-file-cta, .wizard-footer .button, .dash-compact-primary, .dash-mobile-nav__new) {
+  background: var(--hp-action-light) !important;
+  color: var(--hp-canvas) !important;
+  border-color: transparent !important;
+}
+.dash-shell :is(.button--primary, .dash-primary-link, .wizard-file-cta, .wizard-footer .button, .dash-compact-primary, .dash-mobile-nav__new):is(:hover, [data-hovered]) {
+  background: var(--hp-action-light-hover) !important;
+  color: var(--hp-canvas) !important;
+}
+.dash-shell :is(.dash-secondary-link, .button--outline, .button--secondary) {
+  background: var(--hp-surface-raised) !important;
+  color: var(--hp-text) !important;
+  border-color: var(--hp-line) !important;
+}
+.dash-shell :is(.dash-secondary-link, .button--outline, .button--secondary):is(:hover, [data-hovered]) {
+  background: var(--hp-surface-subtle) !important;
+  border-color: var(--hp-line-strong) !important;
+}
+
+/* Fields/actions share one fixed optical corner at every size. Surfaces are
+   not controls, and get their own calmer radius — this avoids the visual
+   "random-radius" effect. */
+.dash-shell :is(
+  .hp-action,
+  .dash-input,
+  .dash-select,
+  .wizard-url-input,
+  .style-editor__name input,
+  .dash-color-field,
+  .clip-field input,
+  .clip-field textarea,
+  .clip-range-field input,
+  .wizard-source-ready__kind,
+  .wizard-source-ready__media > span:last-child,
+  .dash-status,
+  .value-badge
+) { border-radius: var(--hp-radius-control) !important; }
+.dash-shell :is(
+  .hp-action,
+  .dash-input,
+  .dash-select,
+  .wizard-url-input,
+  .style-editor__name input,
+  .dash-color-field,
+  .clip-field input,
+  .clip-field textarea,
+  .clip-range-field input,
+  .wizard-source-ready__kind,
+  .wizard-source-ready__media > span:last-child,
+  .dash-status,
+  .value-badge
+) { corner-shape: squircle; }
+.dash-shell :is(
+  .option-card,
+  .wizard-source-ready,
+  .wizard-source-library button,
+  .wizard-source-pane,
+  .wizard-source-dropzone,
+  .wizard-control-card,
+  .wizard-style-options button,
+  .wizard-summary,
+  .wizard-processing__card,
+  .progress-stage,
+  .style-library-card,
+  .style-library-add,
+  .style-editor,
+  .project-workspace,
+  .moment-inspector,
+  .dash-drawer-dialog,
+  [data-slot="modal-dialog"]
+) { border-radius: var(--hp-radius-surface) !important; }
+.dash-shell .media-thumb { border-radius: var(--hp-radius-media); }
+
+/* Legacy selected states used the former accent alias. Selection remains
+   explicit, but neutral: the dark product chrome never becomes blue. */
+.dash-shell :is(.option-card.is-selected, .style-library-card.is-active, .wizard-style-options button.is-selected) {
+  border-color: var(--hp-text) !important;
+  background: var(--hp-surface-subtle) !important;
+  box-shadow: none !important;
+}
+.dash-shell :is(.option-card.is-selected .option-card__icon, .wizard-style-options button.is-selected > span:first-child) {
+  background: var(--hp-text) !important;
+  color: var(--hp-canvas) !important;
+}
+.dash-shell :is(.hp-action, .button, .option-card, .style-library-card, .wizard-source-library button):focus-visible {
+  outline: 2px solid var(--hp-focus-ring) !important;
+  outline-offset: 2px;
+}
+
+/* Styles are a sober control surface, not a faux phone mockup. */
+.style-library-card { min-height: 64px; padding: 12px 14px; }
+.style-library-card__body { width: 100%; gap: 3px; }
+.style-library-card__title { justify-content: space-between; }
+.style-library-card__tag {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 5px;
+  margin-top: 2px;
+  color: var(--hp-text-subtle);
+  font-size: var(--dash-text-micro);
+}
+.style-editor__main { max-width: 840px; gap: 22px; }
+.style-editor__head { padding-bottom: 2px; }
+.wizard-style-options__mark {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--hp-line);
+  border-radius: var(--hp-radius-control);
+  background: var(--hp-surface-raised);
+  color: var(--hp-text-muted);
+}
+.wizard-style-options button.is-selected .wizard-style-options__mark {
+  color: var(--hp-canvas);
+}
+
+/* Source confirmation is a media-first fact sheet. It has no invented "HP"
+   art or decorative score: thumbnail, title, duration and exact charge only. */
+.wizard-source-ready { grid-template-columns: minmax(220px, .72fr) minmax(0, 1.28fr); gap: 20px; padding: 12px; background: var(--hp-surface); }
+.wizard-source-ready__media { min-height: 190px; background: var(--hp-media); }
+.wizard-source-ready__info { padding: 10px 8px 10px 2px; }
+.wizard-source-ready__info h2 { margin-top: 12px; font-size: 19px; line-height: 1.25; }
+.wizard-source-ready__info .wizard-source-ready__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 22px;
+  margin-top: 16px;
+  border-top: 1px solid var(--hp-line);
+}
+.dash-shell .wizard-source-ready__facts div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 10px;
+  min-height: 42px;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid var(--hp-line);
+  border-radius: 0;
+  background: transparent;
+}
+.wizard-source-ready__facts dt {
+  color: var(--hp-text-muted);
+  font-size: var(--dash-text-xs);
+}
+.wizard-source-ready__facts dd {
+  margin: 0;
+  color: var(--hp-text);
+  font-size: var(--dash-text-sm);
+  font-weight: 720;
+  text-align: right;
+}
+.wizard-source-ready__info > button { margin-top: 14px; color: var(--hp-text-muted); }
+.wizard-source-library button { min-height: 74px; padding: 8px; background: var(--hp-surface); }
+.wizard-source-library__media { flex-basis: 96px; width: 96px; }
+.wizard-source-library button > svg { margin-inline: 4px; color: var(--hp-text-muted); }
+.wizard-source-dialog [data-slot="modal-body"] { padding-top: 6px; }
+.wizard-source-dialog .wizard-source-library { gap: 8px; }
+.wizard-source-dialog .wizard-source-library button { min-height: 88px; }
+.wizard-source-dialog .media-thumb__empty { font-size: 10px; }
+
+/* Honest processing state: one source, one stage, no fake deliverables. */
+.wizard-processing__card { max-width: 720px; box-shadow: none; }
+.wizard-processing__source .media-thumb { width: 72px; flex: 0 0 72px; }
+.wizard-processing__truth { border-left: 2px solid var(--hp-line-strong); padding-left: 10px; color: var(--hp-text-muted); }
+.progress-stage { background: var(--hp-surface-raised); }
+.progress-stage__fill { background: var(--hp-text); }
+.progress-stage__dot { animation: none; }
+.wizard-footer__notice { flex: 1 1 100%; order: 3; color: var(--hp-warning); font-size: var(--dash-text-xs); text-align: right; }
+
+/* Glass is used only for floating navigation/overlays, never for every card. */
+.dash-shell :is(.dash-mobile-nav, .clip-editor__mobile-tabs, .wizard-footer) {
+  background: color-mix(in srgb, var(--hp-surface) 88%, transparent) !important;
+  border-color: color-mix(in srgb, var(--hp-line-strong) 75%, transparent) !important;
+  backdrop-filter: blur(22px) saturate(110%);
+  -webkit-backdrop-filter: blur(22px) saturate(110%);
+}
+
+@media (max-width: 760px) {
+  .dash-shell { --dash-mobile-nav-clearance: 84px; }
+  .dash-page { width: 100%; padding: 18px 14px 96px; }
+  .wizard-body { width: 100%; margin-top: 22px; padding: 0 0 98px; }
+  .wizard-header { gap: 18px; }
+  .wizard-header__intro p { max-width: 300px; margin-inline: auto; }
+  .wizard-panel__heading { margin-bottom: 20px; }
+  .wizard-source-ready { grid-template-columns: 1fr; gap: 12px; padding: 10px; }
+  .wizard-source-ready__media { min-height: 0; aspect-ratio: 16 / 9; }
+  .wizard-source-ready__info { padding: 8px 4px 4px; }
+  .wizard-source-ready__info h2 { font-size: 17px; }
+  .wizard-source-ready__info .wizard-source-ready__facts { grid-template-columns: 1fr; }
+  .wizard-source-library button { min-height: 78px; }
+  .wizard-source-library__media { flex-basis: 92px; width: 92px; }
+  .wizard-footer { position: fixed; z-index: 60; right: 12px; bottom: calc(70px + env(safe-area-inset-bottom)); left: 12px; min-height: 60px; margin: 0; padding: 8px; border-radius: var(--hp-radius-surface); }
+  .wizard-footer .button { width: 100%; }
+  .wizard-footer__notice { padding: 0 4px; text-align: left; }
+  .wizard-footer--source { position: fixed; }
+  .wizard-panel--style .wizard-summary .button { position: static; width: 100%; }
+  .wizard-processing { padding: 52px 14px 94px; }
+  .wizard-processing__card { padding: 22px 14px; }
+  .progress-stage { padding: 15px; }
+  .progress-stage__footer { gap: 6px 10px; }
+  .progress-stage__footer > span:nth-last-child(-n+2) { flex-basis: 100%; }
+  .styles-library { gap: 8px; }
+  .style-library-card { min-width: 210px; min-height: 70px; }
+  .style-editor { padding: 0; }
+  .style-editor__main { gap: 18px; }
+  .style-editor__head { align-items: flex-start; }
+  .style-editor__duplicate { min-height: 36px; padding-inline: 10px; }
+  .dash-mobile-nav { inset: auto 10px max(10px, env(safe-area-inset-bottom)) 10px; border-radius: var(--hp-radius-surface); }
+  .dash-mobile-nav__new { border-radius: var(--hp-radius-control) !important; }
 }

@@ -88,8 +88,8 @@ export function BillingView() {
   return (
     <main className="dash-page">
       <PageHeading
-        title="Кредиты и тариф"
-        description="Кредиты списываются один раз по длительности исходного видео. Один кредит — одна минута."
+        title="Минуты и тариф"
+        description="Минуты списываются один раз по длительности исходного видео. Повторный поиск и ререндер не расходуют баланс снова."
       />
 
       <section className="billing-hero">
@@ -115,7 +115,7 @@ export function BillingView() {
             <span>{plan ? `${formatRubles(plan.priceKopecks)} / месяц` : ""}</span>
           </div>
           <p className="billing-plan__included">
-            {plan ? `${plan.includedSeconds / 60} кредитов начисляется каждый месяц` : "Тариф загружается"}
+            {plan ? `${plan.includedSeconds / 60} минут начисляется каждый месяц` : "Тариф загружается"}
           </p>
           <div className="billing-plan__actions">
             <ActionButton tone="secondary" isDisabled>Изменить тариф</ActionButton>
@@ -126,7 +126,7 @@ export function BillingView() {
 
       <section className="billing-packages">
         <div className="dash-section-head">
-          <div><h2>Добавить кредиты</h2></div>
+          <div><h2>Добавить минуты</h2></div>
           <p>Пакет не меняет тариф и сразу добавляется к тому же балансу.</p>
         </div>
         <div className="billing-packages__grid">
@@ -146,7 +146,7 @@ export function BillingView() {
               >
                 {isPopular ? <span className="billing-package-badge">Чаще выбирают</span> : null}
                 <span className="billing-package-check">{selected === minutes ? <Check size={15} /> : null}</span>
-                <strong>{minutes} кредитов</strong>
+                <strong>{minutes} минут</strong>
                 <p>{packageNotes[item.code] ?? `Действует ${item.expiresDays / 30} месяцев`}</p>
                 <b>{formatRubles(item.priceKopecks)}</b>
               </button>
@@ -157,10 +157,10 @@ export function BillingView() {
             <dl>
               <div><dt>Сейчас</dt><dd>{credits ?? "…"}</dd></div>
               <div><dt>Пакет</dt><dd>+{selected}</dd></div>
-              <div><dt>Итого</dt><dd>{credits === null ? "…" : `${credits + selected} кредитов`}</dd></div>
+              <div><dt>Итого</dt><dd>{credits === null ? "…" : `${credits + selected} минут`}</dd></div>
             </dl>
             <ActionButton fullWidth onPress={purchase} isDisabled={isPurchasing}>
-              {isPurchasing ? "Переходим к оплате…" : "Добавить кредиты"} <ArrowRight size={17} />
+              {isPurchasing ? "Переходим к оплате…" : "Добавить минуты"} <ArrowRight size={17} />
             </ActionButton>
             {notice ? <p role="status">{notice}</p> : null}
           </div>
@@ -184,13 +184,13 @@ export function BillingView() {
                 </span>
                 <span><strong>{transaction.title}</strong><small>{transaction.date}</small></span>
                 <b className={transaction.amount > 0 ? "is-positive" : ""}>
-                  {transaction.amount > 0 ? "+" : ""}{transaction.amount} кред.
+                  {transaction.amount > 0 ? "+" : ""}{transaction.amount} мин.
                 </b>
               </div>
             ))}
           </div>
         ) : (
-          <p className="dash-empty-note">Операций пока нет — здесь появятся начисления и списания кредитов.</p>
+          <p className="dash-empty-note">Операций пока нет — здесь появятся начисления и списания минут.</p>
         )}
       </section>
     </main>

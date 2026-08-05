@@ -1,6 +1,6 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import type { Database } from "../../../../db/index.js";
-import { jobAttempts, jobEvents, jobRequirements, jobs, projectPackages, queueDispatchStates, workerLeases, workspaceQueueStates } from "../../../../db/schema.js";
+import { jobAttempts, jobEvents, jobRequirements, jobs, projectPackages, projects, queueDispatchStates, workerLeases, workspaceQueueStates } from "../../../../db/schema.js";
 import {
   applyWorkspaceStreakLimit,
   nextVirtualFinish,
@@ -481,6 +481,20 @@ export async function requeueExpiredLeases(db: Database) {
           error,
           updatedAt: new Date(),
         }).where(eq(projectPackages.jobId, updated.id));
+      }
+      // Clip-level render failures must remain local: the project can still
+      // deliver all other clips. A pipeline-level lease expiry, on the other
+      // hand, has to become visible to the user instead of leaving an
+      // infinitely animated "processing" screen.
+      if (updated.projectId && !updated.clipId && updated.status === "failed") {
+        const message = typeof error.message === "string" ? error.message : "Обработка не завершилась";
+        const code = typeof error.code === "string" ? error.code : "LEASE_EXPIRED";
+        await tx.update(projects).set({
+          status: "failed",
+          errorCode: code,
+          errorMessage: message,
+          updatedAt: new Date(),
+        }).where(eq(projects.id, updated.projectId));
       }
       updatedJobs.push(updated);
     }

@@ -30,7 +30,7 @@ function documentFixture(): ClipDocumentV2 {
     captions: {
       enabled: true, language: "ru",
       words: [{ wordId: "w1", hidden: false, cutFromMedia: false }, { wordId: "w2", hidden: false, cutFromMedia: false }],
-      style: { preset: "clean", fontFamily: "HVE Sans", fontSizePx: 48, fontWeight: 800, uppercase: false, maxWordsPerLine: 5, maxLines: 2, position: "bottom", safeMarginPx: 160, color: "#ffffff", activeColor: "#10b8f4", outlineColor: "#06131a", outlinePx: 4, background: false },
+      style: { preset: "clean", fontFamily: "HVE Sans", fontSizePx: 48, fontWeight: 800, uppercase: false, maxWordsPerLine: 5, maxLines: 2, position: "bottom", safeMarginPx: 160, color: "#ffffff", activeColor: "#f2f2ed", outlineColor: "#0a0a0b", outlinePx: 4, background: false },
     },
     layers: [],
     audio: { sourceCuts: [], pauseRemoval: { enabled: false, minimumUs: 800_000, beforePaddingUs: 100_000, afterPaddingUs: 120_000, crossfadeUs: 0 }, loudness: { targetLufs: -16, truePeakDb: -1.5 } },
@@ -44,7 +44,7 @@ function stateFixture(): ClipEditorState {
     title: "Новый заголовок", socialTitle: "Социальный заголовок", socialDescription: "Описание",
     startSeconds: 1, endSeconds: 5, layout: "auto", speaker: "Автоматически",
     captionsEnabled: false, subtitlePreset: "clean", fontFamily: "HVE Sans", fontSize: 48,
-    subtitlePosition: "bottom", primaryColor: "#ffffff", activeColor: "#10b8f4",
+    subtitlePosition: "bottom", primaryColor: "#ffffff", activeColor: "#f2f2ed",
     titleEnabled: false, titlePosition: "top", bannerEnabled: false, logoEnabled: false,
     silenceRemoval: true, normalizeAudio: false, exportHeight: 1920,
   };

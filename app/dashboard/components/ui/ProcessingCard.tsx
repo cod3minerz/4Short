@@ -3,7 +3,6 @@ import Link from "next/link";
 import { processingStages } from "../../lib/processing-stages";
 import { MediaThumb } from "./MediaThumb";
 import { ProgressStage } from "./ProgressStage";
-import { Skeleton } from "./Skeleton";
 
 interface ProcessingCardAction {
   completedHref: string;
@@ -19,6 +18,7 @@ interface ProcessingCardProps {
   status: string | null;
   processingIndex: number;
   secondsInStage: number;
+  progress?: { completed?: number; total?: number; unit?: "bytes" | "milliseconds" | "frames" | "steps" } | null;
   errorMessage?: string;
   /** Omit on pages that already sit on the project (no "go check it out" link needed). */
   action?: ProcessingCardAction;
@@ -36,12 +36,21 @@ export function ProcessingCard({
   status,
   processingIndex,
   secondsInStage,
+  progress,
   errorMessage,
   action,
 }: ProcessingCardProps) {
   const completed = status === "review_required";
   const failed = status === "failed";
   const stage = processingStages[Math.min(processingIndex, processingStages.length - 1)];
+  const inProgressHeading = stage?.title ?? "Обрабатываем видео";
+  const transferredBytes = progress?.unit === "bytes" && typeof progress.completed === "number" ? progress.completed : null;
+  const metric = transferredBytes !== null
+    ? `Получено ${new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 1, notation: "compact", style: "unit", unit: "megabyte", unitDisplay: "short" }).format(transferredBytes / (1024 * 1024))}`
+    : undefined;
+  const percent = progress?.total && typeof progress.completed === "number"
+    ? (progress.completed / progress.total) * 100
+    : undefined;
 
   return (
     <div className="wizard-processing__card">
@@ -49,13 +58,13 @@ export function ProcessingCard({
         {completed ? <Check size={32} /> : failed ? <span aria-hidden="true">!</span> : <LoaderCircle size={32} />}
       </div>
       <span className="dash-eyebrow">{completed ? "Анализ завершён" : failed ? "Нужна помощь" : "Можно закрыть страницу"}</span>
-      <h1>{completed ? "МOMЕНТЫ ГОТОВЫ К ПРОВЕРКЕ" : failed ? "ОБРАБОТКА ОСТАНОВЛЕНА" : "ИЩЕМ СИЛЬНЫЕ МОМЕНТЫ"}</h1>
+      <h1>{completed ? "Моменты готовы к проверке" : failed ? "Обработка остановлена" : inProgressHeading}</h1>
       <p>
         {completed
           ? "Мы нашли самостоятельные фрагменты. Выберите те, из которых нужно создать клипы."
           : failed
             ? "Откройте проект: там указан этап ошибки и доступное действие."
-            : "Hashpix продолжит работу после закрытия вкладки. Состояние приходит с российского сервера."}
+            : `${stage?.description ?? "Hashpix продолжает работу в фоне."} Страницу можно закрыть — состояние сохранится.`}
       </p>
 
       <div className="wizard-processing__source">
@@ -74,15 +83,13 @@ export function ProcessingCard({
             current={Math.min(processingIndex, processingStages.length - 1) + 1}
             total={processingStages.length}
             secondsInStage={secondsInStage}
+            metric={metric}
+            percent={percent}
           />
-          <div className="wizard-processing__skeletons" aria-hidden="true">
-            {[1, 2, 3].map((slot) => (
-              <div className="wizard-processing__skeleton-card" key={slot}>
-                <span>{slot}</span>
-                <Skeleton className="wizard-processing__skeleton-body" />
-              </div>
-            ))}
-          </div>
+          <p className="wizard-processing__truth">
+            Варианты клипов появятся только после завершения анализа — мы не
+            показываем фиктивные карточки до того, как их реально нашли.
+          </p>
         </>
       ) : null}
 

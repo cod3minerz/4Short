@@ -38,7 +38,8 @@ Use this sheet for every changed authenticated product route before it is descri
 - [ ] Choice rows use a semantic selector; they are not decorative cards.
 - [ ] New controls use only `--hp-*` tokens and documented sizes/radii.
 - [ ] A light action remains neutral on hover and pressed; it does not become brand blue.
-- [ ] Blue is reserved for progress, selection and the forward action.
+- [ ] Product chrome contains no blue state. Blue may appear only in actual
+  user media or an explicitly configured brand asset.
 - [ ] No unsupported HVE capability looks executable.
 - [ ] Overlay surfaces use glass only above media or an ambient canvas.
 

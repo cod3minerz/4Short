@@ -44,6 +44,12 @@ class Settings(BaseSettings):
     ffmpeg_path: str = "ffmpeg"
     ffprobe_path: str = "ffprobe"
     ytdlp_path: str = "yt-dlp"
+    # Prefer the bounded external downloader when the immutable worker image
+    # provides it. aria2c opens safe parallel HTTP ranges for normal
+    # progressive MP4s — the case where yt-dlp fragment concurrency cannot
+    # help. The importer checks availability before passing this value on.
+    ytdlp_external_downloader: str = "aria2c"
+    source_import_max_bytes: int = 10 * 1024 * 1024 * 1024
     # The worker deliberately processes one media job at a time.  Bound each
     # FFmpeg invocation as well: otherwise filter/encoder auto-threading can
     # consume the entire host and invalidate queue capacity assumptions.

@@ -299,6 +299,7 @@ export async function listProjects() {
       status: string;
       sourceKind: "upload" | "youtube" | null;
       sourceDurationMs: number | null;
+      sourceThumbnailUrl: string | null;
       clipsTotal: number;
       clipsReady: number;
       momentsFound: number;
@@ -328,8 +329,8 @@ export async function deleteProject(projectId: string) {
 export async function createProject(input: {
   title: string;
   source:
-    | { kind: "youtube"; url: string }
-    | { kind: "upload"; uploadId: string; originalFileName: string }
+    | { kind: "youtube"; url: string; preflightJobId: string }
+    | { kind: "upload"; uploadId: string; originalFileName: string; preflightJobId: string }
     | { kind: "existing"; sourceId: string };
   momentSettings: {
     mode: "best" | "opinions" | "tips" | "stories" | "qa" | "product" | "custom" | "uniform" | "manual";
@@ -353,12 +354,45 @@ export async function createProject(input: {
   });
 }
 
+export type SourcePreview = {
+  id: string;
+  status: "queued" | "leased" | "succeeded" | "failed";
+  result: {
+    url: string | null;
+    sourceId?: string;
+    title: string;
+    authorName: string | null;
+    thumbnailUrl: string | null;
+    durationSeconds: number;
+  } | null;
+  error?: { code?: string; message?: string } | null;
+};
+
+export async function createSourcePreview(input: { url: string } | { sourceId: string }) {
+  return request<SourcePreview>("/v1/media/source-previews", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function getSourcePreview(jobId: string) {
+  return request<SourcePreview>(`/v1/media/source-previews/${jobId}`);
+}
+
 export async function getProject(projectId: string) {
   return request<{
     project: { id: string; title: string; status: string; errorCode?: string; errorMessage?: string };
     source: ApiSource | null;
     currentVersion: { id: string; version: number; settings: Record<string, unknown> } | null;
     transcript: { id: string; revision: number; language: string } | null;
+    processing: {
+      type: string;
+      status: string;
+      checkpoint: string | null;
+      startedAt: string | null;
+      progress: { completed?: number; total?: number; unit?: "bytes" | "milliseconds" | "frames" | "steps" } | null;
+      progressUpdatedAt: string | null;
+    } | null;
     moments: ApiMoment[];
     clips: ApiClip[];
   }>(`/v1/projects/${projectId}`);

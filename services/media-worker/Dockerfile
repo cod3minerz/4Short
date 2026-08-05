@@ -8,7 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # rather than shipping a distro FFmpeg variant that silently lacks libass or
 # libx264 and discovering it only after a paid render starts.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ffmpeg ca-certificates curl fontconfig fonts-dejavu-core libgomp1 libglib2.0-0 tini \
+    && apt-get install -y --no-install-recommends aria2 ffmpeg ca-certificates curl fontconfig fonts-dejavu-core libgomp1 libglib2.0-0 tini \
     && ffmpeg -hide_banner -filters 2>&1 | grep -Eq '(^|[[:space:]])ass([[:space:]]|$)' \
     && ffmpeg -hide_banner -encoders 2>&1 | grep -Eq 'libx264' \
     && rm -rf /var/lib/apt/lists/*

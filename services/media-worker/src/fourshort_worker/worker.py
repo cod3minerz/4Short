@@ -42,20 +42,46 @@ class LeaseHeartbeat:
         )
         self.cancellation_event = threading.Event()
 
-    def _run(self) -> None:
-        while not self._stop.wait(self.interval_seconds):
+    def _renew_with_retry(self) -> bool:
+        """Renew an active lease without turning one transient 5xx into loss.
+
+        The periodic heartbeat owns a much larger retry budget than a single
+        HTTP request: the control plane grants a 120 second lease, while the
+        normal renewal interval is materially shorter.  Retrying here keeps
+        a brief API restart from silently killing an already-running FFmpeg
+        or Whisper stage.  Only an explicit ownership conflict is terminal.
+        """
+        for attempt in range(4):
             try:
                 self.api.heartbeat(self.job.id, checkpoint=f"running:{self.job.type}")
                 touch_health(self.health_file)
+                return True
             except LeaseLostError:
-                # Cancellation and lease expiration are terminal for this
-                # attempt.  Heavy subprocesses observe this event and stop;
-                # the worker must never try to complete a job it no longer
-                # owns.
                 self.cancellation_event.set()
+                return False
+            except Exception as error:
+                if attempt == 3:
+                    log.exception("job heartbeat failed after retries", extra={"job_id": self.job.id})
+                    return False
+                delay = min(2 ** attempt, 6)
+                log.warning(
+                    "job heartbeat failed; retrying active lease renewal",
+                    extra={
+                        "job_id": self.job.id,
+                        "attempt": attempt + 1,
+                        "retry_in_seconds": delay,
+                        "error": str(error),
+                    },
+                )
+                if self._stop.wait(delay):
+                    return False
+        return False
+
+    def _run(self) -> None:
+        while not self._stop.wait(self.interval_seconds):
+            if self.cancellation_event.is_set():
                 return
-            except Exception:
-                log.exception("job heartbeat failed", extra={"job_id": self.job.id})
+            self._renew_with_retry()
 
     def __enter__(self):
         self._thread.start()
@@ -76,12 +102,25 @@ class Worker:
         self.settings.active_job_file.unlink(missing_ok=True)
         self.api = ControlApi(settings)
         self.resources = ResourceGuard(settings)
-        self.stages = StageRunner(settings, Storage(settings))
+        self.stages = StageRunner(settings, Storage(settings), progress_reporter=self.report_progress)
         self.running = True
         # Set only after a successful registration. A completed attempt carries
         # this immutable identity so ETA never mixes timings from a different
         # HVE/model/font/runtime configuration.
         self.active_runtime_fingerprint: str | None = None
+
+    def report_progress(self, job, progress: dict) -> None:
+        """Persist measured stage progress without changing job ownership.
+
+        This is intentionally used only by stages with an objective unit
+        (currently imported bytes). The UI must never turn elapsed time into a
+        fabricated percentage.
+        """
+        self.api.heartbeat(
+            job.id,
+            checkpoint=f"running:{job.type}",
+            progress=progress,
+        )
 
     @property
     def classes(self) -> list[str]:
@@ -134,7 +173,7 @@ class Worker:
         image_digest = os.environ.get("FOURSHORT_WORKER_IMAGE_DIGEST") or "unresolved"
         image_digest_complete = bool(re.fullmatch(r"sha256:[a-f0-9]{64}", image_digest, flags=re.IGNORECASE))
         job_types = [
-            "probe", "youtube_import", "extract_audio", "generate_proxy", "verify_brand_video",
+            "source_preview", "probe", "youtube_import", "extract_audio", "generate_proxy", "verify_brand_video",
             "find_moments", "analyze_visual", "analyze_clip_visual", "face_track", "render_clip",
             "zip_project",
         ]
@@ -264,6 +303,38 @@ class Worker:
         if self.active_runtime_fingerprint:
             metrics["runtimeFingerprint"] = self.active_runtime_fingerprint
 
+    def heartbeat_with_retry(self, job, *, checkpoint: str, attempts: int = 4) -> bool:
+        """Keep a short control-plane outage from discarding a media job.
+
+        The lease belongs to this worker for at least ``lease_seconds``.  A
+        single 5xx from the API is therefore not a reason to abandon an import
+        before FFmpeg or yt-dlp have even started.  We retry inside a bounded
+        window and only fail the attempt when the control plane is still
+        unavailable.  A real ownership loss remains immediate and terminal.
+        """
+        for attempt in range(attempts):
+            try:
+                self.api.heartbeat(job.id, checkpoint=checkpoint)
+                return True
+            except LeaseLostError:
+                raise
+            except Exception as error:
+                if attempt == attempts - 1:
+                    raise
+                delay = min(2 ** attempt, 6)
+                log.warning(
+                    "job heartbeat failed; retrying before media work",
+                    extra={
+                        "job_id": job.id,
+                        "checkpoint": checkpoint,
+                        "attempt": attempt + 1,
+                        "retry_in_seconds": delay,
+                        "error": str(error),
+                    },
+                )
+                time.sleep(delay)
+        return False
+
     def run_forever(self) -> None:
         signal.signal(signal.SIGINT, self.stop)
         signal.signal(signal.SIGTERM, self.stop)
@@ -298,7 +369,7 @@ class Worker:
             self.resources.assert_can_start(job.job_class)
             job_dir = self.resources.job_dir(job.id)
             try:
-                self.api.heartbeat(job.id, checkpoint="started")
+                self.heartbeat_with_retry(job, checkpoint="started")
             except LeaseLostError:
                 log.info("job was cancelled before stage start", extra={"job_id": job.id})
                 return
@@ -319,7 +390,7 @@ class Worker:
                     return
             metrics.update(resources.metrics())
             self.annotate_runtime_metrics(metrics)
-            self.api.heartbeat(job.id, checkpoint="finalizing")
+            self.heartbeat_with_retry(job, checkpoint="finalizing")
             self.api.complete(job.id, result, metrics)
         except JobError as error:
             if error.code == "JOB_CANCELLED":

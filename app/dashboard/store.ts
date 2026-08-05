@@ -209,6 +209,7 @@ function projectFromApi(item: Awaited<ReturnType<typeof listProjects>>["items"][
     style: "",
     updatedAt: formatUpdatedAt(item.updatedAt),
     accent: accentRotation[hash % accentRotation.length],
+    thumbnailUrl: item.sourceThumbnailUrl,
   };
 }
 
@@ -473,7 +474,7 @@ export function createStyle() {
     logo: false,
     banner: false,
     safeZones: ["shorts", "reels", "tiktok", "vk"],
-    colors: ["#ffffff", "#10b8f4"],
+    colors: ["#ffffff", "#f5f5f2"],
     persisted: false,
     dirty: true,
   };

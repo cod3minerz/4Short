@@ -36,12 +36,11 @@ export function ProgressStage({ title, current, total, description, metric, perc
           <span className="progress-stage__count">Этап {current} из {total}</span>
         </div>
       </header>
-      <div className="progress-stage__bar" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
-        <div
-          className={percent === undefined ? "progress-stage__fill is-indeterminate" : "progress-stage__fill"}
-          style={percent === undefined ? undefined : { width: `${Math.min(100, Math.max(0, percent))}%` }}
-        />
-      </div>
+      {percent !== undefined ? (
+        <div className="progress-stage__bar" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
+          <div className="progress-stage__fill" style={{ width: `${Math.min(100, Math.max(0, percent))}%` }} />
+        </div>
+      ) : null}
       <p className="progress-stage__description">{description}</p>
       <footer className="progress-stage__footer">
         <span className="progress-stage__status">
@@ -49,7 +48,7 @@ export function ProgressStage({ title, current, total, description, metric, perc
           Обработка идёт
         </span>
         {metric ? <span>{metric}</span> : null}
-        {secondsInStage !== undefined ? <span>На этом этапе уже {formatDuration(secondsInStage)}</span> : null}
+        {secondsInStage !== undefined ? <span>Этап начат {formatDuration(secondsInStage)} назад</span> : null}
         <span>Статус обновится автоматически</span>
         <span>Эту страницу можно закрыть — обработка продолжится</span>
       </footer>

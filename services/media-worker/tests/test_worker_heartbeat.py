@@ -3,6 +3,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 import time
+import threading
 import unittest
 from unittest.mock import patch
 
@@ -48,11 +49,25 @@ class WorkerHeartbeatTests(unittest.TestCase):
         api = object.__new__(ControlApi)
         api.settings = SimpleNamespace(worker_id="worker-test", lease_seconds=120)
         api.client = Client()
+        api._request_lock = threading.RLock()
 
         api.heartbeat("job-1", checkpoint="started")
 
         self.assertEqual(requests[0][0], "/v1/internal/jobs/job-1/heartbeat")
         self.assertNotIn("progress", requests[0][1])
+
+    def test_worker_reports_measured_progress_with_a_running_checkpoint(self):
+        api = FakeApi()
+        worker = object.__new__(Worker)
+        worker.api = api
+        job = SimpleNamespace(id="job-1", type="youtube_import")
+
+        worker.report_progress(job, {"completed": 8 * 1024 * 1024, "unit": "bytes"})
+
+        self.assertEqual(
+            api.heartbeats,
+            [("job-1", "running:youtube_import", {"completed": 8 * 1024 * 1024, "unit": "bytes"})],
+        )
 
     def test_active_job_marker_is_atomic_and_cleanup_does_not_erase_newer_job(self):
         with TemporaryDirectory() as directory:
@@ -130,6 +145,65 @@ class WorkerHeartbeatTests(unittest.TestCase):
             with LeaseHeartbeat(LeaseLostApi(), job, 0.01, Path(directory) / "ready") as heartbeat:
                 time.sleep(0.035)
             self.assertTrue(heartbeat.cancellation_event.is_set())
+
+    def test_active_lease_heartbeat_retries_a_transient_control_plane_error(self):
+        class FlakyApi:
+            def __init__(self):
+                self.calls = 0
+
+            def heartbeat(self, *_args, **_kwargs):
+                self.calls += 1
+                if self.calls < 3:
+                    raise RuntimeError("temporary 500")
+
+        job = SimpleNamespace(id="job-1", type="speech_to_text")
+        with TemporaryDirectory() as directory:
+            heartbeat = LeaseHeartbeat(FlakyApi(), job, 30, Path(directory) / "ready")
+            heartbeat._stop = SimpleNamespace(wait=lambda _delay: False)
+            self.assertTrue(heartbeat._renew_with_retry())
+
+        self.assertEqual(heartbeat.api.calls, 3)
+
+    def test_startup_heartbeat_retries_a_transient_control_plane_error(self):
+        """A single API 5xx must not immediately discard an owned media job."""
+        class FlakyApi:
+            def __init__(self):
+                self.calls = 0
+
+            def heartbeat(self, *_args, **_kwargs):
+                self.calls += 1
+                if self.calls < 3:
+                    raise RuntimeError("control api temporary failure")
+
+        worker = object.__new__(Worker)
+        worker.api = FlakyApi()
+        job = SimpleNamespace(id="job-1", type="youtube_import")
+
+        with patch.object(worker_module.time, "sleep") as sleep:
+            self.assertTrue(worker.heartbeat_with_retry(job, checkpoint="started"))
+
+        self.assertEqual(worker.api.calls, 3)
+        self.assertEqual([call.args[0] for call in sleep.call_args_list], [1, 2])
+
+    def test_startup_heartbeat_never_retries_an_expired_lease(self):
+        class ExpiredLeaseApi:
+            def __init__(self):
+                self.calls = 0
+
+            def heartbeat(self, *_args, **_kwargs):
+                self.calls += 1
+                raise LeaseLostError("lease belongs to another worker")
+
+        worker = object.__new__(Worker)
+        worker.api = ExpiredLeaseApi()
+        job = SimpleNamespace(id="job-1", type="youtube_import")
+
+        with patch.object(worker_module.time, "sleep") as sleep:
+            with self.assertRaises(LeaseLostError):
+                worker.heartbeat_with_retry(job, checkpoint="started")
+
+        self.assertEqual(worker.api.calls, 1)
+        sleep.assert_not_called()
 
     def test_runtime_identity_is_deterministic_and_changes_for_model_rollout(self):
         baseline = {

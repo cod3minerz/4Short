@@ -10,6 +10,7 @@ import type { Project, ProjectStatus } from "../types";
 import { PageHeading } from "./page-heading";
 import { ActionButton, IconButton } from "./ui/ActionButton";
 import { Dialog } from "./ui/Dialog";
+import { MediaThumb } from "./ui/MediaThumb";
 
 type Filter = "all" | "active" | "review" | "ready" | "failed";
 
@@ -112,9 +113,12 @@ export function ProjectsView() {
             return (
               <article className="project-row" key={project.id}>
                 <Link className="project-row__main" href={`/dashboard/projects/${project.id}`}>
-                  <span className={`project-row__thumb tone-${project.accent}`}>
-                    <span className="dash-media-mark">HP</span>
-                  </span>
+                  <MediaThumb
+                    className="project-row__thumb"
+                    src={project.thumbnailUrl ?? undefined}
+                    alt={project.title}
+                    tone="ink"
+                  />
                   <span className="project-row__identity">
                     <strong>{project.title}</strong>
                     <small>

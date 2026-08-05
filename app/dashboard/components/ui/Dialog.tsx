@@ -25,7 +25,7 @@ export function Dialog({ isOpen, onOpenChange, title, description, children, foo
     <Modal>
       <Modal.Backdrop isOpen={isOpen} onOpenChange={onOpenChange}>
         <Modal.Container>
-          <Modal.Dialog className={className}>
+          <Modal.Dialog className={className ? `hp-overlay-scope ${className}` : "hp-overlay-scope"}>
             <Modal.CloseTrigger aria-label="Закрыть" />
             <Modal.Header>
               <Modal.Heading>{title}</Modal.Heading>

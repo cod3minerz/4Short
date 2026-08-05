@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import threading
 import httpx
 
 from .config import Settings
@@ -42,22 +43,29 @@ class ControlApi:
             headers={"X-Worker-Token": settings.worker_api_token},
             timeout=httpx.Timeout(30, connect=10),
         )
+        # A stage can emit byte progress while the lease-renewal thread is
+        # alive. Serialise access to the shared HTTP client so progress never
+        # races a lease heartbeat and turns a healthy import into a transport
+        # failure.
+        self._request_lock = threading.RLock()
 
     def register(self, capabilities: dict, metadata: dict) -> None:
-        response = self.client.post("/v1/internal/workers/register", json={
-            "workerId": self.settings.worker_id,
-            "version": self.settings.worker_version,
-            "capabilities": capabilities,
-            "metadata": metadata,
-        })
+        with self._request_lock:
+            response = self.client.post("/v1/internal/workers/register", json={
+                "workerId": self.settings.worker_id,
+                "version": self.settings.worker_version,
+                "capabilities": capabilities,
+                "metadata": metadata,
+            })
         response.raise_for_status()
 
     def claim(self, classes: list[str]) -> Job | None:
-        response = self.client.post("/v1/internal/jobs/claim", json={
-            "workerId": self.settings.worker_id,
-            "classes": classes,
-            "leaseSeconds": self.settings.lease_seconds,
-        })
+        with self._request_lock:
+            response = self.client.post("/v1/internal/jobs/claim", json={
+                "workerId": self.settings.worker_id,
+                "classes": classes,
+                "leaseSeconds": self.settings.lease_seconds,
+            })
         if response.status_code == 204:
             return None
         response.raise_for_status()
@@ -76,25 +84,28 @@ class ControlApi:
         }
         if progress is not None:
             payload["progress"] = progress
-        response = self.client.post(f"/v1/internal/jobs/{job_id}/heartbeat", json=payload)
+        with self._request_lock:
+            response = self.client.post(f"/v1/internal/jobs/{job_id}/heartbeat", json=payload)
         if response.status_code == 409:
             raise LeaseLostError("Job lease is no longer owned by this worker")
         response.raise_for_status()
 
     def complete(self, job_id: str, result: dict, metrics: dict) -> None:
-        response = self.client.post(f"/v1/internal/jobs/{job_id}/complete", json={
-            "workerId": self.settings.worker_id,
-            "result": result,
-            "metrics": metrics,
-        })
+        with self._request_lock:
+            response = self.client.post(f"/v1/internal/jobs/{job_id}/complete", json={
+                "workerId": self.settings.worker_id,
+                "result": result,
+                "metrics": metrics,
+            })
         response.raise_for_status()
 
     def fail(self, job_id: str, *, retryable: bool, code: str, message: str, details: dict) -> None:
-        response = self.client.post(f"/v1/internal/jobs/{job_id}/fail", json={
-            "workerId": self.settings.worker_id,
-            "retryable": retryable,
-            "code": code,
-            "message": message,
-            "details": details,
-        })
+        with self._request_lock:
+            response = self.client.post(f"/v1/internal/jobs/{job_id}/fail", json={
+                "workerId": self.settings.worker_id,
+                "retryable": retryable,
+                "code": code,
+                "message": message,
+                "details": details,
+            })
         response.raise_for_status()
