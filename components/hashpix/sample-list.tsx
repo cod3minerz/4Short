@@ -2,6 +2,7 @@
 
 import { Check } from "lucide-react";
 import { useMemo, type ReactNode } from "react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export interface SampleListItem {
@@ -45,7 +46,8 @@ export function SampleList({ items, value, onChange, className, ...rest }: Sampl
         return (
           <div key={item.id}>
             {showGroup ? <div className="sample-list__group">{item.group}</div> : null}
-            <button
+            <Button
+              variant="ghost"
               className={cn("sample-list__row", value === item.id && "is-selected")}
               type="button"
               role="option"
@@ -55,7 +57,7 @@ export function SampleList({ items, value, onChange, className, ...rest }: Sampl
               <span className="sample-list__sample">{item.sample}</span>
               <span className="sample-list__label">{item.label}</span>
               {value === item.id ? <Check className="sample-list__check" size={15} aria-hidden="true" /> : null}
-            </button>
+            </Button>
           </div>
         );
       })}

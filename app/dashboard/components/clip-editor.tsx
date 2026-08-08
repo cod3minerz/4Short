@@ -1466,7 +1466,7 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
               title={title}
               description={text}
               selected={scope === id}
-              onPress={() => setScope(id)}
+              onClick={() => setScope(id)}
             />
           ))}
           </div>

@@ -79,6 +79,10 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
   directly, without a second Hashpix alias palette or radius scale. Browser QA
   confirms `/dashboard/styles` at 1280px and 360px has no horizontal overflow;
   a real `test@hashpix.local` Better Auth sign-in reaches `/dashboard/projects`.
+- Registry-anatomy pass: generic dashboard Button/ToggleGroup/Select overrides
+  are removed, the projects forward action is a stock primary `Button`, and
+  the final Hashpix list compositions use registry `Button` with `onClick`.
+  HVE-G4 returns `INSUFFICIENT` as required; no preview geometry changed.
 
 ## Structural locks
 

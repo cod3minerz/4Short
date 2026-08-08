@@ -7,9 +7,9 @@
 | `/forgot-password` | Auth | shared AuthScreen | Button, Input, Label, Field | Migrated | typecheck, unit: 196 pass |
 | `/dashboard` | Dashboard | dashboard shell and wizard | product shell, shadcn forms and overlays | Migrated | typecheck, unit: 196 pass |
 | `/dashboard/new` | Dashboard | redirect only | dashboard route flow | Migrated | typecheck, unit: 196 pass |
-| `/dashboard/projects` | Dashboard | residual layout CSS only | Button, Input, ToggleGroup, Dialog | Canonical preset pass | registry ToggleGroup; 360/1440 overflow check passes; no legacy modal/action selectors remain |
+| `/dashboard/projects` | Dashboard | none | Button, Input, ToggleGroup, Dialog | Direct canonical-preset pass | registry primary forward action and ToggleGroup; 360/1440 overflow check passes; no legacy modal/action selectors remain |
 | `/dashboard/projects/[id]` | Workspace | raw tablist and search inputs | ToggleGroup, Input, Sheet drawer, actions | Canonical preset pass in progress | registry tabs/search; typecheck pass; HVE-G4 scaffold: INSUFFICIENT |
-| `/dashboard/projects/[id]/clips/[clipId]` | Editor | dynamic HVE evidence missing | registry Button, ToggleGroup, choices and shadcn Dialog | Canonical preset source pass | no raw JSX buttons; preview geometry unchanged; HVE-G4 scaffold: INSUFFICIENT |
+| `/dashboard/projects/[id]/clips/[clipId]` | Editor | dynamic HVE evidence missing | registry Button, ToggleGroup, choices and shadcn Dialog | Canonical preset source pass | no raw internal or Hashpix-composition buttons; preview geometry unchanged; HVE-G4 scaffold: INSUFFICIENT |
 | `/dashboard/styles` | Dashboard | none | Button, Input, Select, Switch | Direct canonical-preset pass | 1280px/360px browser QA; Geist, `.625rem` radius and no horizontal overflow; no local token bridge |
 | `/dashboard/billing` | Dashboard | dashboard buttons | Hashpix actions and states | Migrated | typecheck pass |
 | `/dashboard/account` | Dashboard | none | Field, LockedField, Button, status | Canonical preset pass | real Better Auth QA: menu items left-aligned; portal radius 14px; 2FA remains honestly locked |

@@ -2,6 +2,7 @@
 
 import { Check } from "lucide-react";
 import type { ReactNode } from "react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type SelectableRowProps = {
@@ -9,7 +10,7 @@ type SelectableRowProps = {
   description?: string;
   selected?: boolean;
   disabled?: boolean;
-  onPress: () => void;
+  onClick: () => void;
   className?: string;
   leading?: ReactNode;
 };
@@ -20,17 +21,18 @@ export function SelectableRow({
   description,
   selected = false,
   disabled = false,
-  onPress,
+  onClick,
   className,
   leading,
 }: SelectableRowProps) {
   return (
-    <button
+    <Button
+      variant="ghost"
       type="button"
       className={cn("hp-selectable-row", selected && "is-selected", className)}
       aria-pressed={selected}
       disabled={disabled}
-      onClick={onPress}
+      onClick={onClick}
     >
       <span className="hp-selectable-row__leading" aria-hidden="true">
         {selected ? <Check size={15} /> : leading}
@@ -39,6 +41,6 @@ export function SelectableRow({
         <strong>{title}</strong>
         {description ? <small>{description}</small> : null}
       </span>
-    </button>
+    </Button>
   );
 }

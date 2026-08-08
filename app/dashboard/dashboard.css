@@ -61,17 +61,6 @@
   font: inherit;
 }
 
-.dash-shell .button,
-.wizard .button {
-  min-height: 36px;
-  padding-inline: 14px;
-  border-radius: var(--radius);
-  font-size: 13px;
-  font-weight: 720;
-  box-shadow: none;
-  transform: none !important;
-}
-
 .dash-topbar {
   height: 54px;
 }
@@ -335,19 +324,6 @@
   font-weight: 720;
   letter-spacing: 0;
   text-transform: none;
-}
-
-.dash-compact-primary {
-  min-height: 36px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding-inline: 13px;
-  border-radius: var(--radius);
-  background: var(--primary);
-  color: var(--primary-foreground);
-  font-size: 13px;
-  font-weight: 760;
 }
 
 /* New project flow */
@@ -681,36 +657,6 @@
   border-radius: var(--radius);
   background: var(--card);
   color: var(--foreground);
-}
-
-/*
- * Stock shadcn ToggleGroup uses the same compact segmented anatomy across
- * project filters and workspace tabs.
- */
-.dash-shell [data-slot="toggle-group"] {
-  padding: 3px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--secondary);
-}
-
-.dash-shell [data-slot="toggle-group-item"] {
-  min-height: 28px;
-  gap: 6px;
-  border: 0;
-  border-radius: calc(var(--radius) - 3px);
-  background: transparent;
-  color: var(--muted-foreground);
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.dash-shell [data-slot="toggle-group-item"]:hover { color: var(--foreground); }
-
-.dash-shell [data-slot="toggle-group-item"][data-pressed] {
-  background: var(--card);
-  color: var(--foreground);
-  box-shadow: none;
 }
 
 /* Step 2 — live credit cost + trim range. */
@@ -2582,27 +2528,6 @@
   color: color-mix(in oklch, var(--foreground), transparent 28%);
 }
 
-.dash-shell [data-slot="select-trigger"] {
-  width: 100%;
-  min-height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding-inline: 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--card);
-  color: var(--foreground);
-  font-size: 13px;
-}
-.dash-shell [data-slot="select-trigger"]:hover { border-color: var(--ring); }
-.dash-shell [data-slot="select-trigger"][data-focused] {
-  border-color: var(--accent);
-  outline: 3px solid color-mix(in oklch, var(--accent) 42%, white);
-  outline-offset: 2px;
-}
-
 .wizard-style-options button.is-selected {
   border-color: var(--accent);
   box-shadow: inset 0 0 0 1px var(--accent);
@@ -3679,8 +3604,6 @@
   .dash-page-heading { align-items: flex-start; margin-bottom: 20px; }
   .dash-page-heading h1 { font-size: 24px; }
   .dash-page-heading p { font-size: 12px; }
-  .dash-compact-primary { width: 34px; min-height: 34px; justify-content: center; padding: 0; }
-  .dash-compact-primary span { display: none; }
 
   .dash-mobile-nav {
     position: fixed;
@@ -4259,17 +4182,6 @@
  * clobbering their font-size back to inherited.
  */
 
-
-.dash-shell .button:hover,
-.wizard .button:hover {
-  transform: none;
-}
-
-.dash-shell .button:disabled,
-.wizard .button:disabled {
-  cursor: not-allowed;
-  opacity: .48;
-}
 
 .dash-shell button,
 .dash-shell a,
@@ -5180,7 +5092,6 @@
 .dash-nav a.is-active,
 .dash-nav--utility a.is-active { background: var(--card); color: var(--ds-text); box-shadow: inset 0 1px rgba(255,255,255,.05); }
 .dash-profile-menu summary:hover { background: var(--accent); }
-.dash-compact-primary,
 .help-contact > a { background: var(--accent); color: var(--accent-foreground); }
 
 /* The editor is a separate root, but belongs to the same dark system. */
@@ -5258,15 +5169,6 @@
 .wizard-source-ready__info { padding: 10px 8px 10px 2px; }
 .wizard-source-ready__info h2 { margin-top: 12px; font-size: 19px; line-height: 1.25; }
 
-/* Canonical control anatomy for the styles route. Earlier legacy selectors
-   targeted every button and text node; these route rules restore the stock
-   shadcn control scale without changing any style/API behavior. */
-.dash-shell .styles-layout [data-slot="button"],
-.dash-shell .styles-layout [data-slot="select-trigger"],
-.dash-shell .styles-layout [data-slot="switch"] {
-  font-size: .75rem;
-  line-height: 1.25;
-}
 .style-editor__switch > span { min-width: 0; }
 .style-editor__switch strong,
 .style-editor__switch small { display: block; }
@@ -5276,18 +5178,6 @@
   padding: .75rem 0 0;
   border-top: 1px solid var(--border);
   background: var(--background);
-}
-.style-editor__footer [data-slot="button"] { height: 2.25rem; padding-inline: .75rem; }
-.dash-filter-row {
-  padding: .25rem;
-  border-radius: var(--radius-lg);
-  background: var(--muted);
-}
-.dash-filter-row [data-slot="toggle-group-item"] {
-  min-height: 2.25rem;
-  border-radius: var(--radius-md);
-  font-size: .75rem;
-  font-weight: 500;
 }
 .project-storage {
   padding: 1rem;

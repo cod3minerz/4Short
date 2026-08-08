@@ -4,6 +4,7 @@ import { FileVideo, HardDrive, Plus, Search, Trash2, Youtube } from "lucide-reac
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ActionButton, IconButton } from "@/components/hashpix/action-button";
@@ -51,7 +52,12 @@ export function ProjectsView() {
       <PageHeading
         title="Проекты"
         description="Исходники, найденные моменты и готовые клипы."
-        actions={<Link className="dash-compact-primary" href="/dashboard"><Plus size={16} /> Новое видео</Link>}
+        actions={
+          <Button render={<Link href="/dashboard" />}>
+            <Plus size={16} />
+            Новое видео
+          </Button>
+        }
       />
 
       {connection !== "connected" ? (
