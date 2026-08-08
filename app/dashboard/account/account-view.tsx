@@ -1,8 +1,10 @@
 "use client";
 
-import { LoaderCircle, LogOut, Mail, ShieldCheck } from "lucide-react";
+import { KeyRound, LoaderCircle, LogOut, Mail, ShieldCheck, Smartphone } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { ActionButton } from "@/components/hashpix/action-button";
+import { LockedField } from "@/components/hashpix/locked-field";
 import { PageHeading } from "../components/page-heading";
 import { ControlApiError, isControlApiConfigured, listSessions, revokeOtherSessions, signOut } from "../lib/control-api";
 import { useDashboardStore } from "../store";
@@ -84,10 +86,10 @@ export function AccountView() {
     <main className="dash-page">
       <PageHeading title="Аккаунт" description="Вход, безопасность и управление данными." />
       <div className="account-sections">
-        <section className="account-section">
+        <section className="account-section account-section--identity">
           <div><Mail size={18} /><span><h2>Данные аккаунта</h2><p>Основной способ связи и входа.</p></span></div>
           {signedIn ? (
-            <dl>
+            <dl className="account-identity-grid">
               <div><dt>Email</dt><dd>{user!.email}</dd></div>
               {user!.name ? <div><dt>Имя</dt><dd>{user!.name}</dd></div> : null}
             </dl>
@@ -100,7 +102,7 @@ export function AccountView() {
           )}
         </section>
 
-        <section className="account-section">
+        <section className="account-section account-section--security">
           <div><ShieldCheck size={18} /><span><h2>Безопасность</h2><p>Активные входы в аккаунт.</p></span></div>
           {sessions === null ? (
             sessionsError
@@ -128,20 +130,29 @@ export function AccountView() {
               {notice ? <p className="account-section__hint" role="status">{notice}</p> : null}
             </>
           )}
+          <div className="account-security-locks">
+            <LockedField
+              icon={<Smartphone size={16} />}
+              label="Двухфакторная защита"
+              reason="TOTP и passkey станут доступны после добавления серверного security-контракта."
+            />
+            <p className="account-section__hint"><KeyRound size={14} aria-hidden="true" /> Пароль и подтверждение email уже защищают текущий вход.</p>
+          </div>
         </section>
 
         <section className="account-section">
           <div><LogOut size={18} /><span><h2>Управление аккаунтом</h2><p>Действия применяются ко всему workspace.</p></span></div>
           <div className="account-actions">
-            <button
-              type="button"
+            <ActionButton
+              tone="secondary"
               disabled={!signedIn || busy !== null}
               title={signedIn ? undefined : "Вход не подключён к этому окружению"}
               onClick={() => void handleSignOut()}
+              loading={busy === "signout"}
             >
               {busy === "signout" ? <LoaderCircle className="is-spinning" size={16} /> : <LogOut size={16} />}
               {busy === "signout" ? "Выходим…" : "Выйти"}
-            </button>
+            </ActionButton>
           </div>
           <p className="account-section__hint">
             Удаление аккаунта и данных — по запросу через <Link href="/dashboard/help">поддержку</Link>:

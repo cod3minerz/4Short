@@ -1944,16 +1944,18 @@
   color: var(--dash-accent-ink); margin-top: 3px; font-size: var(--dash-text-xs); }
 .help-contact a { min-height: 34px; border-radius: var(--dash-radius-xs); }
 
-.account-sections { width: min(100%, 760px); }
+.account-sections { width: min(100%, 860px); display: grid; gap: 16px; }
 .account-section {
-  padding: 18px 0;
+  padding: 20px;
   border-top: 1px solid var(--dash-border);
+  border-radius: var(--hp-radius-surface);
+  background: var(--dash-surface);
 }
 .account-section:last-child { border-bottom: 1px solid var(--dash-border); }
 .account-section > div:first-child { display: flex; align-items: flex-start; gap: 10px; }
 .account-section h2 { font-size: 14px; }
 .account-section p { margin-top: 3px; color: var(--dash-text-muted); font-size: 11px; }
-.account-section dl { margin: 14px 0 0 28px; }
+.account-section dl { margin: 18px 0 0 28px; }
 .account-section dl div { display: grid; grid-template-columns: 160px 1fr; padding: 8px 0; font-size: 12px; }
 .account-section dt { color: var(--dash-text-muted); }
 .account-section dd { margin: 0; font-weight: 650; }
@@ -1974,6 +1976,9 @@
   cursor: pointer;
 }
 .account-actions { display: flex; gap: 8px; margin: 14px 0 0 28px; }
+.account-security-locks { display: grid; gap: 10px; margin: 18px 0 0 28px; }
+.account-security-locks .locked-field { margin: 0; }
+.account-section__hint { display: flex; align-items: center; gap: 6px; }
 
 .dash-mobile-nav { display: none; }
 
