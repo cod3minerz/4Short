@@ -1,6 +1,9 @@
 "use client";
 
-import { Input, TextArea } from "@heroui/react";
+import { ActionButton } from "@/components/hashpix/action-button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   ArrowRight,
   Check,
@@ -40,14 +43,12 @@ import { trackApp } from "../lib/track-app";
 import { useProjectProcessing } from "../lib/use-project-processing";
 import { refreshBalance, useDashboardStore } from "../store";
 import type { ClipLayout } from "../types";
-import { Dialog } from "./ui/Dialog";
 import { InfoPanel } from "./ui/InfoPanel";
 import { LockedField } from "./ui/LockedField";
 import { MediaThumb } from "./ui/MediaThumb";
 import { OptionCard } from "./ui/OptionCard";
 import { ProcessingCard } from "./ui/ProcessingCard";
 import { RangeTimeline } from "./ui/RangeTimeline";
-import { ActionButton } from "./ui/ActionButton";
 import { SegmentedControl } from "./ui/SegmentedControl";
 import { Select } from "./ui/Select";
 import { Stepper } from "./ui/Stepper";
@@ -568,11 +569,10 @@ export function NewProjectWizard({
                         placeholder="Вставьте ссылку на видео…"
                         type="url"
                         value={url}
-                        variant="secondary"
                         onChange={(event) => { setUrl(event.target.value); setError(""); }}
                         onKeyDown={(event) => { if (event.key === "Enter") void verifyUrl(); }}
                       />
-                      <ActionButton isPending={verifying} onPress={() => void verifyUrl()}>
+                      <ActionButton loading={verifying} onClick={() => void verifyUrl()}>
                         {verifying ? "Проверяем…" : "Проверить"}
                       </ActionButton>
                     </div>
@@ -621,13 +621,9 @@ export function NewProjectWizard({
                   }}
                 />
 
-                <Dialog
-                  isOpen={sourceLibraryOpen}
-                  onOpenChange={setSourceLibraryOpen}
-                  title="Прошлые исходники"
-                  description="Повторная загрузка и списание минут не нужны."
-                  className="wizard-source-dialog"
-                >
+                <Dialog open={sourceLibraryOpen} onOpenChange={setSourceLibraryOpen}>
+                  <DialogContent className="hp-overlay-scope wizard-source-dialog">
+                    <DialogHeader><DialogTitle>Прошлые исходники</DialogTitle><DialogDescription>Повторная загрузка и списание минут не нужны.</DialogDescription></DialogHeader>
                   {isControlApiConfigured() ? (
                     realSourceLibrary === null ? (
                       sourceLibraryError
@@ -675,6 +671,7 @@ export function NewProjectWizard({
                       Медиатека появится после подключения рабочего API. Мы не показываем демонстрационные исходники вместо ваших видео.
                     </p>
                   )}
+                  </DialogContent>
                 </Dialog>
               </div>
             ) : (
@@ -734,7 +731,7 @@ export function NewProjectWizard({
             )}
 
             <div className="wizard-footer wizard-footer--source">
-              <ActionButton isDisabled={!sourceReady || !sourceCostKnown} onPress={() => setStep(2)}>
+              <ActionButton disabled={!sourceReady || !sourceCostKnown} onClick={() => setStep(2)}>
                 Продолжить
                 <ArrowRight size={18} />
               </ActionButton>
@@ -806,13 +803,11 @@ export function NewProjectWizard({
                   {intent === "custom" ? (
                     <label className="wizard-custom-prompt">
                       <span>Опишите нужные моменты</span>
-                      <TextArea
-                        fullWidth
+                      <Textarea
                         maxLength={240}
                         placeholder="Например: найди ответы гостя о запуске продукта и ошибках первой команды"
                         rows={4}
                         value={customPrompt}
-                        variant="secondary"
                         onChange={(event) => setCustomPrompt(event.target.value)}
                       />
                       <small>{customPrompt.length} / 240</small>
@@ -974,7 +969,7 @@ export function NewProjectWizard({
 
             <div className="wizard-footer">
               <button className="wizard-back" type="button" onClick={() => setStep(1)}>Назад</button>
-              <ActionButton isDisabled={notEnoughCredits || !sourceCostKnown} onPress={() => setStep(3)}>
+              <ActionButton disabled={notEnoughCredits || !sourceCostKnown} onClick={() => setStep(3)}>
                 Выбрать оформление
                 <ArrowRight size={18} />
               </ActionButton>
@@ -1111,10 +1106,10 @@ export function NewProjectWizard({
                   <small>Один исходник оплачивается один раз. Поиск, правки и ререндер — без нового списания.</small>
                 </div>
                 <ActionButton
-                  fullWidth
+                  className="w-full"
                   size="lg"
-                  isDisabled={notEnoughCredits || !sourceCostKnown}
-                  onPress={() => void launchProject()}
+                  disabled={notEnoughCredits || !sourceCostKnown}
+                  onClick={() => void launchProject()}
                 >
                   Найти моменты
                   <ArrowRight size={18} />

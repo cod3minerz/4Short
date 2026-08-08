@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Logo } from "../../components/logo";
 import { ControlApiError, signOut } from "../lib/control-api";
 import { useDashboardStore } from "../store";
@@ -148,14 +149,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <div className="dash-profile-menu__popover">
                 {user ? <span className="dash-profile-menu__email">{user.email}</span> : null}
                 <Link href="/dashboard/account"><UserRound size={16} /> Аккаунт</Link>
-                <button
+                <Button
                   type="button"
                   disabled={!user || signingOut}
                   title={user ? undefined : "Вход ещё не подключён к этому окружению"}
                   onClick={() => void handleSignOut()}
                 >
                   <LogOut size={16} /> {signingOut ? "Выходим…" : "Выйти"}
-                </button>
+                </Button>
                 {signOutError ? <p className="dash-field-error" role="alert">{signOutError}</p> : null}
               </div>
             </details>

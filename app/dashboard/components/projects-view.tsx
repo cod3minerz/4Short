@@ -3,13 +3,14 @@
 import { FileVideo, HardDrive, Plus, Search, Trash2, Youtube } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ActionButton, IconButton } from "@/components/hashpix/action-button";
 import { projectStatus } from "../data";
 import { handleTablistKeyDown } from "../lib/a11y";
 import { removeProject, useDashboardStore } from "../store";
 import type { Project, ProjectStatus } from "../types";
 import { PageHeading } from "./page-heading";
-import { ActionButton, IconButton } from "./ui/ActionButton";
-import { Dialog } from "./ui/Dialog";
 import { MediaThumb } from "./ui/MediaThumb";
 
 type Filter = "all" | "active" | "review" | "ready" | "failed";
@@ -94,7 +95,7 @@ export function ProjectsView() {
         <label className="dash-search">
           <Search size={16} aria-hidden="true" />
           <span className="sr-only">Найти проект</span>
-          <input
+          <Input
             placeholder="Поиск"
             type="search"
             value={query}
@@ -135,10 +136,10 @@ export function ProjectsView() {
                 <time>{project.updatedAt}</time>
                 <IconButton
                   className="project-row__delete"
-                  aria-label={`Удалить проект «${project.title}»`}
+                  label={`Удалить проект «${project.title}»`}
                   tooltip="Удалить проект"
                   tone="secondary"
-                  onPress={() => { setDeleteError(""); setProjectToDelete(project); }}
+                  onClick={() => { setDeleteError(""); setProjectToDelete(project); }}
                 >
                   <Trash2 size={16} />
                 </IconButton>
@@ -151,22 +152,23 @@ export function ProjectsView() {
           <Search size={24} />
           <h2>Проекты не найдены</h2>
           <p>Измените запрос или очистите фильтр.</p>
-          <ActionButton tone="secondary" onPress={() => { setFilter("all"); setQuery(""); }}>Показать все</ActionButton>
+          <ActionButton tone="secondary" onClick={() => { setFilter("all"); setQuery(""); }}>Показать все</ActionButton>
         </div>
       )}
 
-      <Dialog
-        isOpen={Boolean(projectToDelete)}
-        onOpenChange={(open) => { if (!open && !deleting) setProjectToDelete(null); }}
-        title="Удалить проект?"
-        description="Действие нельзя отменить."
-        footer={(
-          <>
-            <ActionButton tone="secondary" isDisabled={deleting} onPress={() => setProjectToDelete(null)}>Отменить</ActionButton>
+      <Dialog open={Boolean(projectToDelete)} onOpenChange={(open) => { if (!open && !deleting) setProjectToDelete(null); }}>
+        <DialogContent className="hp-overlay-scope">
+          <DialogHeader><DialogTitle>Удалить проект?</DialogTitle><DialogDescription>Действие нельзя отменить.</DialogDescription></DialogHeader>
+          <p className="project-delete-copy">
+            «{projectToDelete?.title}» исчезнет из списка, активная обработка остановится, а его файлы перестанут занимать место. Общий исходник сохранится, если используется в другом проекте.
+          </p>
+          {deleteError ? <p className="dash-field-error" role="alert">{deleteError}</p> : null}
+          <DialogFooter>
+            <ActionButton tone="secondary" disabled={deleting} onClick={() => setProjectToDelete(null)}>Отменить</ActionButton>
             <ActionButton
               tone="danger"
-              isPending={deleting}
-              onPress={async () => {
+              loading={deleting}
+              onClick={async () => {
                 if (!projectToDelete) return;
                 setDeleting(true);
                 setDeleteError("");
@@ -180,13 +182,8 @@ export function ProjectsView() {
                 }
               }}
             >Удалить</ActionButton>
-          </>
-        )}
-      >
-        <p className="project-delete-copy">
-          «{projectToDelete?.title}» исчезнет из списка, активная обработка остановится, а его файлы перестанут занимать место. Общий исходник сохранится, если используется в другом проекте.
-        </p>
-        {deleteError ? <p className="dash-field-error" role="alert">{deleteError}</p> : null}
+          </DialogFooter>
+        </DialogContent>
       </Dialog>
     </main>
   );
