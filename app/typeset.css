@@ -1,0 +1,24 @@
+/* shadcn/typeset — documentation prose only; never applied to product controls. */
+@layer components {
+  .typeset {
+    --typeset-font-body: inherit;
+    --typeset-font-heading: var(--font-sans);
+    --typeset-leading: 1.75;
+    --typeset-flow: 1.25em;
+    color: var(--color-foreground, currentColor);
+    font-family: var(--typeset-font-body);
+    line-height: var(--typeset-leading);
+    overflow-wrap: break-word;
+  }
+
+  .typeset :where(p, ul, ol, blockquote, pre, table) { margin-block: var(--typeset-flow) 0; }
+  .typeset :where(h1, h2, h3, h4, h5, h6) { color: var(--color-foreground, currentColor); font-family: var(--typeset-font-heading); font-weight: 600; margin-block: var(--typeset-flow) 0; }
+  .typeset h1 { font-size: 1.75em; line-height: 1.3; }
+  .typeset h2 { font-size: 1.25em; line-height: 1.4; }
+  .typeset h3 { font-size: 1.125em; line-height: 1.45; }
+  .typeset :where(a) { color: inherit; font-weight: 500; text-decoration: underline; text-underline-offset: 0.2em; }
+  .typeset :where(ul, ol) { padding-inline-start: 1.5em; }
+  .typeset :where(li) { margin-block-start: 0.5em; padding-inline-start: 0.4em; }
+  .typeset :where(code, kbd) { border: 1px solid var(--color-border); border-radius: calc(var(--radius) * .6); padding: .0625em .35em; }
+  .typeset :where(blockquote) { border-inline-start: 2px solid var(--color-border); color: var(--color-muted-foreground); padding-inline-start: 1em; }
+}

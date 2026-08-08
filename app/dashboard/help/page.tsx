@@ -34,7 +34,7 @@ export default function HelpPage() {
         <span className="sr-only">Найти руководство</span>
         <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Найти ответ" type="search" />
       </label>
-      <section className="help-list" aria-label="Руководства">
+      <section className="help-list typeset" aria-label="Руководства">
         {visible.map((guide) => (
           <Link href={guide.href} key={guide.title}>
             <span><BookOpenText size={18} /></span>
