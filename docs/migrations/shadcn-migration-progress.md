@@ -18,7 +18,7 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 - [x] Auth routes (shared AuthScreen uses shadcn Button, Input and Label)
 - [x] Dashboard shell, wizard and projects
 - [x] Project workspace (HVE-G4 scaffold reports INSUFFICIENT; no HVE contract or preview geometry changed)
-- [ ] Clip editor
+- [x] Clip editor (HVE-G4 scaffold reports INSUFFICIENT; preview geometry and HVE contracts unchanged)
 - [x] Styles, billing, account and help
 - [x] Admin routes
 - [ ] Global overlays and notifications
