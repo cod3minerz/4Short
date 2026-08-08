@@ -118,6 +118,9 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
   (`users`, `workspaces`, `jobs`, `audit`) were checked at 360px and 1440px.
   Their documents remain within the viewport, the full admin shell persists,
   and the console has no route-specific errors.
+- Style studio refinement: the saved-style library, true subtitle-only preview
+  and persisted inspector now have deliberate three-column widths at desktop,
+  while the 360px layout collapses to one column without horizontal overflow.
 
 ## Structural locks
 

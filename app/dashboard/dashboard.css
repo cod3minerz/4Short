@@ -5173,7 +5173,7 @@
    persisted controls. Keep those jobs in separate columns instead of making
    a long, ambiguous form. */
 .styles-layout {
-  grid-template-columns: minmax(210px, 250px) minmax(250px, .8fr) minmax(360px, 480px);
+  grid-template-columns: minmax(220px, 250px) minmax(340px, .9fr) minmax(390px, 1.1fr);
   gap: 20px;
 }
 .styles-library {
