@@ -1,6 +1,10 @@
 "use client";
 
-import { TextArea } from "@heroui/react";
+import { ActionButton, IconButton } from "@/components/hashpix/action-button";
+import { ChoiceSelect, ChoiceSwitch } from "@/components/hashpix/choice-controls";
+import { HashpixDrawer } from "@/components/hashpix/drawer";
+import { StatusBadge } from "@/components/hashpix/status-badge";
+import { Textarea } from "@/components/ui/textarea";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -41,15 +45,10 @@ import { trackApp } from "../lib/track-app";
 import { useProjectProcessing } from "../lib/use-project-processing";
 import { useDashboardStore } from "../store";
 import type { ClipResult, MomentCandidate } from "../types";
-import { ActionButton, IconButton } from "./ui/ActionButton";
-import { Drawer } from "./ui/Drawer";
 import { LockedField } from "./ui/LockedField";
 import { MediaThumb } from "./ui/MediaThumb";
 import { ProcessingCard } from "./ui/ProcessingCard";
-import { Select } from "./ui/Select";
 import { SubtitlePreviewOverlay } from "./ui/SubtitlePreviewOverlay";
-import { StatusBadge } from "./ui/StatusBadge";
-import { Switch } from "./ui/Switch";
 
 type Tab = "moments" | "ready";
 type RenderState = "review" | "rendering" | "ready" | "partial";
@@ -507,22 +506,22 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
           </div>
         </div>
         <div className="project-header__actions">
-          <ActionButton tone="secondary" onPress={() => setTranscriptOpen(true)}>
+          <ActionButton tone="secondary" onClick={() => setTranscriptOpen(true)}>
             <FileText size={18} />
             Транскрипт
           </ActionButton>
-          <ActionButton tone="secondary" onPress={() => setSettingsOpen(true)}>
+          <ActionButton tone="secondary" onClick={() => setSettingsOpen(true)}>
             <Settings2 size={18} />
             Параметры
           </ActionButton>
           {tab === "moments" ? (
-            <ActionButton isDisabled={!selected.length || busy} onPress={startRender}>
+            <ActionButton disabled={!selected.length || busy} onClick={startRender}>
               {busy ? <LoaderCircle className="is-spinning" size={18} /> : <Sparkles size={18} />}
               Создать клипы · {selected.length}
             </ActionButton>
           ) : (
             <span className="dash-action-with-hint">
-              <ActionButton isDisabled tone="secondary">
+              <ActionButton disabled tone="secondary">
                 <FileArchive size={18} />
                 Скачать ZIP
               </ActionButton>
@@ -535,7 +534,7 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
       {notice ? (
         <div className="project-notice" role="status">
           <span>{notice}</span>
-          <IconButton aria-label="Скрыть сообщение" tooltip="Закрыть" onPress={() => setNotice("")}><X size={17} /></IconButton>
+          <IconButton label="Скрыть сообщение" tooltip="Закрыть" onClick={() => setNotice("")}><X size={17} /></IconButton>
         </div>
       ) : null}
 
@@ -583,7 +582,7 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
             <Sparkles size={26} />
             <h3>Моменты не найдены</h3>
             <p>Не удалось выделить законченные мысли в этом видео. Попробуйте уточнить запрос.</p>
-            <ActionButton onPress={() => setSettingsOpen(true)}>Найти иначе</ActionButton>
+            <ActionButton onClick={() => setSettingsOpen(true)}>Найти иначе</ActionButton>
           </div>
         )
       ) : tab === "moments" ? (
@@ -595,7 +594,7 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                 <h2>Выберите, что превратить в клипы</h2>
                 <p>Границы, кадр и текст каждого момента можно исправить до рендера.</p>
               </div>
-              <ActionButton tone="secondary" onPress={() => setSettingsOpen(true)}>
+              <ActionButton tone="secondary" onClick={() => setSettingsOpen(true)}>
                 <RotateCcw size={16} />
                 Найти иначе
               </ActionButton>
@@ -669,7 +668,7 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                 label="Кадр момента"
                 reason="Свой формат для отдельного момента — пока недоступно, используется формат проекта"
               />
-              <ActionButton className="moment-inspector__edit" tone="secondary" onPress={() => setTranscriptOpen(true)}>
+              <ActionButton className="moment-inspector__edit" tone="secondary" onClick={() => setTranscriptOpen(true)}>
                 Изменить границы по тексту
                 <ChevronRight size={17} />
               </ActionButton>
@@ -685,7 +684,7 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
               <p>Откройте клип, исправьте текст, кадр или оформление и перерендерите только его.</p>
             </div>
             <span className="dash-action-with-hint">
-              <ActionButton isDisabled tone="secondary">
+              <ActionButton disabled tone="secondary">
                 <FileArchive size={18} />
                 Скачать готовые ZIP
               </ActionButton>
@@ -714,9 +713,9 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                   <p>{clip.topic} · версия {clip.version || "готовится"}</p>
                   <div className="result-clip__actions">
                     <ActionButton
-                      isDisabled={clip.status !== "ready" || downloadingClipId === clip.id}
+                      disabled={clip.status !== "ready" || downloadingClipId === clip.id}
                       tone="secondary"
-                      onPress={() => void downloadClip(clip.id, clip.title)}
+                      onClick={() => void downloadClip(clip.id, clip.title)}
                     >
                       {downloadingClipId === clip.id
                         ? <LoaderCircle className="is-spinning" size={17} />
@@ -738,25 +737,25 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
               <Sparkles size={26} />
               <h3>Сначала выберите моменты</h3>
               <p>После запуска здесь будут отдельно появляться готовые клипы.</p>
-              <ActionButton onPress={() => setTab("moments")}>Вернуться к моментам</ActionButton>
+              <ActionButton onClick={() => setTab("moments")}>Вернуться к моментам</ActionButton>
             </div>
           )}
         </section>
       )}
 
-      <Drawer
-        isOpen={transcriptOpen}
+      <HashpixDrawer
+        open={transcriptOpen}
         onOpenChange={setTranscriptOpen}
         title="Транскрипт"
         description="Синхронизировано с видео"
         className="transcript-drawer"
         footer={
           <>
-            <ActionButton tone="secondary" onPress={() => setEditingTranscript((value) => !value)}>
+            <ActionButton tone="secondary" onClick={() => setEditingTranscript((value) => !value)}>
               <Pencil size={17} />
               {editingTranscript ? "Закрыть правку" : "Исправить текст"}
             </ActionButton>
-            <ActionButton isDisabled={busy || !boundaryStart || !boundaryEnd} onPress={() => void applyBoundaries()}>
+            <ActionButton disabled={busy || !boundaryStart || !boundaryEnd} onClick={() => void applyBoundaries()}>
               {busy ? <LoaderCircle className="is-spinning" size={17} /> : null}
               Применить границы
             </ActionButton>
@@ -771,16 +770,14 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
             </label>
             {editingTranscript ? (
               <div className="transcript-editor">
-                <TextArea
-                  fullWidth
+                <Textarea
                   rows={14}
                   value={transcriptDraft}
-                  variant="secondary"
                   onChange={(event) => setTranscriptDraft(event.target.value)}
                 />
                 <div>
-                  <ActionButton tone="secondary" onPress={() => setEditingTranscript(false)}>Отменить</ActionButton>
-                  <ActionButton isDisabled={busy} onPress={saveTranscriptRevision}>{busy ? <LoaderCircle className="is-spinning" size={17} /> : null}Сохранить версию</ActionButton>
+                  <ActionButton tone="secondary" onClick={() => setEditingTranscript(false)}>Отменить</ActionButton>
+                  <ActionButton disabled={busy} onClick={saveTranscriptRevision}>{busy ? <LoaderCircle className="is-spinning" size={17} /> : null}Сохранить версию</ActionButton>
                 </div>
               </div>
             ) : canUseApi && !filteredTranscript.length && !search ? (
@@ -813,21 +810,21 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                 ))}
               </div>
             )}
-      </Drawer>
+      </HashpixDrawer>
 
-      <Drawer
-        isOpen={settingsOpen}
+      <HashpixDrawer
+        open={settingsOpen}
         onOpenChange={setSettingsOpen}
         title="Параметры проекта"
         description="Без повторной транскрипции"
         className="project-settings-drawer"
         footer={
           <>
-            <ActionButton isDisabled={busy} tone="secondary" onPress={recompute}>
+            <ActionButton disabled={busy} tone="secondary" onClick={recompute}>
               {busy ? <LoaderCircle className="is-spinning" size={17} /> : <RotateCcw size={17} />}
               Найти ещё
             </ActionButton>
-            <ActionButton isDisabled={busy} onPress={() => void applyStyle()}>
+            <ActionButton disabled={busy} onClick={() => void applyStyle()}>
               {busy ? <LoaderCircle className="is-spinning" size={17} /> : null}
               Применить стиль
             </ActionButton>
@@ -838,10 +835,10 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
 
         <section>
           <h3>Что найти</h3>
-          <label className="drawer-field"><span>Задача</span><Select
+          <label className="drawer-field"><span>Задача</span><ChoiceSelect
             aria-label="Задача"
             value={searchMode}
-            onChange={(value) => setSearchMode(value as typeof searchMode)}
+            onValueChange={(value) => setSearchMode(value as typeof searchMode)}
             options={[
               { id: "tips", label: "Практические советы" },
               { id: "best", label: "Лучшие моменты" },
@@ -851,20 +848,20 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
             ]}
           /></label>
           <div className="project-settings-drawer__pair">
-            <label className="drawer-field"><span>Количество</span><Select
+            <label className="drawer-field"><span>Количество</span><ChoiceSelect
               aria-label="Количество"
               value={searchCount}
-              onChange={setSearchCount}
+              onValueChange={setSearchCount}
               options={[
                 { id: "recommended", label: "Рекомендуемое" },
                 { id: "6", label: "Ровно 6" },
                 { id: "8", label: "Ровно 8" },
               ]}
             /></label>
-            <label className="drawer-field"><span>Длительность</span><Select
+            <label className="drawer-field"><span>Длительность</span><ChoiceSelect
               aria-label="Длительность"
               value={searchDuration}
-              onChange={setSearchDuration}
+              onValueChange={setSearchDuration}
               options={[
                 { id: "short", label: "До 30 сек." },
                 { id: "medium", label: "30–60 сек." },
@@ -896,11 +893,11 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
               </div>
               <div className="project-setting-row">
                 <span><Subtitles size={19} /><span><strong>Субтитры</strong><small>Применить к выбранным клипам</small></span></span>
-                <Switch checked={captions} aria-label="Субтитры" onCheckedChange={setCaptions} />
+                <ChoiceSwitch checked={captions} label="Субтитры" onCheckedChange={setCaptions} />
               </div>
               <div className="project-setting-row">
                 <span><WandSparkles size={19} /><span><strong>Удаление пауз</strong><small>Не обрезать окончания фраз</small></span></span>
-                <Switch checked={silence} aria-label="Удаление пауз" onCheckedChange={setSilence} />
+                <ChoiceSwitch checked={silence} label="Удаление пауз" onCheckedChange={setSilence} />
               </div>
               <Link href="/dashboard/styles">Управление сохранёнными стилями <ChevronRight size={16} /></Link>
             </section>
@@ -910,7 +907,7 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
               <span><strong>Минуты не спишутся повторно.</strong> Новый поиск использует сохранённый транскрипт.</span>
             </div>
 
-      </Drawer>
+      </HashpixDrawer>
     </main>
   );
 }

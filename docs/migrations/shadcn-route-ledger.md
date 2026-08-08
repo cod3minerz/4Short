@@ -8,7 +8,7 @@
 | `/dashboard` | Dashboard | dashboard shell and wizard | product shell, shadcn forms and overlays | Migrated | typecheck, unit: 196 pass |
 | `/dashboard/new` | Dashboard | redirect only | dashboard route flow | Migrated | typecheck, unit: 196 pass |
 | `/dashboard/projects` | Dashboard | raw actions/dialog | Hashpix actions, Input, Dialog | Migrated | typecheck, unit: 196 pass |
-| `/dashboard/projects/[id]` | Workspace | HeroUI controls/drawer | Select, Switch, Sheet, menus | Audited | Baseline pass |
+| `/dashboard/projects/[id]` | Workspace | HeroUI controls/drawer | Hashpix choices, Sheet drawer, actions | Migrated | typecheck pass; HVE-G4 scaffold: INSUFFICIENT |
 | `/dashboard/projects/[id]/clips/[clipId]` | Editor | dashboard UI/raw controls | shared controls and HVE product components | Audited | Baseline pass |
 | `/dashboard/styles` | Dashboard | dashboard UI controls | Hashpix choices and actions | Migrated | typecheck pass |
 | `/dashboard/billing` | Dashboard | dashboard buttons | Hashpix actions and states | Migrated | typecheck pass |

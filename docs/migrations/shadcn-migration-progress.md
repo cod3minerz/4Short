@@ -17,7 +17,7 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 - [x] Hashpix reusable component layer (ActionButton, IconButton, Field, LockedField, StatusBadge)
 - [x] Auth routes (shared AuthScreen uses shadcn Button, Input and Label)
 - [x] Dashboard shell, wizard and projects
-- [ ] Project workspace
+- [x] Project workspace (HVE-G4 scaffold reports INSUFFICIENT; no HVE contract or preview geometry changed)
 - [ ] Clip editor
 - [x] Styles, billing, account and help
 - [ ] Admin routes
