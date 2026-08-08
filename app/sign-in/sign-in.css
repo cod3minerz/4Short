@@ -161,7 +161,7 @@
 .auth-input-wrap:focus-within {
   border-color: var(--auth-text);
   background: #1a1a1d;
-  box-shadow: 0 0 0 3px rgb(245 245 242 / 15%);
+  box-shadow: 0 0 0 2px var(--ring);
 }
 
 .auth-input-wrap input,
@@ -176,6 +176,11 @@
   background: transparent;
   font: inherit;
   font-size: 15px;
+}
+
+.auth-input-wrap input:focus-visible {
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .auth-input-wrap input::placeholder,
@@ -212,7 +217,7 @@
   transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
-.auth-code:focus { border-color: var(--auth-text); background: #1a1a1d; box-shadow: 0 0 0 3px rgb(245 245 242 / 15%); }
+.auth-code:focus-visible { border-color: var(--ring); background: #1a1a1d; box-shadow: 0 0 0 2px var(--ring); }
 
 .auth-submit {
   width: 100%;
@@ -261,10 +266,7 @@
 .auth-back:focus-visible,
 .auth-password-toggle:focus-visible,
 .auth-link:focus-visible,
-.auth-submit:focus-visible {
-  outline: 2px solid var(--auth-text);
-  outline-offset: 2px;
-}
+.auth-submit:focus-visible { outline-offset: 2px; }
 
 @media (max-width: 540px) {
   .auth-shell { align-items: start; padding: 18px 14px; }
