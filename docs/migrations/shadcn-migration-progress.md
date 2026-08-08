@@ -16,7 +16,7 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 - [x] Official base primitives (20 registry components; Sonner retry remains pending)
 - [x] Hashpix reusable component layer (ActionButton, IconButton, Field, LockedField, StatusBadge)
 - [x] Auth routes (shared AuthScreen uses shadcn Button, Input and Label)
-- [ ] Dashboard shell, wizard and projects
+- [x] Dashboard shell, wizard and projects
 - [ ] Project workspace
 - [ ] Clip editor
 - [ ] Styles, billing, account and help

@@ -1,6 +1,7 @@
 "use client";
 
 import { ActionButton } from "@/components/hashpix/action-button";
+import { ChoiceSegmented, ChoiceSelect, ChoiceSwitch } from "@/components/hashpix/choice-controls";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,10 +50,7 @@ import { MediaThumb } from "./ui/MediaThumb";
 import { OptionCard } from "./ui/OptionCard";
 import { ProcessingCard } from "./ui/ProcessingCard";
 import { RangeTimeline } from "./ui/RangeTimeline";
-import { SegmentedControl } from "./ui/SegmentedControl";
-import { Select } from "./ui/Select";
 import { Stepper } from "./ui/Stepper";
-import { Switch } from "./ui/Switch";
 import { ValueBadge } from "./ui/ValueBadge";
 
 /**
@@ -820,11 +818,11 @@ export function NewProjectWizard({
             <div className="wizard-result-settings">
               <fieldset>
                 <legend>Количество</legend>
-                <SegmentedControl
+                <ChoiceSegmented
                   aria-label="Количество клипов"
                   fullWidth
                   value={count}
-                  onChange={setCount}
+                  onValueChange={setCount}
                   options={[
                     { id: "recommended", label: "Рекомендуемое" },
                     { id: "8", label: "Ровно 8" },
@@ -833,11 +831,11 @@ export function NewProjectWizard({
               </fieldset>
               <fieldset>
                 <legend>Длительность</legend>
-                <SegmentedControl
+                <ChoiceSegmented
                   aria-label="Длительность клипов"
                   fullWidth
                   value={duration}
-                  onChange={setDuration}
+                  onValueChange={setDuration}
                   options={durations.map((value) => ({ id: value, label: value }))}
                 />
               </fieldset>
@@ -925,11 +923,11 @@ export function NewProjectWizard({
               <div className="wizard-advanced-grid">
                 <label>
                   <span>Разнообразие тем</span>
-                  <Select
+                  <ChoiceSelect
                     aria-label="Разнообразие тем"
                     fullWidth
                     value={diversity}
-                    onChange={(value) => setDiversity(value as typeof diversity)}
+                    onValueChange={(value) => setDiversity(value as typeof diversity)}
                     options={[
                       { id: "high", label: "Высокое" },
                       { id: "medium", label: "Среднее" },
@@ -939,11 +937,11 @@ export function NewProjectWizard({
                 </label>
                 <label>
                   <span>Строгость отбора</span>
-                  <Select
+                  <ChoiceSelect
                     aria-label="Строгость отбора"
                     fullWidth
                     value={strictness}
-                    onChange={(value) => setStrictness(value as typeof strictness)}
+                    onValueChange={(value) => setStrictness(value as typeof strictness)}
                     options={[
                       { id: "wide", label: "Больше вариантов" },
                       { id: "balanced", label: "Сбалансированно" },
@@ -953,11 +951,11 @@ export function NewProjectWizard({
                 </label>
                 <label>
                   <span>Завершение мысли</span>
-                  <Select
+                  <ChoiceSelect
                     aria-label="Завершение мысли"
                     fullWidth
                     value={allowThoughtCompletion ? "yes" : "no"}
-                    onChange={(value) => setAllowThoughtCompletion(value === "yes")}
+                    onValueChange={(value) => setAllowThoughtCompletion(value === "yes")}
                     options={[
                       { id: "yes", label: "Можно немного превысить лимит" },
                       { id: "no", label: "Не превышать лимит" },
@@ -986,12 +984,12 @@ export function NewProjectWizard({
               <p>Возьмите сохранённый стиль и при необходимости измените детали.</p>
             </div>
 
-            <SegmentedControl
+            <ChoiceSegmented
               aria-label="Режим оформления"
               className="wizard-style-mode"
               fullWidth
               value={styleMode}
-              onChange={(value) => setStyleMode(value as "auto" | "custom" | "preset")}
+              onValueChange={(value) => setStyleMode(value as "auto" | "custom" | "preset")}
               options={[
                 { id: "auto", label: <><Sparkles size={17} /> Быстро</> },
                 { id: "custom", label: <><SlidersHorizontal size={17} /> Тонкая настройка</> },
@@ -1052,21 +1050,21 @@ export function NewProjectWizard({
                         <span className="wizard-control-card__icon"><Subtitles size={19} /></span>
                         <span><strong>Субтитры</strong><small>Стиль можно изменить в готовом клипе</small></span>
                       </div>
-                      <Switch checked={captions} aria-label="Добавлять субтитры" onCheckedChange={setCaptions} />
+                      <ChoiceSwitch checked={captions} label="Добавлять субтитры" onCheckedChange={setCaptions} />
                     </div>
                     <div className="wizard-control-card">
                       <div>
                         <span className="wizard-control-card__icon"><WandSparkles size={19} /></span>
                         <span><strong>Убрать длинные паузы</strong><small>Мы не обрежем окончания фраз</small></span>
                       </div>
-                      <Switch checked={silence} aria-label="Удалять длинные паузы" onCheckedChange={setSilence} />
+                      <ChoiceSwitch checked={silence} label="Удалять длинные паузы" onCheckedChange={setSilence} />
                     </div>
                     <div className="wizard-control-card">
                       <div>
                         <span className="wizard-control-card__icon"><UploadCloud size={19} /></span>
                         <span><strong>Место под баннер</strong><small>Оставим область снизу — файл добавите в редакторе клипа</small></span>
                       </div>
-                      <Switch checked={banner} aria-label="Оставить место под баннер" onCheckedChange={setBanner} />
+                      <ChoiceSwitch checked={banner} label="Оставить место под баннер" onCheckedChange={setBanner} />
                     </div>
                   </>
                 ) : null}
