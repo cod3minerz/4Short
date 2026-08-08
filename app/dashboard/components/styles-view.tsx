@@ -2,6 +2,8 @@
 
 import { Check, Copy, Palette, Plus, Subtitles } from "lucide-react";
 import { useState } from "react";
+import { ActionButton } from "@/components/hashpix/action-button";
+import { ChoiceSelect, ChoiceSwitch } from "@/components/hashpix/choice-controls";
 import { ControlApiError } from "../lib/control-api";
 import { trackApp } from "../lib/track-app";
 import {
@@ -14,11 +16,8 @@ import {
 } from "../store";
 import type { StylePreset } from "../types";
 import { PageHeading } from "./page-heading";
-import { ActionButton } from "./ui/ActionButton";
 import { ColorField } from "./ui/ColorField";
 import { LockedField } from "./ui/LockedField";
-import { Select } from "./ui/Select";
-import { Switch } from "./ui/Switch";
 
 const subtitlePresets = [
   { id: "clean", label: "Clean", description: "Спокойный текст без подложки и анимации" },
@@ -110,7 +109,7 @@ export function StylesView() {
         title="Стили"
         description="Сохраните оформление один раз и применяйте его ко всем новым проектам."
         actions={
-          <ActionButton onPress={startNewStyle}>
+          <ActionButton onClick={startNewStyle}>
             <Plus size={18} /> Новый стиль
           </ActionButton>
         }
@@ -144,7 +143,7 @@ export function StylesView() {
               </span>
             </button>
           ))}
-          <ActionButton className="style-library-add" tone="secondary" onPress={startNewStyle}>
+          <ActionButton className="style-library-add" tone="secondary" onClick={startNewStyle}>
             <Plus size={20} />
             <span><strong>Создать новый стиль</strong><small>Настройте субтитры, кадр и брендирование</small></span>
           </ActionButton>
@@ -161,7 +160,7 @@ export function StylesView() {
               <ActionButton
                 tone="secondary"
                 className="style-editor__duplicate"
-                onPress={() => {
+                onClick={() => {
                   const id = duplicateStyle(active.id);
                   if (id) setActiveOverride(id);
                 }}
@@ -179,10 +178,10 @@ export function StylesView() {
               <h3>Кадр</h3>
               <label className="style-field">
                 <span><strong>Кадрирование</strong><small>Безопасный fallback при ошибке трекинга</small></span>
-                <Select
+                <ChoiceSelect
                   options={activeFramingOptions}
                   value={active.framing}
-                  onChange={(value) => patch({ framing: value })}
+                  onValueChange={(value) => patch({ framing: value })}
                   aria-label="Кадрирование"
                   fullWidth
                 />
@@ -192,9 +191,9 @@ export function StylesView() {
             <section className="style-section">
               <div className="style-section__head">
                 <h3>Субтитры</h3>
-                <Switch
+                <ChoiceSwitch
                   checked={active.captions !== "Выключены"}
-                  aria-label="Субтитры"
+                  label="Субтитры"
                   onCheckedChange={(value) => patch({ captions: value ? "Активное слово" : "Выключены" })}
                 />
               </div>
@@ -203,10 +202,10 @@ export function StylesView() {
                 <>
                   <label className="style-field">
                     <span><strong>Оформление</strong><small>{activeSubtitlePreset.description}</small></span>
-                      <Select
+                      <ChoiceSelect
                       options={subtitlePresets.map(({ id, label }) => ({ id, label }))}
                       value={active.subtitlePreset}
-                      onChange={(value) => patch({ subtitlePreset: value as StylePreset["subtitlePreset"] })}
+                      onValueChange={(value) => patch({ subtitlePreset: value as StylePreset["subtitlePreset"] })}
                       aria-label="Оформление субтитров"
                       fullWidth
                     />
@@ -215,20 +214,20 @@ export function StylesView() {
                   <div className="style-field-row">
                     <label className="style-field">
                       <span><strong>Шрифт</strong></span>
-                      <Select
+                      <ChoiceSelect
                         options={fontOptions}
                         value={active.fontFamily}
-                        onChange={(value) => patch({ fontFamily: value })}
+                        onValueChange={(value) => patch({ fontFamily: value })}
                         aria-label="Шрифт субтитров"
                         fullWidth
                       />
                     </label>
                     <label className="style-field">
                       <span><strong>Положение</strong></span>
-                      <Select
+                      <ChoiceSelect
                         options={positionOptions}
                         value={active.subtitlePosition}
-                        onChange={(value) => patch({ subtitlePosition: value as StylePreset["subtitlePosition"] })}
+                        onValueChange={(value) => patch({ subtitlePosition: value as StylePreset["subtitlePosition"] })}
                         aria-label="Положение субтитров"
                         fullWidth
                       />
@@ -258,33 +257,33 @@ export function StylesView() {
               <h3>Клип</h3>
               <div className="style-editor__switch">
                 <span><strong>Удалять паузы</strong><small>Длиннее 0,8 секунды</small></span>
-                <Switch
+                <ChoiceSwitch
                   checked={active.silenceRemoval}
-                  aria-label="Удалять паузы"
+                  label="Удалять паузы"
                   onCheckedChange={(value) => patch({ silenceRemoval: value })}
                 />
               </div>
               <div className="style-editor__switch">
                 <span><strong>Заголовок клипа</strong><small>Автоматический или введённый вручную</small></span>
-                <Switch
+                <ChoiceSwitch
                   checked={active.title}
-                  aria-label="Заголовок клипа"
+                  label="Заголовок клипа"
                   onCheckedChange={(value) => patch({ title: value })}
                 />
               </div>
               <div className="style-editor__switch">
                 <span><strong>Логотип</strong><small>С безопасным отступом от интерфейса соцсетей</small></span>
-                <Switch
+                <ChoiceSwitch
                   checked={active.logo}
-                  aria-label="Логотип"
+                  label="Логотип"
                   onCheckedChange={(value) => patch({ logo: value })}
                 />
               </div>
               <div className="style-editor__switch">
                 <span><strong>Рекламный баннер</strong><small>Учитывает безопасную зону субтитров</small></span>
-                <Switch
+                <ChoiceSwitch
                   checked={active.banner}
-                  aria-label="Рекламный баннер"
+                  label="Рекламный баннер"
                   onCheckedChange={(value) => patch({ banner: value })}
                 />
               </div>
@@ -302,7 +301,7 @@ export function StylesView() {
           {active.id !== defaultStyleId ? (
             <ActionButton
               tone="secondary"
-              onPress={async () => {
+              onClick={async () => {
                 setSaveError("");
                 try {
                   await setDefaultStyle(active.id);
@@ -315,8 +314,8 @@ export function StylesView() {
             </ActionButton>
           ) : <span className="style-saved-state"><Check size={15} /> Стиль по умолчанию</span>}
           <ActionButton
-            isPending={savingStyleId === active.id}
-            onPress={async () => {
+            loading={savingStyleId === active.id}
+            onClick={async () => {
               setSaveError("");
               try {
                 await saveStyle(active.id);

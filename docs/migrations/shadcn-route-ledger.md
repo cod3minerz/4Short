@@ -10,10 +10,10 @@
 | `/dashboard/projects` | Dashboard | raw actions/dialog | Hashpix actions, Input, Dialog | Migrated | typecheck, unit: 196 pass |
 | `/dashboard/projects/[id]` | Workspace | HeroUI controls/drawer | Select, Switch, Sheet, menus | Audited | Baseline pass |
 | `/dashboard/projects/[id]/clips/[clipId]` | Editor | dashboard UI/raw controls | shared controls and HVE product components | Audited | Baseline pass |
-| `/dashboard/styles` | Dashboard | dashboard UI controls | forms, Select, Switch, dialogs | Audited | Baseline pass |
-| `/dashboard/billing` | Dashboard | dashboard buttons | Button, states, table | Audited | Baseline pass |
-| `/dashboard/account` | Dashboard | dashboard buttons/forms | Field, Button, status | Audited | Baseline pass |
-| `/dashboard/help` | Dashboard | raw search input | Input and reusable states | Audited | Baseline pass |
+| `/dashboard/styles` | Dashboard | dashboard UI controls | Hashpix choices and actions | Migrated | typecheck pass |
+| `/dashboard/billing` | Dashboard | dashboard buttons | Hashpix actions and states | Migrated | typecheck pass |
+| `/dashboard/account` | Dashboard | no legacy dependency | Field, Button, status | Migrated | source audit pass |
+| `/dashboard/help` | Dashboard | raw search input | Input and reusable states | Migrated | typecheck pass |
 | `/admin` | Admin | HeroUI/local light system | shared tokens, Button, Badge | Audited | Baseline pass |
 | `/admin/users` | Admin | HeroUI/table controls | Table, Select, AlertDialog | Audited | Baseline pass |
 | `/admin/workspaces` | Admin | HeroUI/forms | Table, Field, Select, Dialog | Audited | Baseline pass |

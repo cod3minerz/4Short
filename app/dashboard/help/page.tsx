@@ -3,6 +3,7 @@
 import { ArrowRight, BookOpenText, MessageCircle, Search } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { Input } from "@/components/ui/input";
 import { PageHeading } from "../components/page-heading";
 
 /**
@@ -31,7 +32,7 @@ export default function HelpPage() {
       <label className="help-search">
         <Search size={17} />
         <span className="sr-only">Найти руководство</span>
-        <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Найти ответ" type="search" />
+        <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Найти ответ" type="search" />
       </label>
       <section className="help-list" aria-label="Руководства">
         {visible.map((guide) => (

@@ -2,6 +2,7 @@
 
 import { ArrowRight, Check, Clock3, CreditCard, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ActionButton } from "@/components/hashpix/action-button";
 import { minutePackages, productPlans } from "@/packages/product-config/src";
 import { minuteTransactions as previewTransactions } from "../data";
 import {
@@ -14,7 +15,6 @@ import { trackApp } from "../lib/track-app";
 import { useDashboardStore } from "../store";
 import type { MinuteTransaction } from "../types";
 import { PageHeading } from "./page-heading";
-import { ActionButton } from "./ui/ActionButton";
 
 function formatTransactionDate(iso: string) {
   const date = new Date(iso);
@@ -118,7 +118,7 @@ export function BillingView() {
             {plan ? `${plan.includedSeconds / 60} минут начисляется каждый месяц` : "Тариф загружается"}
           </p>
           <div className="billing-plan__actions">
-            <ActionButton tone="secondary" isDisabled>Изменить тариф</ActionButton>
+            <ActionButton tone="secondary" disabled>Изменить тариф</ActionButton>
             <small>Смена тарифа появится вместе с подключением оплаты.</small>
           </div>
         </div>
@@ -159,7 +159,7 @@ export function BillingView() {
               <div><dt>Пакет</dt><dd>+{selected}</dd></div>
               <div><dt>Итого</dt><dd>{credits === null ? "…" : `${credits + selected} минут`}</dd></div>
             </dl>
-            <ActionButton fullWidth onPress={purchase} isDisabled={isPurchasing}>
+            <ActionButton className="w-full" onClick={purchase} disabled={isPurchasing}>
               {isPurchasing ? "Переходим к оплате…" : "Добавить минуты"} <ArrowRight size={17} />
             </ActionButton>
             {notice ? <p role="status">{notice}</p> : null}

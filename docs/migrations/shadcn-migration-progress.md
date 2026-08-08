@@ -19,7 +19,7 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 - [x] Dashboard shell, wizard and projects
 - [ ] Project workspace
 - [ ] Clip editor
-- [ ] Styles, billing, account and help
+- [x] Styles, billing, account and help
 - [ ] Admin routes
 - [ ] Global overlays and notifications
 - [ ] Legacy removal
