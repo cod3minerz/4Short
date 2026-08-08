@@ -12,7 +12,7 @@
 | `/dashboard/projects/[id]/clips/[clipId]` | Editor | legacy dashboard actions/overlays | Hashpix choices, actions and shadcn Dialog | Migrated | typecheck pass; HVE-G4 scaffold: INSUFFICIENT |
 | `/dashboard/styles` | Dashboard | legacy universal button/type rules | Button, Input, Select, Switch | Canonical preset pass | labels stack correctly; save button is 12px/36px/10px radius; no overflow |
 | `/dashboard/billing` | Dashboard | dashboard buttons | Hashpix actions and states | Migrated | typecheck pass |
-| `/dashboard/account` | Dashboard | no legacy dependency | Field, LockedField, Button, status | Canonical preset pass | authenticated session QA; 2FA remains honestly locked; portal radius normalised |
+| `/dashboard/account` | Dashboard | no legacy dependency | Field, LockedField, Button, status | Canonical preset pass | real Better Auth QA: menu items left-aligned; portal radius 14px; 2FA remains honestly locked |
 | `/dashboard/help` | Dashboard | raw search input | Input and reusable states | Migrated | typecheck pass |
 | `/admin` | Admin | floating double CSS layout and access-gate flash | Badge, Button, Input, Select, Skeleton layout | Canonical preset pass | full viewport, zero main radius; cold-load keeps shell instead of access gate |
 | `/admin/users` | Admin | native selects/status wrapper | Badge, Button, Input, Select | Canonical preset pass | client navigation does not show access gate |
