@@ -14,7 +14,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Logo } from "../../components/logo";
 import { ControlApiError, signOut } from "../lib/control-api";
 import { useDashboardStore } from "../store";
@@ -123,10 +123,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 </button>}
               />
               <DropdownMenuContent align="end" className="dash-profile-menu__popover hp-overlay-scope">
-                {user ? <DropdownMenuLabel className="dash-profile-menu__email">{user.email}</DropdownMenuLabel> : null}
-                <DropdownMenuItem onClick={() => router.push("/dashboard/account")}>
-                  <UserRound size={16} /> Аккаунт
-                </DropdownMenuItem>
+                <DropdownMenuGroup>
+                  {user ? <DropdownMenuLabel className="dash-profile-menu__email">{user.email}</DropdownMenuLabel> : null}
+                  <DropdownMenuItem onClick={() => router.push("/dashboard/account")}>
+                    <UserRound size={16} /> Аккаунт
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   variant="destructive"
