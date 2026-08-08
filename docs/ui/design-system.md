@@ -4,22 +4,25 @@ Migration status: [shadcn progress](../migrations/shadcn-migration-progress.md)
 
 ## Layers
 
-1. `components/ui`: unmodified or minimally token-adapted shadcn/Base UI primitives.
-2. `components/hashpix`: reusable product controls and states.
+1. `components/ui`: canonical registry shadcn/Base UI primitives.
+2. `components/hashpix`: functional product compositions and states only.
 3. Internal routes: composition, data and business behavior only.
 
 ## Semantic contract
 
-- Shadcn roles (`background`, `foreground`, `primary`, `secondary`, `muted`, `accent`, `destructive`, `border`, `input`, `ring`) map to Hashpix `--hp-*` roles inside internal roots and portals.
-- Compact controls use 14px corners, surfaces 18px, and workspaces 24px.
-- Primary actions are neutral light on dark; blue is reserved for user media or configured brand content.
-- Opaque tonal surfaces are the default. Glass is allowed only above media or an intentional ambient layer.
+- Internal product routes use the canonical `b38miVLH6` root and `.dark`
+  variables verbatim. There is no `--hp-*` visual-token layer.
+- `--radius` is `.625rem`; derived radii come only from the generated shadcn
+  Tailwind mapping.
+- Dark product primary is indigo (`oklch(0.398 0.195 277.366)`), with the
+  canonical neutral surfaces, border, input and ring values.
 - Geist is the only internal product font.
 
 ## Component rules
 
 - Use official shadcn compound APIs and standard React event/disabled props.
-- Product loading/tone behavior belongs in `components/hashpix`, not compatibility shims in primitives.
+- Product loading/locked-state behavior may live in `components/hashpix`, but
+  it must compose stock primitives without styling compatibility shims.
 - Field errors stay beside their field. Sonner is for transient cross-view feedback.
 - Every control executes a real capability or renders as `LockedField` with the true reason.
 - Route files must not introduce colors, radii, shadows, focus rings, or local primitive implementations.

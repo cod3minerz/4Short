@@ -1,9 +1,13 @@
 @import "tailwindcss";
 @import "@heroui/styles";
 @import "./typeset.css";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Geist Variable", Arial, sans-serif;
+  --font-sans: var(--font-sans);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -25,6 +29,24 @@
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 4px);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 @font-face {
@@ -46,9 +68,8 @@
 }
 
 :root {
-  /* Shared Hashpix system primitives. Marketing consumes the dark family now;
-     dashboard can map its existing semantic --dash-* roles in a later pass
-     without changing its sidebar/content information architecture. */
+  /* Marketing-only values. Internal product routes use the canonical shadcn
+     roles below and opt into `.dark` at their route root. */
   --ds-font-sans: "Geist Variable", Arial, sans-serif;
   --ds-canvas: #000000;
   --ds-surface: #171718;
@@ -60,11 +81,9 @@
   --ds-radius-panel: 16px;
   --ds-radius-inner: 12px;
   --ds-radius-pill: 999px;
-  --accent: #3153FF;
   --accent-strong: color-mix(in oklch, #3153FF 80%, black);
   --ink: oklch(19% 0.02 242);
   --ink-soft: oklch(28% 0.022 242);
-  --muted: oklch(49% 0.018 242);
   --line: oklch(89.5% 0.012 236);
   --surface: oklch(98.4% 0.005 235);
   --surface-blue: color-mix(in oklch, #3153FF 8%, white);
@@ -74,65 +93,61 @@
   --radius-section: 44px;
   --radius-card: 30px;
   --shadow-soft: 0 24px 70px rgba(21, 62, 78, 0.1);
-  --background: var(--white);
-  --foreground: var(--ink);
   --font-manrope: var(--ds-font-sans);
-  --font-sans: var(--font-manrope);
+  --font-sans: "Geist Variable", Arial, sans-serif;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.457 0.24 277.023);
+  --primary-foreground: oklch(0.962 0.018 272.314);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.785 0.115 274.713);
+  --chart-2: oklch(0.585 0.233 277.117);
+  --chart-3: oklch(0.511 0.262 276.966);
+  --chart-4: oklch(0.457 0.24 277.023);
+  --chart-5: oklch(0.398 0.195 277.366);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.511 0.262 276.966);
+  --sidebar-primary-foreground: oklch(0.962 0.018 272.314);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
 }
 
-/* Internal product tokens are scoped away from the public landing. Portal
-   content carries hp-overlay-scope so Base UI layers inherit these roles. */
-.hp-theme,
-.dash-shell,
-.editor-focus-shell,
-.admin-shell,
-.auth-shell,
+/* Base UI portals leave the route subtree. This is a token bridge, not a
+   separate product theme: it repeats the preset's canonical dark roles. */
 .hp-overlay-scope {
-  --hp-canvas: oklch(0.145 0 0);
-  --hp-surface: oklch(0.205 0 0);
-  --hp-surface-raised: oklch(0.269 0 0);
-  --hp-surface-subtle: oklch(0.269 0 0);
-  --hp-media: oklch(0.145 0 0);
-  --hp-line: oklch(0.371 0 0);
-  --hp-line-strong: oklch(0.556 0 0);
-  --hp-text: oklch(0.985 0 0);
-  --hp-text-muted: oklch(0.708 0 0);
-  --hp-text-subtle: oklch(0.556 0 0);
-  --hp-brand: oklch(0.585 0.233 277.117);
-  --hp-brand-hover: oklch(0.511 0.262 276.966);
-  --hp-brand-pressed: oklch(0.457 0.24 277.023);
-  --hp-brand-foreground: oklch(0.985 0 0);
-  --hp-success: oklch(0.723 0.191 149.579);
-  --hp-warning: oklch(0.828 0.189 84.429);
-  --hp-danger: oklch(0.637 0.237 25.331);
-  --hp-focus-ring: oklch(0.585 0.233 277.117);
-  --hp-radius-control: var(--radius);
-  --hp-radius-surface: calc(var(--radius) + 4px);
-  --hp-radius-workspace: calc(var(--radius) + 8px);
-  --hp-motion-fast: 120ms;
-  --hp-motion-normal: 160ms;
-  --hp-motion-slow: 240ms;
-  --background: var(--hp-canvas);
-  --foreground: var(--hp-text);
-  --card: var(--hp-surface);
-  --card-foreground: var(--hp-text);
-  --popover: var(--hp-surface-raised);
-  --popover-foreground: var(--hp-text);
-  --primary: var(--hp-brand);
-  --primary-foreground: var(--hp-brand-foreground);
-  --secondary: var(--hp-surface-subtle);
-  --secondary-foreground: var(--hp-text);
-  --muted: var(--hp-surface-subtle);
-  --muted-foreground: var(--hp-text-muted);
-  --accent: var(--hp-surface-subtle);
-  --accent-foreground: var(--hp-text);
-  --destructive: var(--hp-danger);
-  --border: var(--hp-line);
-  --input: var(--hp-line);
-  --ring: var(--hp-focus-ring);
-  --radius: 0.625rem;
-  color: var(--hp-text);
-  font-family: "Geist Variable", Arial, sans-serif;
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.398 0.195 277.366);
+  --primary-foreground: oklch(0.962 0.018 272.314);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
 }
 
 * {
@@ -3971,5 +3986,51 @@ h2 {
   .article-modal {
     padding: 30px 20px 22px;
     border-radius: 28px;
+  }
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.398 0.195 277.366);
+  --primary-foreground: oklch(0.962 0.018 272.314);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.785 0.115 274.713);
+  --chart-2: oklch(0.585 0.233 277.117);
+  --chart-3: oklch(0.511 0.262 276.966);
+  --chart-4: oklch(0.457 0.24 277.023);
+  --chart-5: oklch(0.398 0.195 277.366);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.585 0.233 277.117);
+  --sidebar-primary-foreground: oklch(0.962 0.018 272.314);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
   }
 }

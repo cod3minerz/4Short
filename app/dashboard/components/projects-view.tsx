@@ -5,9 +5,9 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ActionButton, IconButton } from "@/components/hashpix/action-button";
 import { projectStatus } from "../data";
-import { handleTablistKeyDown } from "../lib/a11y";
 import { removeProject, useDashboardStore } from "../store";
 import type { Project, ProjectStatus } from "../types";
 import { PageHeading } from "./page-heading";
@@ -77,21 +77,21 @@ export function ProjectsView() {
       ) : null}
 
       <div className="dash-project-toolbar">
-        <div className="dash-filter-row" role="tablist" aria-label="Фильтры проектов" onKeyDown={handleTablistKeyDown}>
+        <ToggleGroup
+          className="dash-filter-row"
+          aria-label="Фильтры проектов"
+          value={[filter]}
+          onValueChange={(next) => { const selected = next[0] as Filter | undefined; if (selected) setFilter(selected); }}
+        >
           {filters.map((item) => (
-            <button
-              role="tab"
-              aria-selected={filter === item.id}
-              tabIndex={filter === item.id ? 0 : -1}
-              className={filter === item.id ? "is-active" : ""}
+            <ToggleGroupItem
               key={item.id}
-              type="button"
-              onClick={() => setFilter(item.id)}
+              value={item.id}
             >
               {item.label}
-            </button>
+            </ToggleGroupItem>
           ))}
-        </div>
+        </ToggleGroup>
         <label className="dash-search">
           <Search size={16} aria-hidden="true" />
           <span className="sr-only">Найти проект</span>

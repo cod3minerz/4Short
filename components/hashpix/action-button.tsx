@@ -5,7 +5,6 @@ import type { ComponentProps, ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { cn } from "@/lib/utils"
 
 export type ActionTone = "brand" | "light" | "secondary" | "danger" | "quiet"
 
@@ -29,7 +28,7 @@ export function ActionButton({ tone = "brand", loading = false, className, child
       variant={variants[tone]}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={cn("hp-action", `hp-action--${tone}`, className)}
+      className={className}
     >
       {loading ? <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" /> : null}
       {children}
@@ -47,7 +46,7 @@ export function IconButton({ label, tooltip = label, className, children, ...pro
   return (
     <Tooltip>
       <TooltipTrigger
-        render={<ActionButton {...props} aria-label={label} className={cn("hp-action--icon", className)}>{children}</ActionButton>}
+        render={<ActionButton {...props} aria-label={label} className={className}>{children}</ActionButton>}
       />
       <TooltipContent>{tooltip}</TooltipContent>
     </Tooltip>

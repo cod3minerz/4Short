@@ -28,9 +28,9 @@ and use a safe test account before release. Do not mark the route verified.
 
 1. Structural: intended shell, no overflow, sensible container width, correct
    panel collapse at 360/768/1024/1440 px.
-2. System: only semantic tokens and shared primitives; compact controls use
-   the same 14px optical control radius at every height; no accidental blue product chrome;
-   glass only over media/ambient content. A media card contains a real retained
+2. System: only canonical shadcn `b38miVLH6` roles and registry primitives;
+   compact controls use the preset radius scale (`--radius: .625rem`), focus
+   ring and variants; no product-specific visual overrides. A media card contains a real retained
    thumbnail or the explicit unavailable state—never brand art or fake output.
 3. Interaction: click every visible actionable control; confirm an actual state
    change, API request or intentionally locked reason.

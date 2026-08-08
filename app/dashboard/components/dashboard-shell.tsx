@@ -95,11 +95,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   };
 
   if (isEditor) {
-    return <div className="editor-focus-shell">{children}</div>;
+    return <div className="editor-focus-shell dark">{children}</div>;
   }
 
   return (
-    <div className="dash-shell">
+    <div className="dash-shell dark">
       <header className="dash-topbar">
         <div className="dash-topbar__inner">
           <Link className="dash-topbar__logo" href="/" aria-label="Hashpix — на главную">

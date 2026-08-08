@@ -12,8 +12,8 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 - [x] Fresh Codebase Memory full index with exclusions (6,511 nodes / 15,047 edges)
 - [x] Shadcn foundation and MCP configuration
 - [ ] Shadcn skill installation (network retry pending)
-- [x] Semantic token system
-- [x] Official base primitives (20 registry components; Sonner retry remains pending)
+- [x] Canonical preset reapplied with `npx shadcn@latest apply --preset b38miVLH6`
+- [x] Official base primitives (20 registry components)
 - [x] Hashpix reusable component layer (ActionButton, IconButton, Field, LockedField, StatusBadge)
 - [x] Auth routes (shared AuthScreen uses shadcn Button, Input and Label)
 - [x] Dashboard shell, wizard and projects
@@ -21,8 +21,8 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 - [x] Clip editor (HVE-G4 scaffold reports INSUFFICIENT; preview geometry and HVE contracts unchanged)
 - [x] Styles, billing, account and help
 - [x] Admin routes
-- [ ] Global overlays and notifications
-- [x] Internal HeroUI wrapper removal and preset token alignment
+- [ ] Global notifications (Sonner registry package is blocked by repeated npm `ECONNRESET`; existing inline field and autosave feedback remain intentionally inline)
+- [ ] Legacy product CSS selector retirement (in progress; preset values now bridge remaining selectors)
 - [ ] Full automated and browser acceptance
 
 ## Baseline evidence
@@ -31,13 +31,16 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 - `npm run lint`: pass
 - `npm run test:unit`: 196 pass
 - `npm run build:vercel`: pass, 28 generated pages
-- `npm run audit:product-ui`: pass under the pre-migration contract
-- `npm run audit:dark-surfaces`: pass under the pre-migration contract
+- `npm run audit:product-ui`: previous contract is superseded; it is not
+  acceptance evidence for the canonical-preset pass.
 
 ## Structural locks
 
 - Preserve dashboard navigation, main-container geometry and editor zones.
 - Preserve all API, database, HVE document and routing contracts.
-- Use Geist for internal UI and the 14/18/24px Hashpix radius hierarchy.
+- Internal routes use the canonical `b38miVLH6` `base-mira` roles verbatim:
+  `--radius: .625rem`, neutral surfaces, indigo primary and stock Base UI
+  focus treatment. A temporary CSS bridge maps residual legacy selectors to
+  those exact roles while the selectors are retired.
 - Public landing and blog remain visually unchanged.
 - Unsupported HVE capabilities remain `LockedField` controls with truthful reasons.

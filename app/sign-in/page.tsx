@@ -292,9 +292,7 @@ export function AuthScreen({ initialMode }: { initialMode: AuthScreenMode }) {
           : `Введите код из письма для ${email || "вашего email"} и новый пароль.`;
 
   return (
-    <main className="auth-shell">
-      <div className="auth-ambient auth-ambient--one" aria-hidden="true" />
-      <div className="auth-ambient auth-ambient--two" aria-hidden="true" />
+    <main className="auth-shell dark">
       <section className="auth-card" aria-labelledby="auth-title">
         <Link className="auth-card__logo" href="/" aria-label="Hashpix — на главную">
           <Logo priority tone="light" variant="identity" />

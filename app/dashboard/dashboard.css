@@ -10,94 +10,106 @@
  * from the app-wide oklch custom properties in app/globals.css.
  */
 
-/* Canonical Hashpix product tokens. They live on :root so portals (Dialog,
-   Drawer and Tooltip) inherit the exact same contract as the application. */
+/* Transitional layout aliases. Their values are the canonical `base-mira`
+   preset roles; no product-specific colours, radii or focus treatment live
+   here. New components must use their shadcn utility classes directly. */
 :root {
-  /* Product actions are neutral in the dark theme. Blue belongs only to
-     user media/brand content, never to generic navigation or CTAs. */
+  /* Legacy selectors below are removed route-by-route. During that work they
+     resolve exclusively to the current shadcn roles, so they cannot reintroduce
+     a second palette, radius scale or focus ring. */
+  --hp-canvas: var(--background);
+  --hp-surface: var(--card);
+  --hp-surface-raised: var(--secondary);
+  --hp-surface-subtle: var(--muted);
+  --hp-media: var(--background);
+  --hp-line: var(--border);
+  --hp-line-strong: var(--ring);
+  --hp-text: var(--foreground);
+  --hp-text-muted: var(--muted-foreground);
+  --hp-text-subtle: var(--muted-foreground);
+  --hp-brand: var(--primary);
+  --hp-brand-hover: color-mix(in oklch, var(--primary), var(--foreground) 10%);
+  --hp-brand-pressed: color-mix(in oklch, var(--primary), var(--background) 10%);
+  --hp-brand-foreground: var(--primary-foreground);
+  --hp-success: oklch(0.723 0.191 149.579);
+  --hp-warning: oklch(0.828 0.189 84.429);
+  --hp-danger: var(--destructive);
+  --hp-radius-control: var(--radius);
+  --hp-radius-surface: var(--radius-lg);
+  --hp-radius-workspace: var(--radius-xl);
   --hp-action-light: var(--primary);
-  --hp-action-light-hover: color-mix(in oklch, var(--primary), white 12%);
-  --hp-action-light-pressed: color-mix(in oklch, var(--primary), black 12%);
-  --hp-control-sm: 32px;
-  --hp-control-md: 36px;
-  --hp-control-lg: 40px;
-  /* Controls keep one optical corner regardless of their height. A fixed
-     radius is less noisy than turning every 32/36/40px control into a
-     differently proportioned pill. Browsers that support `corner-shape`
-     receive the same soft squircle finish without relying on it. */
-  --hp-radius-action: var(--hp-radius-control);
-  --hp-radius-field: var(--hp-radius-control);
-  --hp-radius-overlay: var(--hp-radius-surface);
-  --hp-radius-panel: var(--hp-radius-surface);
-  --hp-space-1: 4px;
-  --hp-space-2: 8px;
-  --hp-space-3: 12px;
-  --hp-space-4: 16px;
-  --hp-space-5: 24px;
-  --hp-space-6: 32px;
-  --hp-space-7: 48px;
-  --hp-motion-interactive: 160ms ease;
-  --hp-motion-overlay: 120ms ease;
-  --hp-focus-ring: rgb(245 245 242 / .9);
+  --hp-action-light-hover: color-mix(in oklch, var(--primary), var(--foreground) 12%);
+  --hp-action-light-pressed: color-mix(in oklch, var(--primary), var(--background) 12%);
+  --hp-control-sm: 28px;
+  --hp-control-md: 32px;
+  --hp-control-lg: 36px;
+  --hp-radius-action: var(--radius);
+  --hp-radius-field: var(--radius);
+  --hp-radius-overlay: var(--radius-lg);
+  --hp-radius-panel: var(--radius-lg);
+  --hp-space-1: 4px; --hp-space-2: 8px; --hp-space-3: 12px;
+  --hp-space-4: 16px; --hp-space-5: 24px; --hp-space-6: 32px; --hp-space-7: 48px;
+  --hp-motion-interactive: 150ms ease; --hp-motion-overlay: 150ms ease;
+  --hp-focus-ring: var(--ring);
 }
 
 /* The two roots consume the canonical token layer. `--dash-*` are transition
    aliases for legacy selectors only; new UI must consume semantic --hp-* roles. */
 .dash-shell,
 .editor-focus-shell {
-  --ink: var(--hp-text);
-  --white: var(--hp-text);
+  --ink: var(--foreground);
+  --white: var(--foreground);
   --dash-text-micro: 10px;
   --dash-text-xs: 12px;
   --dash-text-sm: 13px;
   --dash-text-md: 14px;
   --dash-text-lg: 16px;
-  color: var(--ds-text);
-  --dash-bg: var(--hp-canvas);
-  --dash-surface: var(--hp-surface);
-  --dash-surface-subtle: var(--hp-surface-raised);
-  --dash-surface-muted: var(--hp-surface-subtle);
-  --dash-media: var(--hp-media);
-  --dash-border: var(--hp-line);
-  --dash-border-strong: var(--hp-line-strong);
-  --dash-text-muted: var(--hp-text-muted);
-  --dash-accent-soft: rgb(245 245 242 / .12);
-  --dash-accent-faint: rgb(245 245 242 / .07);
+  color: var(--foreground);
+  --dash-bg: var(--background);
+  --dash-surface: var(--card);
+  --dash-surface-subtle: var(--secondary);
+  --dash-surface-muted: var(--muted);
+  --dash-media: var(--background);
+  --dash-border: var(--border);
+  --dash-border-strong: var(--ring);
+  --dash-text-muted: var(--muted-foreground);
+  --dash-accent-soft: color-mix(in oklch, var(--primary), transparent 82%);
+  --dash-accent-faint: color-mix(in oklch, var(--primary), transparent 90%);
   --dash-control-sm: var(--hp-control-sm);
   --dash-control-md: var(--hp-control-md);
   --dash-control-lg: var(--hp-control-lg);
   --dash-mobile-nav-clearance: 74px;
-  --dash-radius-control: var(--hp-radius-control);
-  --dash-radius-card: var(--hp-radius-panel);
+  --dash-radius-control: var(--radius);
+  --dash-radius-card: var(--radius-lg);
   /* Radius scale. Replaces 20+ one-off pixel values that had no relationship
      to each other; --dash-radius-control/-card stay as semantic aliases. */
-  --dash-radius-xs: var(--hp-radius-control);
-  --dash-radius-sm: var(--hp-radius-control);
-  --dash-radius-md: var(--hp-radius-surface);
-  --dash-radius-lg: var(--hp-radius-surface);
-  --dash-radius-xl: var(--hp-radius-workspace);
-  --dash-radius-pill: var(--hp-radius-action);
+  --dash-radius-xs: var(--radius-sm);
+  --dash-radius-sm: var(--radius);
+  --dash-radius-md: var(--radius-lg);
+  --dash-radius-lg: var(--radius-xl);
+  --dash-radius-xl: var(--radius-2xl);
+  --dash-radius-pill: var(--radius);
 
   /*
    * Colour families the hardcode audit found repeated across the file with
    * dozens of near-identical one-off values. Declared once here so the sweep
    * below can collapse them.
    */
-  --dash-accent-ink: var(--hp-text);
-  --dash-accent-tint: rgb(245 245 242 / .16);
-  --dash-accent-wash: rgb(245 245 242 / .07);
-  --dash-ink-soft: var(--hp-text);
-  --dash-ink-muted: color-mix(in oklch, var(--hp-text) 84%, transparent);
-  --dash-text-soft: color-mix(in oklch, var(--hp-text) 72%, transparent);
-  --dash-text-dim: color-mix(in oklch, var(--hp-text) 62%, transparent);
-  --dash-text-faint: var(--hp-text-subtle);
-  --dash-success-ink: var(--hp-success);
-  --dash-success-surface: color-mix(in oklch, var(--hp-success) 13%, transparent);
-  --dash-danger-ink: var(--hp-danger);
-  --dash-danger-surface: color-mix(in oklch, var(--hp-danger) 12%, transparent);
-  --dash-danger-border: color-mix(in oklch, var(--hp-danger) 34%, transparent);
-  --dash-warning-ink: var(--hp-warning);
-  --dash-warning-surface: color-mix(in oklch, var(--hp-warning) 12%, transparent);
+  --dash-accent-ink: var(--primary-foreground);
+  --dash-accent-tint: color-mix(in oklch, var(--primary), transparent 75%);
+  --dash-accent-wash: var(--accent);
+  --dash-ink-soft: var(--foreground);
+  --dash-ink-muted: color-mix(in oklch, var(--foreground), transparent 16%);
+  --dash-text-soft: color-mix(in oklch, var(--foreground), transparent 28%);
+  --dash-text-dim: color-mix(in oklch, var(--foreground), transparent 38%);
+  --dash-text-faint: var(--muted-foreground);
+  --dash-success-ink: oklch(0.723 0.191 149.579);
+  --dash-success-surface: color-mix(in oklch, oklch(0.723 0.191 149.579), transparent 87%);
+  --dash-danger-ink: var(--destructive);
+  --dash-danger-surface: color-mix(in oklch, var(--destructive), transparent 88%);
+  --dash-danger-border: color-mix(in oklch, var(--destructive), transparent 66%);
+  --dash-warning-ink: oklch(0.828 0.189 84.429);
+  --dash-warning-surface: color-mix(in oklch, oklch(0.828 0.189 84.429), transparent 88%);
   --dash-brand-youtube: #ff0033; /* YouTube brand red — not a semantic token */
 
   /*
@@ -163,10 +175,8 @@
 }
 
 /*
- * app/globals.css sets a direct `h1, h2 { font-family: "Ermilov" }` rule for
- * the marketing pages, which share globals.css. Ermilov is a decorative
- * display face — illegible as dense dashboard UI text — so every heading
- * inside the dashboard overrides back to Manrope here rather than touching
+ * Marketing pages have independent typography. Product headings use Geist,
+ * the font installed by the selected shadcn preset, rather than touching
  * the global rule (touching it would risk the landing page, which is out of
  * scope and must stay pixel-identical). A direct element rule is required:
  * inheritance from the shell's own font-family cannot win against another
@@ -176,7 +186,7 @@
 .dash-shell h2,
 .editor-focus-shell h1,
 .editor-focus-shell h2 {
-  font-family: var(--font-manrope), Manrope, sans-serif;
+  font-family: var(--font-sans), Arial, sans-serif;
 }
 
 /*
@@ -194,7 +204,7 @@
  */
 [data-slot="modal-heading"],
 [data-slot="drawer-heading"] {
-  font-family: var(--font-manrope), Manrope, sans-serif;
+  font-family: var(--font-sans), Arial, sans-serif;
 }
 
 /*
@@ -264,8 +274,8 @@
   gap: 7px;
   padding: 3px 10px 3px 4px;
   border: 1px solid var(--dash-border);
-  border-radius: var(--hp-radius-action);
-  background: var(--dash-surface-raised);
+  border-radius: var(--radius-md);
+  background: var(--secondary);
   color: var(--dash-text-soft);
   font-size: 12px;
   font-weight: 680;
@@ -282,12 +292,12 @@
   height: 24px;
   display: grid;
   place-items: center;
-  border-radius: var(--hp-radius-action);
-  background: var(--hp-text);
-  color: var(--hp-canvas);
+  border-radius: var(--radius-sm);
+  background: var(--foreground);
+  color: var(--background);
 }
 
-.dash-topbar__balance-icon svg { color: var(--hp-canvas); }
+.dash-topbar__balance-icon svg { color: var(--background); }
 
 .dash-profile-menu {
   min-height: 36px;
@@ -327,7 +337,7 @@
   place-items: center;
   border-radius: var(--dash-radius-xs);
   background: var(--dash-surface-muted);
-  color: var(--hp-text);
+  color: var(--foreground);
   font-size: 12px;
   font-weight: 850;
 }
@@ -337,8 +347,8 @@
   padding: 6px;
   border: 1px solid var(--dash-border);
   border-radius: var(--dash-radius-md);
-  background: var(--dash-surface);
-  box-shadow: 0 12px 32px rgba(20, 28, 38, .12);
+  background: var(--popover);
+  box-shadow: none;
 }
 
 .dash-profile-menu__popover [data-slot="dropdown-menu-item"] {
@@ -350,7 +360,7 @@
   padding-inline: 10px;
   justify-content: flex-start;
   border-radius: var(--dash-radius-xs);
-  color: var(--hp-text);
+  color: var(--popover-foreground);
   font-size: 13px;
   text-align: left;
   cursor: pointer;

@@ -10,8 +10,8 @@ inherit product surface rules.
 
 1. **Canvas is for work.** The clip, transcript and user decision receive the
    contrast; application chrome stays quiet.
-2. **One semantic role, one token.** A value exists in the token layer before
-   it exists in a component.
+2. **One semantic role, one preset token.** A value exists in the canonical
+   shadcn preset before it exists in a component.
 3. **Shape communicates object type.** Product controls inherit the
    `base-mira` preset scale from `--radius: .625rem`; surfaces derive from it.
    No local numeric radius may be introduced to "make it fit".
@@ -24,66 +24,32 @@ inherit product surface rules.
 
 ## Token layer
 
-Define product values once in the Hashpix product root. Component/page CSS must
-consume these roles rather than create literal alternatives.
-
-| Role | Token | Value |
-| --- | --- | --- |
-| Application canvas | `--hp-canvas` | neutral 950 |
-| Base surface | `--hp-surface` | neutral 900 |
-| Raised / quiet surface | `--hp-surface-raised`, `--hp-surface-subtle` | neutral 800 |
-| Media stage | `--hp-media` | neutral 950 |
-| Border / strong border | `--hp-line`, `--hp-line-strong` | neutral 700 / 500 |
-| Primary text | `--hp-text` | neutral 50 |
-| Secondary / tertiary text | `--hp-text-muted`, `--hp-text-subtle` | neutral 300 / 500 |
-| Primary action | `--hp-brand` | indigo 600 |
-| Primary hover / pressed | `--hp-brand-hover`, `--hp-brand-pressed` | indigo 700 / 800 |
-| Primary foreground | `--hp-brand-foreground` | neutral 50 |
-| Success / warning / danger | `--hp-success`, `--hp-warning`, `--hp-danger` | preset semantic status colours |
-
-Foreground tokens accompany all interactive fills. Do not derive them inside a
-component. Internal product routes use the neutral/indigo `b38miVLH6` preset;
-the landing and blog deliberately retain their separate marketing palette.
-
-## Geometry
-
-| Role | Token | Value |
-| --- | --- | --- |
-| Compact / regular / large control height | `--hp-control-{sm,md,lg}` | 32 / 36 / 40px |
-| Any compact control | `--hp-radius-control` | `var(--radius)` |
-| Surface / sheet | `--hp-radius-surface` | `calc(var(--radius) + 4px)` |
-| App workspace radius | `--hp-radius-workspace` | `calc(var(--radius) + 8px)` |
-| Spacing | `--hp-space-*` | 4 / 8 / 12 / 16 / 24 / 32 / 48px |
-| Interactive / overlay motion | `--hp-motion-{interactive,overlay}` | 160ms ease / 120ms ease |
-
-Buttons, icon buttons, chips, segmented choices and fields use the preset
-control radius. Cards, lists, dialogs and media containers use the derived
-surface radius; only app workspaces use `--hp-radius-workspace`. Never invent
-a local radius.
+Internal routes consume the canonical `b38miVLH6` roles verbatim. There is no
+Hashpix visual-token layer and no local palette: `background`, `foreground`,
+`card`, `popover`, `primary`, `secondary`, `muted`, `accent`, `destructive`,
+`border`, `input`, `ring`, sidebar and chart roles. The dark product root is
+the preset `.dark` definition; `--radius` is `.625rem`. Landing and blog keep
+their separate marketing stylesheet.
 
 ## Reusable primitives
 
 | Primitive | Job |
 | --- | --- |
-| `ActionButton` | Text action: brand, light, secondary, danger or quiet; composes shadcn Button. |
-| `IconButton` | One labelled icon action with Tooltip. |
+| `Button` / `Icon Button` | Registry shadcn action with its stock variants and sizes. |
 | `Field` | Label, input/control, hint and error as one unit. |
-| `SegmentedControl` | Mutually exclusive, immediately applied options. |
-| `MenuButton` + `Popover` | Contextual choices without persistent UI noise. |
+| `ToggleGroup` | Mutually exclusive, immediately applied options. |
+| `DropdownMenu` / `Popover` | Registry compound overlay primitives. |
 | `StatusBadge` | Compact state, never a call to action. |
 | `LockedField` | A recognised but unsupported capability and its true reason. |
 | `Dialog` / `Drawer` | Focused decision / long contextual work; compose shadcn Dialog/Sheet. |
 
-Do not implement the same anatomy per page. If a required pattern is absent,
-add a primitive and documented variants before using it.
+Do not implement the same anatomy per page or restyle a registry primitive.
 
 ## State contract
 
-All interactive primitives define default, hover, pressed, focus-visible,
-selected, disabled and loading state. Hover changes depth or luminosity within
-the same semantic family only. Focus uses the indigo `--hp-focus-ring`,
-distinct from the selected border. Loading preserves the control's geometry
-and label width. Disabled has no hover response.
+Registry primitives define default, hover, pressed, focus-visible, selected,
+disabled and loading state. Use their stock ring and variants; loading preserves
+the control's geometry and label width.
 
 ## Product-specific rules
 

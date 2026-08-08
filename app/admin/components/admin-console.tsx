@@ -659,7 +659,7 @@ export function AdminConsole({ initialView = "overview" }: { initialView?: Admin
   }
 
   return (
-    <div className="admin-shell">
+    <div className="admin-shell dark">
       <aside className={`admin-sidebar ${menuOpen ? "is-open" : ""}`}>
         <div className="admin-sidebar__brand">
           <Link href="/" aria-label="Hashpix — на главную"><Logo priority /></Link>
