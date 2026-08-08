@@ -53,7 +53,7 @@ export function ProjectsView() {
         title="Проекты"
         description="Исходники, найденные моменты и готовые клипы."
         actions={
-          <Button render={<Link href="/dashboard" />}>
+          <Button nativeButton={false} render={<Link href="/dashboard" />}>
             <Plus size={16} />
             Новое видео
           </Button>
