@@ -134,7 +134,7 @@
   margin-bottom: 16px;
 }
 
-.auth-field > span:first-child {
+.auth-field > label {
   display: flex;
   justify-content: space-between;
   color: #e7eaf1;

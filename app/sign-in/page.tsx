@@ -3,7 +3,10 @@
 import { Eye, EyeOff, LockKeyhole, Mail, MoveLeft } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useId, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Logo } from "../components/logo";
 import {
   ControlApiError,
@@ -297,9 +300,9 @@ export function AuthScreen({ initialMode }: { initialMode: AuthScreenMode }) {
           <Logo priority tone="light" variant="identity" />
         </Link>
         {(step === "verify-email" || step === "reset-password") ? (
-          <button className="auth-back" type="button" onClick={() => changeStep(step === "verify-email" ? "sign-up" : "forgot-password")}>
+          <Button className="auth-back" variant="ghost" type="button" onClick={() => changeStep(step === "verify-email" ? "sign-up" : "forgot-password")}>
             <MoveLeft aria-hidden="true" size={16} /> Назад
-          </button>
+          </Button>
         ) : null}
         <header className="auth-card__header">
           <h1 id="auth-title">{title}</h1>
@@ -312,9 +315,9 @@ export function AuthScreen({ initialMode }: { initialMode: AuthScreenMode }) {
           <form onSubmit={(event) => { event.preventDefault(); void signIn(); }} noValidate>
             <EmailField email={email} setEmail={setEmail} clearFeedback={clearFeedback} />
             <PasswordField value={password} onChange={setPassword} show={showPassword} setShow={setShowPassword} label="Пароль" autoComplete="current-password" clearFeedback={clearFeedback} />
-            <button className="auth-submit" type="submit" disabled={busy}>{busy ? "Входим…" : "Войти"}</button>
+            <Button className="auth-submit" type="submit" disabled={busy}>{busy ? "Входим…" : "Войти"}</Button>
             <div className="auth-actions">
-              <button className="auth-link" type="button" onClick={() => changeStep("forgot-password")}>Забыли пароль?</button>
+              <Button className="auth-link" variant="ghost" type="button" onClick={() => changeStep("forgot-password")}>Забыли пароль?</Button>
               <Link className="auth-link" href="/sign-up">Создать аккаунт</Link>
             </div>
           </form>
@@ -325,7 +328,7 @@ export function AuthScreen({ initialMode }: { initialMode: AuthScreenMode }) {
             <EmailField email={email} setEmail={setEmail} clearFeedback={clearFeedback} />
             <PasswordField value={password} onChange={setPassword} show={showPassword} setShow={setShowPassword} label="Пароль" autoComplete="new-password" hint="От 12 символов" clearFeedback={clearFeedback} />
             <PasswordField value={confirmPassword} onChange={setConfirmPassword} show={showPassword} setShow={setShowPassword} label="Повторите пароль" autoComplete="new-password" clearFeedback={clearFeedback} />
-            <button className="auth-submit" type="submit" disabled={busy}>{busy ? "Создаём аккаунт…" : "Продолжить"}</button>
+            <Button className="auth-submit" type="submit" disabled={busy}>{busy ? "Создаём аккаунт…" : "Продолжить"}</Button>
             <p className="auth-legal">Продолжая, вы подтверждаете, что имеете право использовать сервис.</p>
             <div className="auth-actions auth-actions--single"><Link className="auth-link" href="/sign-in">Уже есть аккаунт? Войти</Link></div>
           </form>
@@ -334,7 +337,7 @@ export function AuthScreen({ initialMode }: { initialMode: AuthScreenMode }) {
         {step === "verify-email" ? (
           <form onSubmit={(event) => { event.preventDefault(); void verifyEmail(); }} noValidate>
             <OtpField value={otp} onChange={(value) => { setOtp(value); clearFeedback(); }} />
-            <button className="auth-submit" type="submit" disabled={busy}>{busy ? "Проверяем…" : "Подтвердить email"}</button>
+            <Button className="auth-submit" type="submit" disabled={busy}>{busy ? "Проверяем…" : "Подтвердить email"}</Button>
             <ResendButton cooldown={cooldown} busy={busy} onClick={resendVerification} />
           </form>
         ) : null}
@@ -342,7 +345,7 @@ export function AuthScreen({ initialMode }: { initialMode: AuthScreenMode }) {
         {step === "forgot-password" ? (
           <form onSubmit={(event) => { event.preventDefault(); void requestReset(); }} noValidate>
             <EmailField email={email} setEmail={setEmail} clearFeedback={clearFeedback} />
-            <button className="auth-submit" type="submit" disabled={busy}>{busy ? "Отправляем…" : "Отправить код"}</button>
+            <Button className="auth-submit" type="submit" disabled={busy}>{busy ? "Отправляем…" : "Отправить код"}</Button>
             <div className="auth-actions auth-actions--single"><Link className="auth-link" href="/sign-in">Вернуться ко входу</Link></div>
           </form>
         ) : null}
@@ -352,7 +355,7 @@ export function AuthScreen({ initialMode }: { initialMode: AuthScreenMode }) {
             <OtpField value={otp} onChange={(value) => { setOtp(value); clearFeedback(); }} />
             <PasswordField value={password} onChange={setPassword} show={showPassword} setShow={setShowPassword} label="Новый пароль" autoComplete="new-password" hint="От 12 символов" clearFeedback={clearFeedback} />
             <PasswordField value={confirmPassword} onChange={setConfirmPassword} show={showPassword} setShow={setShowPassword} label="Повторите пароль" autoComplete="new-password" clearFeedback={clearFeedback} />
-            <button className="auth-submit" type="submit" disabled={busy}>{busy ? "Обновляем…" : "Обновить пароль"}</button>
+            <Button className="auth-submit" type="submit" disabled={busy}>{busy ? "Обновляем…" : "Обновить пароль"}</Button>
             <ResendButton cooldown={cooldown} busy={busy} onClick={resendReset} />
           </form>
         ) : null}
@@ -362,39 +365,42 @@ export function AuthScreen({ initialMode }: { initialMode: AuthScreenMode }) {
 }
 
 function EmailField({ email, setEmail, clearFeedback }: { email: string; setEmail: (value: string) => void; clearFeedback: () => void }) {
+  const id = useId();
   return (
-    <label className="auth-field">
-      <span>Email</span>
+    <div className="auth-field">
+      <Label htmlFor={id}>Email</Label>
       <span className="auth-input-wrap">
         <Mail aria-hidden="true" size={18} />
-        <input type="email" autoComplete="email" autoCapitalize="none" autoFocus placeholder="you@example.com" value={email} onChange={(event) => { setEmail(event.target.value); clearFeedback(); }} />
+        <Input id={id} type="email" autoComplete="email" autoCapitalize="none" autoFocus placeholder="you@example.com" value={email} onChange={(event) => { setEmail(event.target.value); clearFeedback(); }} />
       </span>
-    </label>
+    </div>
   );
 }
 
 function PasswordField({ value, onChange, show, setShow, label, autoComplete, hint, clearFeedback }: { value: string; onChange: (value: string) => void; show: boolean; setShow: (value: boolean) => void; label: string; autoComplete: "current-password" | "new-password"; hint?: string; clearFeedback: () => void }) {
+  const id = useId();
   return (
-    <label className="auth-field">
-      <span>{label}{hint ? <small>{hint}</small> : null}</span>
+    <div className="auth-field">
+      <Label htmlFor={id}>{label}{hint ? <small>{hint}</small> : null}</Label>
       <span className="auth-input-wrap">
         <LockKeyhole aria-hidden="true" size={18} />
-        <input type={show ? "text" : "password"} autoComplete={autoComplete} placeholder="••••••••••••" value={value} onChange={(event) => { onChange(event.target.value); clearFeedback(); }} />
-        <button className="auth-password-toggle" type="button" onClick={() => setShow(!show)} aria-label={show ? "Скрыть пароль" : "Показать пароль"}>{show ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+        <Input id={id} type={show ? "text" : "password"} autoComplete={autoComplete} placeholder="••••••••••••" value={value} onChange={(event) => { onChange(event.target.value); clearFeedback(); }} />
+        <Button className="auth-password-toggle" variant="ghost" size="icon" type="button" onClick={() => setShow(!show)} aria-label={show ? "Скрыть пароль" : "Показать пароль"}>{show ? <EyeOff size={18} /> : <Eye size={18} />}</Button>
       </span>
-    </label>
+    </div>
   );
 }
 
 function OtpField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const id = useId();
   return (
-    <label className="auth-field">
-      <span>Код из письма</span>
-      <input className="auth-code" type="text" inputMode="numeric" autoComplete="one-time-code" autoFocus maxLength={6} placeholder="000000" value={value} onChange={(event) => onChange(event.target.value.replace(/\D/g, ""))} />
-    </label>
+    <div className="auth-field">
+      <Label htmlFor={id}>Код из письма</Label>
+      <Input id={id} className="auth-code" type="text" inputMode="numeric" autoComplete="one-time-code" autoFocus maxLength={6} placeholder="000000" value={value} onChange={(event) => onChange(event.target.value.replace(/\D/g, ""))} />
+    </div>
   );
 }
 
 function ResendButton({ cooldown, busy, onClick }: { cooldown: number; busy: boolean; onClick: () => Promise<void> }) {
-  return <div className="auth-resend"><button className="auth-link" type="button" disabled={cooldown > 0 || busy} onClick={() => void onClick()}>{cooldown ? `Отправить ещё раз через ${cooldown} с` : "Отправить код ещё раз"}</button></div>;
+  return <div className="auth-resend"><Button className="auth-link" variant="ghost" type="button" disabled={cooldown > 0 || busy} onClick={() => void onClick()}>{cooldown ? `Отправить ещё раз через ${cooldown} с` : "Отправить код ещё раз"}</Button></div>;
 }

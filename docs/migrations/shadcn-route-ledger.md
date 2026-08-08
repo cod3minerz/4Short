@@ -2,9 +2,9 @@
 
 | Route | Area | Legacy dependencies | Target components | Status | Checks |
 | --- | --- | --- | --- | --- | --- |
-| `/sign-in` | Auth | local inputs/actions | Button, Input, Label, Field | Audited | Baseline pass |
-| `/sign-up` | Auth | shared AuthScreen | Button, Input, Label, Field | Audited | Baseline pass |
-| `/forgot-password` | Auth | shared AuthScreen | Button, Input, Label, Field | Audited | Baseline pass |
+| `/sign-in` | Auth | local inputs/actions | Button, Input, Label, Field | Migrated | typecheck, unit: 196 pass |
+| `/sign-up` | Auth | shared AuthScreen | Button, Input, Label, Field | Migrated | typecheck, unit: 196 pass |
+| `/forgot-password` | Auth | shared AuthScreen | Button, Input, Label, Field | Migrated | typecheck, unit: 196 pass |
 | `/dashboard` | Dashboard | HeroUI + dashboard UI | product shell, wizard components | Audited | Baseline pass |
 | `/dashboard/new` | Dashboard | HeroUI + dashboard UI | wizard, Dialog, form primitives | Audited | Baseline pass |
 | `/dashboard/projects` | Dashboard | raw actions/dialog | Button, Input, AlertDialog | Audited | Baseline pass |
