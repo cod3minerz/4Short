@@ -2,7 +2,7 @@
 
 Branch: `codex/shadcn-ui-migration`  
 Base: `06edb53`  
-Preset: `b38miVLH6` (`mira`, Geist, Lucide, neutral/indigo, Radix)
+Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 
 ## Stages
 
@@ -10,7 +10,8 @@ Preset: `b38miVLH6` (`mira`, Geist, Lucide, neutral/indigo, Radix)
 - [x] Specification stored in repository
 - [x] Initial graph-first inventory and 17-route ledger
 - [ ] Fresh Codebase Memory full index with exclusions
-- [ ] Shadcn foundation, skill and MCP
+- [x] Shadcn foundation and MCP configuration
+- [ ] Shadcn skill installation (network retry pending)
 - [ ] Semantic token system
 - [ ] Official base primitives
 - [ ] Hashpix reusable component layer

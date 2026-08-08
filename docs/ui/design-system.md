@@ -4,7 +4,7 @@ Migration status: [shadcn progress](../migrations/shadcn-migration-progress.md)
 
 ## Layers
 
-1. `components/ui`: unmodified or minimally token-adapted shadcn/Radix primitives.
+1. `components/ui`: unmodified or minimally token-adapted shadcn/Base UI primitives.
 2. `components/hashpix`: reusable product controls and states.
 3. Internal routes: composition, data and business behavior only.
 
