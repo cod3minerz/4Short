@@ -117,9 +117,9 @@ export function AccountView() {
                     <small>Вход {formatDate(session.createdAt)}{session.ipAddress ? ` · ${session.ipAddress}` : ""}</small>
                   </span>
                   {index === 0 && sessions.length > 1 ? (
-                    <button type="button" disabled={busy !== null} onClick={() => void revokeOthers()}>
+                    <ActionButton tone="secondary" disabled={busy !== null} loading={busy === "revoke"} onClick={() => void revokeOthers()}>
                       {busy === "revoke" ? "Завершаем…" : "Завершить другие сессии"}
-                    </button>
+                    </ActionButton>
                   ) : null}
                 </div>
               ))}

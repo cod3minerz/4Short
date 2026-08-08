@@ -27,7 +27,8 @@ Build a coherent production tool, not a collection of page-specific CSS fixes.
 - Use shadcn/Base UI compound components and standard React `onClick` props;
   never recreate a library control with a guessed attribute.
 - Keep button shape constant through default, hover, pressed, loading and
-  disabled states. Buttons are pills; fields and panels are not.
+  disabled states. Use the `base-mira` preset radius scale; do not turn every
+  action into a pill.
 - Do not use glass over a flat background. Glass is permitted only above real
   video/media or a deliberately rendered ambient-light layer.
 - Do not copy competitor branding, screens, copy, or interaction details.
@@ -48,12 +49,12 @@ Build a coherent production tool, not a collection of page-specific CSS fixes.
 
 ## Product conventions
 
-- Credit/minute affordance: filled `Zap`, brand-blue circular carrier, numeric
-  balance; never a gem, diamond or decorative currency icon.
-- White is an intentional action fill, not a generic surface. Its hover stays
-  neutral white/grey; it never changes into brand blue.
-- Blue marks forward action, selected state and live progress. It does not
-  decorate inactive cards or ordinary text.
+- Credit/minute affordance: filled black `Zap` in a white circular carrier,
+  followed by the numeric balance; never a gem, diamond or decorative
+  currency icon.
+- Product routes use the `b38miVLH6` neutral/indigo Mira preset: indigo marks
+  forward action, selected state and live progress; it does not decorate
+  inactive cards or ordinary text.
 - The editor is a focus tool: transcript, canvas, contextual tools, transport.
   Do not turn it into a dashboard, a freeform NLE, or an accordion wall.
 - Preserve keyboard reachability and visible focus. Icons without visible text

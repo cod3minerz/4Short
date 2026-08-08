@@ -12,14 +12,11 @@ inherit product surface rules.
    contrast; application chrome stays quiet.
 2. **One semantic role, one token.** A value exists in the token layer before
    it exists in a component.
-3. **Shape communicates object type.** Every compact control uses the same
-   14px optical corner at every height; containers are the only
-   rounded-surface family. `corner-shape: squircle` is progressive polish,
-   never a dependency. No local numeric radius may be introduced to "make it
-   fit".
-4. **State never changes meaning.** A neutral or white control may brighten,
-   but it never becomes blue on hover. Blue is reserved for user media and
-   explicitly configured brand assets, not application chrome.
+3. **Shape communicates object type.** Product controls inherit the
+   `base-mira` preset scale from `--radius: .625rem`; surfaces derive from it.
+   No local numeric radius may be introduced to "make it fit".
+4. **State never changes meaning.** Indigo is the primary action, selected
+   state and live-progress role. Neutral surfaces remain neutral on hover.
 5. **Glass shows context beneath it.** Use it over video/canvas or ambient
    media only; never as generic form decoration.
 6. **Every promise is executable.** Unimplemented HVE features are locked with
@@ -32,40 +29,37 @@ consume these roles rather than create literal alternatives.
 
 | Role | Token | Value |
 | --- | --- | --- |
-| Application canvas | `--hp-canvas` | `#0A0A0B` |
-| Base surface | `--hp-surface` | `#121214` |
-| Raised surface | `--hp-surface-raised` | `#18181B` |
-| Quiet surface | `--hp-surface-subtle` | `#202024` |
-| Media stage | `--hp-media` | `#09090A` |
-| Border | `--hp-line` | `#2B2B30` |
-| Strong border | `--hp-line-strong` | `#48484F` |
-| Primary text/action | `--hp-text`, `--hp-brand` | `#F5F5F2` |
-| Secondary text | `--hp-text-muted` | `#A5A5AE` |
-| Tertiary text | `--hp-text-subtle` | `#777780` |
-| Primary foreground | `--hp-brand-foreground` | `#0B0B0C` |
-| Success | `--hp-success` | `#32C982` |
-| Warning | `--hp-warning` | `#E8B34C` |
-| Danger | `--hp-danger` | `#F06B73` |
+| Application canvas | `--hp-canvas` | neutral 950 |
+| Base surface | `--hp-surface` | neutral 900 |
+| Raised / quiet surface | `--hp-surface-raised`, `--hp-surface-subtle` | neutral 800 |
+| Media stage | `--hp-media` | neutral 950 |
+| Border / strong border | `--hp-line`, `--hp-line-strong` | neutral 700 / 500 |
+| Primary text | `--hp-text` | neutral 50 |
+| Secondary / tertiary text | `--hp-text-muted`, `--hp-text-subtle` | neutral 300 / 500 |
+| Primary action | `--hp-brand` | indigo 600 |
+| Primary hover / pressed | `--hp-brand-hover`, `--hp-brand-pressed` | indigo 700 / 800 |
+| Primary foreground | `--hp-brand-foreground` | neutral 50 |
+| Success / warning / danger | `--hp-success`, `--hp-warning`, `--hp-danger` | preset semantic status colours |
 
 Foreground tokens accompany all interactive fills. Do not derive them inside a
-component. The product's primary action is neutral light on dark; no product
-component may introduce a blue substitute.
+component. Internal product routes use the neutral/indigo `b38miVLH6` preset;
+the landing and blog deliberately retain their separate marketing palette.
 
 ## Geometry
 
 | Role | Token | Value |
 | --- | --- | --- |
 | Compact / regular / large control height | `--hp-control-{sm,md,lg}` | 32 / 36 / 40px |
-| Any compact control | `--hp-radius-control` | 14px |
-| Surface / sheet | `--hp-radius-surface` | 18px |
-| App workspace radius | `--hp-radius-workspace` | 24px |
+| Any compact control | `--hp-radius-control` | `var(--radius)` |
+| Surface / sheet | `--hp-radius-surface` | `calc(var(--radius) + 4px)` |
+| App workspace radius | `--hp-radius-workspace` | `calc(var(--radius) + 8px)` |
 | Spacing | `--hp-space-*` | 4 / 8 / 12 / 16 / 24 / 32 / 48px |
 | Interactive / overlay motion | `--hp-motion-{interactive,overlay}` | 160ms ease / 120ms ease |
 
-Buttons, icon buttons, chips, segmented choices and fields use the same
-14px `--hp-radius-control`, regardless of their height. Cards, lists, dialogs
-and media containers use `--hp-radius-surface`; only app workspaces use
-`--hp-radius-workspace`. Never invent a local radius.
+Buttons, icon buttons, chips, segmented choices and fields use the preset
+control radius. Cards, lists, dialogs and media containers use the derived
+surface radius; only app workspaces use `--hp-radius-workspace`. Never invent
+a local radius.
 
 ## Reusable primitives
 
@@ -87,14 +81,15 @@ add a primitive and documented variants before using it.
 
 All interactive primitives define default, hover, pressed, focus-visible,
 selected, disabled and loading state. Hover changes depth or luminosity within
-the same semantic family only. Focus uses the neutral `--hp-focus-ring`,
-distinct from the selected border but never blue. Loading preserves the
-control's geometry and label width. Disabled has no hover response.
+the same semantic family only. Focus uses the indigo `--hp-focus-ring`,
+distinct from the selected border. Loading preserves the control's geometry
+and label width. Disabled has no hover response.
 
 ## Product-specific rules
 
 - Minutes use a filled lightning icon (`Zap` with `fill="currentColor"`) in a
-  neutral light carrier, followed by the numeric balance. Do not use gems.
+  white carrier with a black glyph, followed by the numeric balance. Do not
+  use gems.
 - Canvas overlays may use `rgba(16,17,22,.72)` plus `backdrop-filter: blur`.
   Ordinary forms and cards remain opaque.
 - Layout modes are selected through the contextual frame inspector. Their

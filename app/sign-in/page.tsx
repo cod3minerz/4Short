@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Logo } from "../components/logo";
 import {
   ControlApiError,
@@ -367,37 +367,37 @@ export function AuthScreen({ initialMode }: { initialMode: AuthScreenMode }) {
 function EmailField({ email, setEmail, clearFeedback }: { email: string; setEmail: (value: string) => void; clearFeedback: () => void }) {
   const id = useId();
   return (
-    <div className="auth-field">
-      <Label htmlFor={id}>Email</Label>
+    <Field className="auth-field">
+      <FieldLabel htmlFor={id}>Email</FieldLabel>
       <span className="auth-input-wrap">
         <Mail aria-hidden="true" size={18} />
         <Input id={id} type="email" autoComplete="email" autoCapitalize="none" autoFocus placeholder="you@example.com" value={email} onChange={(event) => { setEmail(event.target.value); clearFeedback(); }} />
       </span>
-    </div>
+    </Field>
   );
 }
 
 function PasswordField({ value, onChange, show, setShow, label, autoComplete, hint, clearFeedback }: { value: string; onChange: (value: string) => void; show: boolean; setShow: (value: boolean) => void; label: string; autoComplete: "current-password" | "new-password"; hint?: string; clearFeedback: () => void }) {
   const id = useId();
   return (
-    <div className="auth-field">
-      <Label htmlFor={id}>{label}{hint ? <small>{hint}</small> : null}</Label>
+    <Field className="auth-field">
+      <FieldLabel htmlFor={id}>{label}{hint ? <small>{hint}</small> : null}</FieldLabel>
       <span className="auth-input-wrap">
         <LockKeyhole aria-hidden="true" size={18} />
         <Input id={id} type={show ? "text" : "password"} autoComplete={autoComplete} placeholder="••••••••••••" value={value} onChange={(event) => { onChange(event.target.value); clearFeedback(); }} />
         <Button className="auth-password-toggle" variant="ghost" size="icon" type="button" onClick={() => setShow(!show)} aria-label={show ? "Скрыть пароль" : "Показать пароль"}>{show ? <EyeOff size={18} /> : <Eye size={18} />}</Button>
       </span>
-    </div>
+    </Field>
   );
 }
 
 function OtpField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const id = useId();
   return (
-    <div className="auth-field">
-      <Label htmlFor={id}>Код из письма</Label>
+    <Field className="auth-field">
+      <FieldLabel htmlFor={id}>Код из письма</FieldLabel>
       <Input id={id} className="auth-code" type="text" inputMode="numeric" autoComplete="one-time-code" autoFocus maxLength={6} placeholder="000000" value={value} onChange={(event) => onChange(event.target.value.replace(/\D/g, ""))} />
-    </div>
+    </Field>
   );
 }
 

@@ -283,11 +283,11 @@
   display: grid;
   place-items: center;
   border-radius: var(--hp-radius-action);
-  background: var(--hp-brand);
-  color: var(--hp-brand-foreground);
+  background: var(--hp-text);
+  color: var(--hp-canvas);
 }
 
-.dash-topbar__balance-icon svg { color: #0b0b0c; }
+.dash-topbar__balance-icon svg { color: var(--hp-canvas); }
 
 .dash-profile-menu {
   min-height: 36px;
@@ -1090,8 +1090,8 @@
   opacity: .75;
 }
 
-.account-actions button:disabled,
-.account-session button:disabled {
+.account-actions .hp-action:disabled,
+.account-session .hp-action:disabled {
   cursor: not-allowed;
   opacity: .5;
 }
@@ -1337,7 +1337,7 @@
 
 .dash-filter-row {
   padding: 5px;
-  border-radius: var(--dash-radius-pill);
+  border-radius: var(--hp-radius-control);
   background: var(--dash-surface-muted);
   display: flex; gap: 2px; }
 .dash-filter-row button {
@@ -1345,7 +1345,7 @@
   min-height: 32px;
   padding-inline: 11px;
   border: 0;
-  border-radius: var(--dash-radius-pill);
+  border-radius: calc(var(--hp-radius-control) - 2px);
   background: transparent;
   color: var(--dash-text-muted);
   font-size: 12px;
@@ -1943,7 +1943,7 @@
 .account-session span { display: flex; flex-direction: column; }
 .account-session strong { font-size: 12px; }
 .account-session small { margin-top: 3px; color: var(--dash-text-muted); font-size: 10px; }
-.account-section button {
+.account-session > .hp-action {
   min-height: 34px;
   display: inline-flex;
   align-items: center;
@@ -5576,31 +5576,19 @@
   color: var(--hp-text);
 }
 
-/* --------------------------------------------------------------------------
-   Production polish pass — these rules intentionally sit after every legacy
-   responsive block. Product chrome is monochrome; brand colour belongs to a
-   creator's media, never to the product's primary controls. The small set of
-   semantic radii below is the only radius system dashboard code may use.
-   -------------------------------------------------------------------------- */
-.dash-shell {
-  --hp-radius-control: 14px;
-  --hp-radius-media: 12px;
-  --hp-radius-surface: 18px;
-  --hp-radius-workspace: 24px;
-}
-
-/* Do not allow legacy light/blue hover declarations to leak into the dark UI. */
+/* Preserve the preset's semantic radius and indigo action roles after the
+   older responsive cascade. */
 .dash-shell :is(.button, .hp-action, .dash-primary-link, .dash-secondary-link, .wizard-file-cta) {
   transition: background-color var(--hp-motion-interactive), border-color var(--hp-motion-interactive), color var(--hp-motion-interactive), opacity var(--hp-motion-interactive);
 }
 .dash-shell :is(.button--primary, .dash-primary-link, .wizard-file-cta, .wizard-footer .button, .dash-compact-primary, .dash-mobile-nav__new) {
-  background: var(--hp-action-light) !important;
-  color: var(--hp-canvas) !important;
+  background: var(--hp-brand) !important;
+  color: var(--hp-brand-foreground) !important;
   border-color: transparent !important;
 }
 .dash-shell :is(.button--primary, .dash-primary-link, .wizard-file-cta, .wizard-footer .button, .dash-compact-primary, .dash-mobile-nav__new):is(:hover, [data-hovered]) {
-  background: var(--hp-action-light-hover) !important;
-  color: var(--hp-canvas) !important;
+  background: var(--hp-brand-hover) !important;
+  color: var(--hp-brand-foreground) !important;
 }
 .dash-shell :is(.dash-secondary-link, .button--outline, .button--secondary) {
   background: var(--hp-surface-raised) !important;
@@ -5666,16 +5654,16 @@
 ) { border-radius: var(--hp-radius-surface) !important; }
 .dash-shell .media-thumb { border-radius: var(--hp-radius-media); }
 
-/* Legacy selected states used the former accent alias. Selection remains
-   explicit, but neutral: the dark product chrome never becomes blue. */
+/* Selected product states use the preset indigo role rather than a local
+   accent alias. */
 .dash-shell :is(.option-card.is-selected, .style-library-card.is-active, .wizard-style-options button.is-selected) {
-  border-color: var(--hp-text) !important;
-  background: var(--hp-surface-subtle) !important;
+  border-color: var(--hp-brand) !important;
+  background: color-mix(in oklch, var(--hp-brand) 14%, var(--hp-surface-subtle)) !important;
   box-shadow: none !important;
 }
 .dash-shell :is(.option-card.is-selected .option-card__icon, .wizard-style-options button.is-selected > span:first-child) {
-  background: var(--hp-text) !important;
-  color: var(--hp-canvas) !important;
+  background: var(--hp-brand) !important;
+  color: var(--hp-brand-foreground) !important;
 }
 .dash-shell :is(.hp-action, .button, .option-card, .style-library-card, .wizard-source-library button):focus-visible {
   outline: 2px solid var(--hp-focus-ring) !important;
