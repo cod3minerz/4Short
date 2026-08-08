@@ -18,7 +18,7 @@ Codebase Memory project: `Users-kirill-Documents-4Short`
 | Status, empty and processing states | Dashboard shared UI | repeated | Hashpix product compositions | Medium | Audited |
 | Admin light/local primitives | `app/admin` | 5 routes | shared dark tokens and shadcn controls | High | Audited |
 | Auth local form controls | `app/sign-in` shared by 3 routes | one multi-step flow | shadcn form primitives | High | Audited |
-| Notifications | Internal application | no toast provider found | Sonner plus retained inline field errors | Medium | Audited |
+| Notifications | Internal application | no toast provider found; registry install retries reset by npm | Sonner plus retained inline field errors | Medium | External network blocker |
 | Product CSS literals | dashboard/admin/auth CSS | media overlay/renderer values only; product chrome uses canonical roles | semantic shadcn roles | High | Audited |
 | Local radius declarations | dashboard/admin/auth CSS | media/editor micro-geometry and intentional list seams only | generated shadcn radius scale for shared controls/surfaces | High | Audited |
 | Public HeroUI consumers | landing and blog | 4 files | deliberately retained outside scope | Landing regression | Excluded |

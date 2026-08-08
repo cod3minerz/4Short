@@ -28,7 +28,9 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 ## Active finalisation queue
 
 1. Add the global Sonner registry primitive when the package registry is
-   reachable; retain inline field and autosave feedback by design.
+   reachable; the final canonical retry on 2026-08-08 again failed before
+   writing files (`npm install sonner next-themes` → `ECONNRESET`). Retain
+   inline field and autosave feedback by design.
 2. Complete the remaining authenticated dynamic workspace/editor and overlay
    records. The 360/768/1024/1440 layout matrix now passes for `/dashboard`,
    `/dashboard/styles`, `/dashboard/account` and `/admin`.
