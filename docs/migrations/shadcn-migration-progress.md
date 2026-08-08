@@ -83,6 +83,9 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
   are removed, the projects forward action is a stock primary `Button`, and
   the final Hashpix list compositions use registry `Button` with `onClick`.
   HVE-G4 returns `INSUFFICIENT` as required; no preview geometry changed.
+- Internal/marketing boundary pass: product CSS no longer reads the landing
+  `--ds-*` palette; those legacy variables remain landing-only so public pages
+  stay visually unchanged.
 
 ## Structural locks
 

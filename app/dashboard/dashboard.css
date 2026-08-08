@@ -5073,8 +5073,8 @@
 
 .dash-topbar__logo .brand-logo img { filter: grayscale(1) brightness(0) invert(1); }
 .dash-topbar__balance { background: rgba(255, 255, 255, .07); color: var(--muted-foreground); }
-.dash-topbar__balance span { color: var(--ds-text); }
-.dash-profile-menu__avatar { background: var(--muted); color: var(--ds-text); }
+.dash-topbar__balance span { color: var(--foreground); }
+.dash-profile-menu__avatar { background: var(--muted); color: var(--foreground); }
 
 .wizard-footer {
   border-color: var(--border);
@@ -5088,26 +5088,26 @@
 
 /* Shell states that were still inheriting the light dashboard palette. */
 .dash-nav a { color: var(--muted-foreground); }
-.dash-nav a:hover { background: var(--accent); color: var(--ds-text); }
+.dash-nav a:hover { background: var(--accent); color: var(--foreground); }
 .dash-nav a.is-active,
-.dash-nav--utility a.is-active { background: var(--card); color: var(--ds-text); box-shadow: inset 0 1px rgba(255,255,255,.05); }
+.dash-nav--utility a.is-active { background: var(--card); color: var(--foreground); box-shadow: inset 0 1px rgba(255,255,255,.05); }
 .dash-profile-menu summary:hover { background: var(--accent); }
 .help-contact > a { background: var(--accent); color: var(--accent-foreground); }
 
 /* The editor is a separate root, but belongs to the same dark system. */
 .editor-focus-shell,
-.clip-editor { background: var(--background); color: var(--ds-text); }
+.clip-editor { background: var(--background); color: var(--foreground); }
 .clip-editor__header {
   border-color: var(--border);
   background: rgba(17, 17, 18, .9);
-  color: var(--ds-text);
+  color: var(--foreground);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 }
 .clip-editor__header > div > small { color: var(--muted-foreground); }
 .clip-editor__notice,
 .clip-trim,
-.clip-editor__mobile-tabs { background: var(--card); color: var(--ds-text); }
+.clip-editor__mobile-tabs { background: var(--card); color: var(--foreground); }
 .clip-preview-stage { background: var(--background); }
 .clip-trim { border-color: var(--border); }
 .clip-editor__header > div > a,
@@ -5125,12 +5125,12 @@
 .clip-editor__notice { border-color: var(--border); box-shadow: 0 10px 28px rgba(0,0,0,.36); }
 .clip-phone-preview__play,
 .moment-preview > button,
-.wizard-source-ready__media > span:last-child { background: var(--muted); color: var(--ds-text); }
+.wizard-source-ready__media > span:last-child { background: var(--muted); color: var(--foreground); }
 
 @media (max-width: 900px) {
   .dash-mobile-nav,
   .clip-editor__mobile-tabs { border-color: var(--border); background: rgba(17,17,18,.92); box-shadow: 0 14px 35px rgba(0,0,0,.36); }
-  .dash-mobile-nav > .is-active { color: var(--ds-text); }
+  .dash-mobile-nav > .is-active { color: var(--foreground); }
 }
 
 /* Styles are a sober control surface, not a faux phone mockup. */
