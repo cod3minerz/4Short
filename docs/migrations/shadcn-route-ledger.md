@@ -3,8 +3,8 @@
 | Route | Area | Legacy dependencies | Target components | Status | Checks |
 | --- | --- | --- | --- | --- | --- |
 | `/sign-in` | Auth | custom focus/card styling | Button, Input, Field | Canonical preset pass | 360px browser focus QA: stock Input has one 2px ring, global outline is suppressed only on registry Input, wrapper has no shadow; Geist heading, no overflow or console errors |
-| `/sign-up` | Auth | shared AuthScreen | Button, Input, Label, Field | Migrated | typecheck, unit: 196 pass |
-| `/forgot-password` | Auth | shared AuthScreen | Button, Input, Label, Field | Migrated | typecheck, unit: 196 pass |
+| `/sign-up` | Auth | shared AuthScreen | Button, Input, Label, Field | Canonical preset pass | 360/1440 browser QA: no horizontal overflow; no route-specific console error |
+| `/forgot-password` | Auth | shared AuthScreen | Button, Input, Label, Field | Canonical preset pass | 360/1440 browser QA: no horizontal overflow; no route-specific console error |
 | `/dashboard` | Dashboard | dashboard shell and wizard | Button, Input, Dialog, ActionButton, real platform assets | Canonical source-flow pass | 1280/360 browser QA: no overflow or console errors; source-mode controls work; source dialog closes by Escape and returns focus; source-confirmed state remains evidence-blocked until a real retained source is available |
 | `/dashboard/new` | Dashboard | redirect only | dashboard route flow | Migrated | typecheck, unit: 196 pass |
 | `/dashboard/projects` | Dashboard | none | Button, Input, ToggleGroup, Dialog | Direct canonical-preset pass | registry primary forward action and ToggleGroup; it navigates to `/dashboard` without a Base UI console warning; 360/1440 overflow check passes; no legacy modal/action selectors remain |
@@ -15,9 +15,9 @@
 | `/dashboard/account` | Dashboard | none | Field, LockedField, Button, status | Canonical preset pass | real Better Auth QA: menu items left-aligned; portal radius 14px; 2FA remains honestly locked |
 | `/dashboard/help` | Dashboard | none | Input and reusable states | Canonical preset pass | 360px contrast QA: article headings inherit the dark-product `foreground` token |
 | `/admin` | Admin | floating double CSS layout and access-gate flash | Badge, Button, Input, Select, Skeleton layout | Canonical preset pass | full viewport, zero main radius; cold-load keeps shell instead of access gate; worker-state colour/radius use preset primary/radius |
-| `/admin/users` | Admin | native selects/status wrapper | Badge, Button, Input, Select | Canonical preset pass | client navigation does not show access gate |
-| `/admin/workspaces` | Admin | native selects/status wrapper | Badge, Button, Input, Select | Canonical preset pass | client navigation does not show access gate |
-| `/admin/jobs` | Admin | status wrapper | Badge, Button | Canonical preset pass | client navigation does not show access gate |
-| `/admin/audit` | Admin | status wrapper | Badge, Input | Canonical preset pass | client navigation does not show access gate |
+| `/admin/users` | Admin | native selects/status wrapper | Badge, Button, Input, Select | Canonical preset pass | client navigation does not show access gate; 360/1440 browser QA has no horizontal overflow or route-specific console error |
+| `/admin/workspaces` | Admin | native selects/status wrapper | Badge, Button, Input, Select | Canonical preset pass | client navigation does not show access gate; 360/1440 browser QA has no horizontal overflow or route-specific console error |
+| `/admin/jobs` | Admin | status wrapper | Badge, Button | Canonical preset pass | client navigation does not show access gate; 360/1440 browser QA has no horizontal overflow or route-specific console error |
+| `/admin/audit` | Admin | status wrapper | Badge, Input | Canonical preset pass | client navigation does not show access gate; 360/1440 browser QA has no horizontal overflow or route-specific console error |
 
 Public `/` and `/blog/**` are excluded from migration and remain mandatory regression checks.

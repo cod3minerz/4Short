@@ -114,6 +114,10 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
   confirms the styles/default state and admin shell have no overflow or
   console errors. Profile and source-library overlays close with Escape and
   restore their trigger focus.
+- Static route sweep: sign-up, password recovery and every admin section
+  (`users`, `workspaces`, `jobs`, `audit`) were checked at 360px and 1440px.
+  Their documents remain within the viewport, the full admin shell persists,
+  and the console has no route-specific errors.
 
 ## Structural locks
 
