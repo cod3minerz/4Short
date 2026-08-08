@@ -2,7 +2,7 @@
 
 import { Check } from "lucide-react";
 import { useMemo, type ReactNode } from "react";
-import { cn } from "../../lib/cn";
+import { cn } from "@/lib/utils";
 
 export interface SampleListItem {
   id: string;

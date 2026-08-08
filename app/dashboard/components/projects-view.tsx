@@ -11,7 +11,7 @@ import { projectStatus } from "../data";
 import { removeProject, useDashboardStore } from "../store";
 import type { Project, ProjectStatus } from "../types";
 import { PageHeading } from "./page-heading";
-import { MediaThumb } from "./ui/MediaThumb";
+import { MediaThumb } from "@/components/hashpix/media-thumb";
 
 type Filter = "all" | "active" | "review" | "ready" | "failed";
 

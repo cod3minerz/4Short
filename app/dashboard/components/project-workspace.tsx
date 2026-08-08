@@ -47,10 +47,10 @@ import { trackApp } from "../lib/track-app";
 import { useProjectProcessing } from "../lib/use-project-processing";
 import { useDashboardStore } from "../store";
 import type { ClipResult, MomentCandidate } from "../types";
-import { LockedField } from "./ui/LockedField";
-import { MediaThumb } from "./ui/MediaThumb";
-import { ProcessingCard } from "./ui/ProcessingCard";
-import { SubtitlePreviewOverlay } from "./ui/SubtitlePreviewOverlay";
+import { LockedField } from "@/components/hashpix/locked-field";
+import { MediaThumb } from "@/components/hashpix/media-thumb";
+import { ProcessingCard } from "@/components/hashpix/processing-card";
+import { SubtitlePreviewOverlay } from "@/components/hashpix/subtitle-preview-overlay";
 
 type Tab = "moments" | "ready";
 type RenderState = "review" | "rendering" | "ready" | "partial";

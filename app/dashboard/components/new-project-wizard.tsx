@@ -45,14 +45,14 @@ import { trackApp } from "../lib/track-app";
 import { useProjectProcessing } from "../lib/use-project-processing";
 import { refreshBalance, useDashboardStore } from "../store";
 import type { ClipLayout } from "../types";
-import { InfoPanel } from "./ui/InfoPanel";
-import { LockedField } from "./ui/LockedField";
-import { MediaThumb } from "./ui/MediaThumb";
-import { OptionCard } from "./ui/OptionCard";
-import { ProcessingCard } from "./ui/ProcessingCard";
-import { RangeTimeline } from "./ui/RangeTimeline";
-import { Stepper } from "./ui/Stepper";
-import { ValueBadge } from "./ui/ValueBadge";
+import { InfoPanel } from "@/components/hashpix/info-panel";
+import { LockedField } from "@/components/hashpix/locked-field";
+import { MediaThumb } from "@/components/hashpix/media-thumb";
+import { OptionCard } from "@/components/hashpix/option-card";
+import { ProcessingCard } from "@/components/hashpix/processing-card";
+import { RangeTimeline } from "@/components/hashpix/range-timeline";
+import { Stepper } from "@/components/hashpix/stepper";
+import { ValueBadge } from "@/components/hashpix/value-badge";
 
 /**
  * Every host the worker will actually import from — mirrors

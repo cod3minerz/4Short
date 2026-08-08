@@ -17,8 +17,8 @@ import {
 } from "../store";
 import type { StylePreset } from "../types";
 import { PageHeading } from "./page-heading";
-import { ColorField } from "./ui/ColorField";
-import { LockedField } from "./ui/LockedField";
+import { ColorField } from "@/components/hashpix/color-field";
+import { LockedField } from "@/components/hashpix/locked-field";
 
 const subtitlePresets = [
   { id: "clean", label: "Clean", description: "Спокойный текст без подложки и анимации" },

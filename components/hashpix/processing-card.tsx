@@ -1,8 +1,8 @@
 import { ArrowRight, Check, LoaderCircle } from "lucide-react";
 import Link from "next/link";
-import { processingStages } from "../../lib/processing-stages";
-import { MediaThumb } from "./MediaThumb";
-import { ProgressStage } from "./ProgressStage";
+import { processingStages } from "@/app/dashboard/lib/processing-stages";
+import { MediaThumb } from "./media-thumb";
+import { ProgressStage } from "./progress-stage";
 
 interface ProcessingCardAction {
   completedHref: string;

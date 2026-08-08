@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { cn } from "../../lib/cn";
-import type { SubtitlePreset } from "../../types";
+import { cn } from "@/lib/utils";
+import type { SubtitlePreset } from "@/app/dashboard/types";
 
 const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
 

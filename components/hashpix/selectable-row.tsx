@@ -2,7 +2,7 @@
 
 import { Check } from "lucide-react";
 import type { ReactNode } from "react";
-import { cn } from "../../lib/cn";
+import { cn } from "@/lib/utils";
 
 type SelectableRowProps = {
   title: string;

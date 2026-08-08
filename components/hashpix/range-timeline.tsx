@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { cn } from "../../lib/cn";
+import { cn } from "@/lib/utils";
 
 interface RangeTimelineProps {
   /** Bounds of the underlying media, in seconds. */

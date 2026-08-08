@@ -7,7 +7,7 @@ Codebase Memory project: `Users-kirill-Documents-4Short`
 | Legacy component or pattern | Current path | Known usage | Target | Risk | Status |
 | --- | --- | ---: | --- | --- | --- |
 | HeroUI internal imports | `app/dashboard`, `app/admin` | 11 files | shadcn/Radix primitives | High: interaction props and overlays | Audited |
-| Legacy dashboard UI folder | `app/dashboard/components/ui` | 22 files | `components/ui` plus `components/hashpix` | High: shared across editor/workspace | Audited |
+| Legacy dashboard UI folder | `app/dashboard/components/ui` | removed | `components/ui` registry primitives plus `components/hashpix` compositions | High: shared across editor/workspace | Retired |
 | Hashpix product compositions | `components/hashpix` | ActionButton, IconButton, Field, LockedField, StatusBadge | shadcn/Base UI primitives with Hashpix semantics | Medium | Established |
 | Raw action buttons | Internal route components | 44 matches / 19 files | `Button`, `ActionButton`, `IconButton` | Medium | Audited |
 | Raw text/form inputs | Internal route components | 24 matches / 15 files | `Input`, `Textarea`, `Field` | Medium | Audited |
@@ -35,4 +35,6 @@ editor-native controls, not generic form primitives.
 
 The old `app/admin/admin.css` cascade is removed. `app/admin/admin-minimal.css`
 is now the single product-specific layout layer and resolves every visual role
-through the canonical preset variables.
+through the canonical preset variables. The old dashboard-local `ui` directory
+is also removed: product compositions live in `components/hashpix`, while
+`components/ui` remains registry-only.

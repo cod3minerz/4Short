@@ -70,6 +70,10 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
   the editor sends the contract-valid `#0a0a0b` subtitle outline rather than
   leaking a CSS variable into the render EDL. HVE-G4 remains `INSUFFICIENT`
   because the repository only provides a scaffold gate, never a false PASS.
+- Component-boundary pass: all former `app/dashboard/components/ui/*`
+  compositions are now imported from `components/hashpix`; the obsolete folder
+  is empty and removed. Registry primitives remain exclusively in
+  `components/ui`.
 
 ## Structural locks
 

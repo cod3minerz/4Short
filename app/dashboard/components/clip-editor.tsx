@@ -63,12 +63,12 @@ import {
 } from "../lib/hve-offline-command-queue";
 import { layoutFromApi, layoutOptions, layoutToApi } from "../lib/layout-options";
 import { toEditorWords, type EditorWord } from "../lib/transcript";
-import { ColorField } from "./ui/ColorField";
-import { OptionCard } from "./ui/OptionCard";
-import { RangeTimeline } from "./ui/RangeTimeline";
-import { SampleList } from "./ui/SampleList";
-import { SelectableRow } from "./ui/SelectableRow";
-import { SubtitlePreviewOverlay } from "./ui/SubtitlePreviewOverlay";
+import { ColorField } from "@/components/hashpix/color-field";
+import { OptionCard } from "@/components/hashpix/option-card";
+import { RangeTimeline } from "@/components/hashpix/range-timeline";
+import { SampleList } from "@/components/hashpix/sample-list";
+import { SelectableRow } from "@/components/hashpix/selectable-row";
+import { SubtitlePreviewOverlay } from "@/components/hashpix/subtitle-preview-overlay";
 import { HveCompositionPreview } from "./HveCompositionPreview";
 import { trackApp } from "../lib/track-app";
 import {
