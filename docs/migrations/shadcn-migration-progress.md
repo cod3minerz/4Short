@@ -32,7 +32,12 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
    writing files (`npm install sonner next-themes` → `ECONNRESET`). Retain
    inline field and autosave feedback by design.
 2. Complete the remaining authenticated dynamic workspace/editor and overlay
-   records. The 360/768/1024/1440 layout matrix now passes for `/dashboard`,
+   records. A real 12-second local MP4 fixture was selected through the
+   product upload control on 2026-08-09, but its pre-signed storage PUT was
+   stopped by the browser-automation transport as `UnknownError` before the
+   object could be retained. This known PUT restriction cannot prove the
+   workspace/editor path; it is not recorded as a product PASS. The
+   360/768/1024/1440 layout matrix now passes for `/dashboard`,
    `/dashboard/styles`, `/dashboard/account` and `/admin`.
 3. Close only the evidence tasks that the repository can actually prove:
    HVE-G4 is still a scaffold and must remain `INSUFFICIENT`, never PASS.
@@ -128,6 +133,11 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
   layout hook or removed as a dead visual override. The source-step CTA now
   uses the stock `lg` Button size, aligns right on desktop, and stacks below
   its URL field at 360px without overflow.
+- Source-flow structural rebuild: `/dashboard` now uses one bounded work
+  surface with header, step badge, stepper, a unified three-way source choice,
+  source-specific card and honest action status. Browser comparison at 1280px
+  and 360px confirms the reference hierarchy without horizontal overflow;
+  every control continues to use its existing source API path.
 
 ## Structural locks
 

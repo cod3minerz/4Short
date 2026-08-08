@@ -4760,6 +4760,93 @@
 .stepper__step.is-current .stepper__label,
 .stepper__step.is-done .stepper__label { color: var(--foreground); }
 
+/* Source flow: one bounded work surface, mirroring the product's sequential
+   decision order. The controls themselves remain stock registry primitives. */
+.wizard.dash-page { padding: 32px; }
+.wizard-frame {
+  width: min(100%, 1180px);
+  margin-inline: auto;
+  padding: clamp(28px, 4vw, 48px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+.wizard-header { align-items: stretch; gap: clamp(28px, 4vw, 42px); text-align: left; }
+.wizard-header__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.wizard-header__intro { gap: 8px; }
+.wizard-header h1 { font-size: clamp(28px, 2.3vw, 34px); line-height: 1.1; }
+.wizard-header__intro p { font-size: 15px; }
+.wizard-step-badge {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.wizard-header .stepper { max-width: none; }
+.wizard-body { width: min(100%, 1060px); margin: 52px auto 0; padding: 0; }
+.wizard-panel--source .wizard-panel__heading { max-width: none; margin: 0 0 24px; text-align: left; }
+.wizard-panel--source .wizard-panel__heading h1 { font-size: 28px; }
+.wizard-panel--source .wizard-panel__heading p { font-size: 15px; }
+.wizard-source-compact { max-width: none; }
+.option-card-grid.wizard-source-cards {
+  gap: 0;
+  margin-bottom: 20px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+.wizard-source-cards .option-card {
+  min-height: 100px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.wizard-source-cards .option-card + .option-card { border-left: 1px solid var(--border); }
+.wizard-source-cards .option-card.is-selected {
+  box-shadow: inset 0 0 0 1px var(--ring);
+  background: var(--secondary);
+}
+.wizard-source-pane {
+  min-height: 0;
+  padding: 24px;
+  border-radius: var(--radius);
+}
+.wizard-url-input { min-height: 44px; }
+.wizard-platform-label { margin-top: 18px; }
+.wizard-footer--source {
+  margin: 32px 0 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--border);
+  background: transparent;
+  backdrop-filter: none;
+}
+.wizard-footer__source-state { display: inline-flex; align-items: center; gap: 12px; min-width: 0; }
+.wizard-footer__source-state > svg { flex: 0 0 auto; color: var(--primary); }
+.wizard-footer__source-state > span:last-child { display: grid; gap: 2px; }
+.wizard-footer__source-state strong { font-size: 14px; font-weight: 600; }
+.wizard-footer__source-state small { color: var(--muted-foreground); font-size: 12px; }
+.wizard-footer__source-mark { width: 34px; height: 34px; border: 1px solid var(--border); border-radius: var(--radius); }
+
+@media (max-width: 720px) {
+  .wizard.dash-page { padding: 12px 12px 96px; }
+  .wizard-frame { padding: 24px 18px; }
+  .wizard-header__top { flex-direction: column; gap: 14px; }
+  .wizard-step-badge { align-self: flex-start; }
+  .wizard-body { margin-top: 34px; }
+  .wizard-panel--source .wizard-panel__heading h1 { font-size: 24px; }
+  .option-card-grid.wizard-source-cards { gap: 1px; background: var(--border); }
+  .wizard-source-cards .option-card + .option-card { border-left: 0; }
+  .wizard-source-cards .option-card { min-height: 84px; }
+  .wizard-source-pane { padding: 16px; }
+  .wizard-footer--source { position: static; display: grid; gap: 16px; }
+  .wizard-footer--source > [data-slot="button"] { width: 100%; margin-left: 0; }
+}
+
 @media (max-width: 640px) {
   .stepper__label { display: block; font-size: 10px; }
   .stepper__step:not(:last-child)::after { left: calc(50% + 21px); right: calc(-50% + 21px); }

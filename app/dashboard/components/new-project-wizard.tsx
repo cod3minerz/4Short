@@ -514,21 +514,24 @@ export function NewProjectWizard({
 
   return (
     <main className="wizard dash-page">
-      <header className="wizard-header">
-        <div className="wizard-header__intro">
-          <h1>Создать нарезку</h1>
-          <p>Добавьте исходник, выберите нужные моменты и оформление.</p>
-        </div>
-        <Stepper steps={wizardSteps} current={step} />
-      </header>
+      <section className="wizard-frame">
+        <header className="wizard-header">
+          <div className="wizard-header__top">
+            <div className="wizard-header__intro">
+              <h1>Создать нарезку</h1>
+              <p>Добавьте видео и настройте будущие клипы.</p>
+            </div>
+            <span className="wizard-step-badge">Шаг {step} из 4</span>
+          </div>
+          <Stepper steps={wizardSteps} current={step} />
+        </header>
 
-      <div className="wizard-body">
-        {step === 1 ? (
-          <section className="wizard-panel" aria-labelledby="wizard-source-title">
+        <div className="wizard-body">
+          {step === 1 ? (
+          <section className="wizard-panel wizard-panel--source" aria-labelledby="wizard-source-title">
             <div className="wizard-panel__heading">
-              <span className="dash-eyebrow">Шаг 1 из 4</span>
               <h1 id="wizard-source-title">Добавьте видео</h1>
-              <p>Вставьте ссылку, загрузите файл или используйте сохранённый исходник.</p>
+              <p>Выберите источник видео.</p>
             </div>
 
             {!sourceReady ? (
@@ -732,6 +735,13 @@ export function NewProjectWizard({
             )}
 
             <div className="wizard-footer wizard-footer--source">
+              <div className="wizard-footer__source-state" role="status">
+                {sourceReady ? <Check size={20} aria-hidden="true" /> : <span className="wizard-footer__source-mark" aria-hidden="true" />}
+                <span>
+                  <strong>{sourceReady ? "Видео добавлено" : "Видео не добавлено"}</strong>
+                  <small>{sourceReady ? "Проверьте исходник перед продолжением." : "Добавьте видео, чтобы продолжить."}</small>
+                </span>
+              </div>
               <ActionButton size="lg" disabled={!sourceReady || !sourceCostKnown} onClick={() => setStep(2)}>
                 Продолжить
                 <ArrowRight size={18} />
@@ -1126,7 +1136,8 @@ export function NewProjectWizard({
             </div>
           </section>
         ) : null}
-      </div>
+        </div>
+      </section>
     </main>
   );
 }
