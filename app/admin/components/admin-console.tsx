@@ -119,6 +119,21 @@ function LoadingState() {
   return <div className="admin-loading" role="status"><LoaderCircle size={24} /> Загружаем данные</div>;
 }
 
+function AdminShellSkeleton() {
+  return (
+    <div className="admin-shell dark" aria-busy="true" aria-label="Загружаем административную консоль">
+      <aside className="admin-sidebar">
+        <div className="admin-sidebar__brand"><div className="h-6 w-24 rounded-md bg-muted" /></div>
+        <div className="mt-6 grid gap-1">{Array.from({ length: 5 }, (_, index) => <div className="h-8 rounded-md bg-muted" key={index} />)}</div>
+      </aside>
+      <main className="admin-main">
+        <header className="admin-toolbar"><div className="h-5 w-32 rounded-md bg-muted" /></header>
+        <div className="admin-content"><div className="h-8 w-56 rounded-md bg-muted" /></div>
+      </main>
+    </div>
+  );
+}
+
 function Pager({
   data,
   onPage,
@@ -657,20 +672,24 @@ export function AdminConsole({ initialView = "overview" }: { initialView?: Admin
     setAudit(await adminApi.audit(searches.audit, page));
   }, [searches.audit]);
 
+  if (access === "loading") {
+    return <AdminShellSkeleton />;
+  }
+
   if (access !== "ready" || !me) {
     return (
       <main className="admin-gate">
         <Link href="/" aria-label="Hashpix — на главную"><Logo priority /></Link>
         <section>
-          {access === "loading" ? <LoaderCircle className="admin-gate__spinner" size={28} /> : <ShieldCheck size={30} />}
+          <ShieldCheck size={30} />
           <span className="admin-eyebrow">HASHPIX / ADMIN</span>
-          <h1>{access === "loading" ? "ПРОВЕРЯЕМ ДОСТУП" : access === "unconfigured" ? "CONTROL API НЕ ПОДКЛЮЧЁН" : "ДОСТУП ЗАКРЫТ"}</h1>
+          <h1>{access === "unconfigured" ? "CONTROL API НЕ ПОДКЛЮЧЁН" : "ДОСТУП ЗАКРЫТ"}</h1>
           <p>
             {access === "unconfigured"
               ? "Админ-панель не показывает демонстрационные данные. Подключите российский Control API и задайте PLATFORM_ADMIN_EMAILS."
               : access === "denied"
                 ? error
-                : "Проверяем активную сессию и платформенную роль."}
+                : "Активная сессия не обладает административными правами."}
           </p>
           <Link className="admin-back-link" href="/dashboard"><ArrowLeft size={17} /> Вернуться в кабинет</Link>
         </section>

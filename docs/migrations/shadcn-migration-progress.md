@@ -45,6 +45,8 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 - Overlay audit: dialog, dropdown and sheet portal roots consume the canonical
   dark preset surface/border/radius values. Product CSS dark-surface audit
   passes; the public landing stylesheet is deliberately excluded.
+- Admin cold-load audit: access verification now keeps a full shadcn shell
+  skeleton in place, rather than rendering the disruptive access-gate screen.
 
 ## Structural locks
 

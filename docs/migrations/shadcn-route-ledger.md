@@ -14,7 +14,7 @@
 | `/dashboard/billing` | Dashboard | dashboard buttons | Hashpix actions and states | Migrated | typecheck pass |
 | `/dashboard/account` | Dashboard | no legacy dependency | Field, LockedField, Button, status | Canonical preset pass | authenticated session QA; 2FA remains honestly locked; portal radius normalised |
 | `/dashboard/help` | Dashboard | raw search input | Input and reusable states | Migrated | typecheck pass |
-| `/admin` | Admin | floating double CSS layout | Badge, Button, Input, Select | Canonical preset pass | full viewport, zero main radius, no overflow |
+| `/admin` | Admin | floating double CSS layout and access-gate flash | Badge, Button, Input, Select, Skeleton layout | Canonical preset pass | full viewport, zero main radius; cold-load keeps shell instead of access gate |
 | `/admin/users` | Admin | native selects/status wrapper | Badge, Button, Input, Select | Canonical preset pass | client navigation does not show access gate |
 | `/admin/workspaces` | Admin | native selects/status wrapper | Badge, Button, Input, Select | Canonical preset pass | client navigation does not show access gate |
 | `/admin/jobs` | Admin | status wrapper | Badge, Button | Canonical preset pass | client navigation does not show access gate |
