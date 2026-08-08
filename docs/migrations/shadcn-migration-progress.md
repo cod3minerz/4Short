@@ -28,7 +28,8 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 ## Active finalisation queue
 
 1. Retire the `--hp-*` compatibility bridge and the duplicate dashboard CSS
-   override blocks (including old modal/drawer slot names).
+   override blocks. Obsolete HeroUI modal/drawer and `.hp-action` selector
+   families are now removed; the remaining bridge is limited to layout rules.
 2. Replace raw route controls in styles, billing, workspace, wizard and editor
    with installed Button/Input/Select/Switch/ToggleGroup primitives; preserve
    native range controls only where they are media-editor inputs.

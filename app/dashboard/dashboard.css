@@ -1043,8 +1043,8 @@
   opacity: .75;
 }
 
-.account-actions .hp-action:disabled,
-.account-session .hp-action:disabled {
+.account-actions [data-slot="button"]:disabled,
+.account-session [data-slot="button"]:disabled {
   cursor: not-allowed;
   opacity: .5;
 }
@@ -1896,7 +1896,7 @@
 .account-session span { display: flex; flex-direction: column; }
 .account-session strong { font-size: 12px; }
 .account-session small { margin-top: 3px; color: var(--dash-text-muted); font-size: 10px; }
-.account-session > .hp-action {
+.account-session > [data-slot="button"] {
   min-height: 34px;
   display: inline-flex;
   align-items: center;
@@ -1961,7 +1961,7 @@
 }
 
 .clip-editor__header > div > a,
-.clip-editor__header nav > .hp-action {
+.clip-editor__header nav > [data-slot="button"] {
   width: 32px;
   height: 32px;
   display: grid;
@@ -1972,7 +1972,7 @@
 }
 
 .clip-editor__header > div > a:hover,
-.clip-editor__header nav > .hp-action:hover { background: var(--dash-surface-subtle); }
+.clip-editor__header nav > [data-slot="button"]:hover { background: var(--secondary); }
 
 .clip-editor__header input {
   width: min(36vw, 360px);
@@ -2051,8 +2051,8 @@
 }
 
 .clip-inspector > header strong { font-size: 12px; }
-.clip-transcript-panel > header > .hp-action,
-.clip-inspector > header > .hp-action { flex: 0 0 auto; }
+.clip-transcript-panel > header > [data-slot="button"],
+.clip-inspector > header > [data-slot="button"] { flex: 0 0 auto; }
 
 .clip-transcript-panel__title { font-size: 12px; }
 
@@ -2137,8 +2137,8 @@
   font-size: 11px;
 }
 .clip-word-actions > div { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-.clip-word-actions .hp-action { min-height: var(--hp-control-sm); padding-inline: 8px; font-size: 10px; }
-.clip-word-actions > .hp-action:last-child { color: var(--hp-danger); }
+.clip-word-actions [data-slot="button"] { min-height: 28px; padding-inline: 8px; font-size: 10px; }
+.clip-word-actions > [data-slot="button"]:last-child { color: var(--destructive); }
 
 .clip-preview-stage {
   position: relative;
@@ -2290,7 +2290,7 @@
   color: var(--dash-text-muted);
   font-size: 9px;
 }
-.clip-transport > .hp-action { width: 26px; height: 26px; min-height: 26px; }
+.clip-transport > [data-slot="button"] { width: 26px; height: 26px; min-height: 26px; }
 .clip-transport strong { color: var(--ink); font-size: 9px; text-align: center; }
 .clip-transport > label { display: grid; grid-template-columns: 14px 1fr auto; align-items: center; gap: 5px; }
 .clip-transport input { width: 100%; }
@@ -2334,17 +2334,17 @@
   background: var(--hp-surface);
 }
 
-.clip-inspector__rail .hp-action {
+.clip-inspector__rail [data-slot="button"] {
   color: var(--hp-text-subtle);
 }
 
-.clip-inspector__rail .hp-action:hover,
-.clip-inspector__rail .hp-action.is-active {
+.clip-inspector__rail [data-slot="button"]:hover,
+.clip-inspector__rail [data-slot="button"].is-active {
   background: var(--dash-accent-wash);
   color: var(--hp-text);
 }
 
-.clip-inspector__rail .hp-action.is-active {
+.clip-inspector__rail [data-slot="button"].is-active {
   color: var(--hp-brand-hover);
 }
 
@@ -3418,8 +3418,8 @@
   flex: 1;
 }
 
-.project-notice .hp-action,
-.clip-editor__notice .hp-action { flex: 0 0 auto; color: inherit; }
+.project-notice [data-slot="button"],
+.clip-editor__notice [data-slot="button"] { flex: 0 0 auto; color: inherit; }
 
 .moment-list__head p {
   max-width: 620px;
@@ -3694,9 +3694,7 @@
    * users could not save a version or undo a change. There is enough header
    * width for all four controls at this breakpoint; shrink instead of hide.
    */
-  .clip-editor__header :is(.button, .hp-action) { min-height: 30px; padding-inline: 9px; font-size: 10px; }
-  .clip-editor__header .hp-action--quiet svg:last-child { display: none; }
-  .clip-editor__header .hp-action--brand svg { display: none; }
+  .clip-editor__header [data-slot="button"] { min-height: 30px; padding-inline: 9px; font-size: 10px; }
   .clip-editor__workspace,
   .clip-editor.is-left-collapsed .clip-editor__workspace,
   .clip-editor.is-right-collapsed .clip-editor__workspace {
@@ -3746,11 +3744,11 @@
     width: min(100%, 360px);
     gap: var(--hp-space-2);
   }
-  .clip-mobile-tools .hp-action {
+  .clip-mobile-tools [data-slot="button"] {
     justify-content: flex-start;
     min-height: var(--hp-control-lg);
   }
-  .clip-mobile-tools .hp-action.is-active { border-color: var(--hp-brand); background: var(--dash-accent-wash); }
+  .clip-mobile-tools [data-slot="button"].is-active { border-color: var(--primary); background: var(--accent); }
   .clip-mobile-tools > p { max-width: 300px; margin: 0; font-size: var(--dash-text-xs); }
   .clip-editor__mobile-tabs {
     position: fixed;
@@ -4215,7 +4213,7 @@
    * on a phone was "Обновить клип" (a re-render), not an actual save. They
    * fit at 28px each once the title field's min-width is trimmed below.
    */
-  .clip-editor__header nav > .hp-action--icon {
+  .clip-editor__header nav > [data-slot="button"] {
     width: 40px;
     height: 40px;
   }
@@ -4226,13 +4224,13 @@
     min-height: 40px;
   }
 
-  .clip-editor__header nav :is(.button, .hp-action) {
+  .clip-editor__header nav [data-slot="button"] {
     min-width: 44px;
     padding-inline: 11px;
     font-size: 0;
   }
 
-  .clip-editor__header nav :is(.button, .hp-action) svg {
+  .clip-editor__header nav [data-slot="button"] svg {
     width: 19px;
     height: 19px;
   }
@@ -4244,13 +4242,6 @@
    * leave the button with nothing to show at all — bring the chevron back
    * as its icon.
    */
-  .clip-editor__header nav .hp-action--quiet svg:last-child {
-    display: inline-block !important;
-  }
-
-  .clip-editor__header nav .hp-action--brand svg {
-    display: inline-block !important;
-  }
 
   .clip-editor__notice {
     margin: 8px 10px 0;
@@ -4362,14 +4353,14 @@
   .clip-editor__header { gap: 2px; padding-inline: 6px; }
   .clip-editor__header > div { gap: 3px; }
   .clip-editor__header > div > a,
-  .clip-editor__header nav > .hp-action--icon {
+  .clip-editor__header nav > [data-slot="button"] {
     width: 40px;
     height: 40px;
   }
   .clip-editor__header > div { grid-template-columns: 40px minmax(0, 1fr); }
   .clip-editor__header input { width: 52px; }
   .clip-editor__header nav { gap: 2px; }
-  .clip-editor__header nav :is(.button, .hp-action) { min-width: 40px; min-height: 40px; padding-inline: 8px; }
+  .clip-editor__header nav [data-slot="button"] { min-width: 40px; min-height: 40px; padding-inline: 8px; }
 }
 
 
@@ -5329,298 +5320,26 @@
 .clip-preview-stage { background: var(--hp-media); }
 .clip-trim { border-color: var(--hp-line); }
 .clip-editor__header > div > a,
-.clip-editor__header nav > .hp-action,
-.clip-transcript-panel > header > .hp-action,
-.clip-inspector > header > .hp-action,
+.clip-editor__header nav > [data-slot="button"],
+.clip-transcript-panel > header > [data-slot="button"],
+.clip-inspector > header > [data-slot="button"],
 .clip-panel-restore,
-.clip-transport > .hp-action { color: var(--hp-text-muted); }
+.clip-transport > [data-slot="button"] { color: var(--muted-foreground); }
 .clip-editor__header > div > a:hover,
-.clip-editor__header nav > .hp-action:hover,
-.clip-transcript-panel > header > .hp-action:hover,
-.clip-inspector > header > .hp-action:hover,
+.clip-editor__header nav > [data-slot="button"]:hover,
+.clip-transcript-panel > header > [data-slot="button"]:hover,
+.clip-inspector > header > [data-slot="button"]:hover,
 .clip-panel-restore:hover,
-.clip-transport > .hp-action:hover { background: var(--hp-surface-raised); color: var(--hp-text); }
+.clip-transport > [data-slot="button"]:hover { background: var(--secondary); color: var(--foreground); }
 .clip-editor__notice { border-color: var(--dash-border); box-shadow: 0 10px 28px rgba(0,0,0,.36); }
 .clip-phone-preview__play,
 .moment-preview > button,
 .wizard-source-ready__media > span:last-child { background: var(--dash-surface-muted); color: var(--ds-text); }
 
-/* HeroUI portals mount on <body>, outside .dash-shell. Give dialogs and
-   drawers their own complete token scope instead of falling back to white. */
-:where([data-slot="modal-backdrop"], [data-slot="drawer-backdrop"]) {
-  --dash-surface: var(--hp-surface);
-  --dash-surface-subtle: var(--hp-surface-raised);
-  --dash-surface-muted: var(--hp-surface-subtle);
-  --dash-border: var(--hp-line);
-  --dash-text-muted: var(--hp-text-muted);
-  --dash-text: var(--hp-text);
-  background: color-mix(in srgb, var(--hp-canvas) 72%, transparent) !important;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-:where([data-slot="modal-dialog"], .dash-drawer-dialog) {
-  border: 1px solid var(--hp-line) !important;
-  border-radius: var(--hp-radius-overlay);
-  background: color-mix(in srgb, var(--hp-surface) 96%, transparent) !important;
-  color: var(--hp-text) !important;
-  box-shadow: 0 var(--hp-space-5) 80px color-mix(in srgb, var(--hp-canvas) 50%, transparent);
-}
-
-:where([data-slot="modal-header"], [data-slot="modal-footer"], [data-slot="drawer-header"], [data-slot="drawer-footer"]) { border-color: var(--hp-line) !important; }
-:where([data-slot="modal-heading"], [data-slot="drawer-heading"]) { color: var(--hp-text); }
-:where([data-slot="modal-body"], [data-slot="drawer-body"], .dash-drawer-dialog) { color: var(--hp-text-muted); }
-:where([data-slot="modal-close-trigger"], [data-slot="drawer-close-trigger"]) { background: var(--hp-surface-subtle) !important; color: var(--hp-text) !important; }
-
-:where([data-slot="modal-dialog"], .dash-drawer-dialog) .button {
-  border-radius: var(--hp-radius-action);
-  border-color: var(--hp-line);
-  background: var(--hp-text);
-  color: var(--hp-canvas);
-}
-:where([data-slot="modal-dialog"], .dash-drawer-dialog) .button--outline { background: transparent; color: var(--hp-text); }
-:where([data-slot="modal-dialog"], .dash-drawer-dialog) .button--danger { border-color: color-mix(in srgb, var(--hp-danger) 35%, transparent); background: var(--hp-danger); color: var(--hp-canvas); }
-
-/* Canonical reusable actions. The type component owns press semantics; this
-   stylesheet owns visual state. No page gets to redefine its own hover model. */
-.hp-action {
-  min-height: var(--hp-control-md);
-  border: 1px solid transparent;
-  border-radius: var(--hp-radius-action);
-  corner-shape: squircle;
-  padding-inline: 14px;
-  box-shadow: none;
-  font-size: var(--dash-text-sm);
-  font-weight: 720;
-  transition: background-color var(--hp-motion-interactive), border-color var(--hp-motion-interactive), color var(--hp-motion-interactive);
-}
-
-.hp-action[data-focus-visible] { outline: 2px solid var(--hp-focus-ring); outline-offset: 2px; }
-.hp-action[data-disabled] { cursor: not-allowed; opacity: .48; }
-.hp-action--brand { background: var(--hp-brand); color: var(--hp-brand-foreground); }
-.hp-action--brand[data-hovered] { background: var(--hp-brand-hover); }
-.hp-action--brand[data-pressed] { background: var(--hp-brand-pressed); }
-.hp-action--light { background: var(--hp-action-light); color: var(--hp-canvas); }
-.hp-action--light[data-hovered] { background: var(--hp-action-light-hover); }
-.hp-action--light[data-pressed] { background: var(--hp-action-light-pressed); }
-.hp-action--secondary { border-color: var(--hp-line); background: var(--hp-surface-raised); color: var(--hp-text); }
-.hp-action--secondary[data-hovered] { border-color: var(--hp-line-strong); background: var(--hp-surface-subtle); }
-.hp-action--secondary[data-pressed] { background: var(--hp-surface); }
-.hp-action--danger { background: var(--hp-danger); color: var(--hp-canvas); }
-.hp-action--quiet { background: transparent; color: var(--hp-text-muted); }
-.hp-action--quiet[data-hovered] { background: var(--dash-accent-wash); color: var(--hp-text); }
-.hp-action--icon { position: relative; width: var(--hp-control-md); min-width: var(--hp-control-md); padding-inline: 0; }
-.hp-action--icon[data-tooltip]::after {
-  position: absolute;
-  z-index: 60;
-  top: 50%;
-  left: calc(100% + var(--hp-space-2));
-  width: max-content;
-  max-width: 180px;
-  transform: translateY(-50%);
-  padding: var(--hp-space-1) var(--hp-space-2);
-  border: 1px solid var(--hp-line);
-  border-radius: var(--hp-radius-field);
-  background: var(--hp-surface-raised);
-  color: var(--hp-text);
-  content: attr(data-tooltip);
-  font-size: var(--dash-text-micro);
-  line-height: 1.2;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--hp-motion-overlay);
-}
-.hp-action--icon[data-tooltip]:is([data-hovered], [data-focus-visible])::after { opacity: 1; }
-
-/* Page layouts may position a primitive, but they cannot invent another
-   visual family. These rules preserve the page anatomy while consuming the
-   canonical action / field geometry and state contract. */
-.project-row__delete.hp-action {
-  width: var(--hp-control-sm);
-  min-width: var(--hp-control-sm);
-  min-height: var(--hp-control-sm);
-  padding: 0;
-  color: var(--hp-text-muted);
-}
-.project-row__delete.hp-action[data-hovered] { background: var(--dash-danger-surface); color: var(--hp-danger); }
-.style-library-add.hp-action {
-  justify-content: flex-start;
-  min-height: 74px;
-  padding: 14px;
-  border-style: dashed;
-  border-color: var(--hp-line-strong);
-  border-radius: var(--hp-radius-overlay);
-  background: transparent;
-  color: var(--hp-text);
-  text-align: left;
-}
-.style-library-add.hp-action[data-hovered] { background: var(--hp-surface-raised); }
-.style-editor__duplicate.hp-action,
-.moment-list__head > .hp-action {
-  gap: 7px;
-  min-height: var(--hp-control-md);
-  padding-inline: 13px;
-  font-size: var(--dash-text-sm);
-}
-.moment-inspector__edit.hp-action {
-  justify-content: space-between;
-  width: 100%;
-  margin-top: 12px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hp-action { transition: none; }
-}
-
 @media (max-width: 900px) {
   .dash-mobile-nav,
   .clip-editor__mobile-tabs { border-color: var(--dash-border); background: rgba(17,17,18,.92); box-shadow: 0 14px 35px rgba(0,0,0,.36); }
   .dash-mobile-nav > .is-active { color: var(--ds-text); }
-}
-
-/* Product-surface guardrail. These are the legacy selectors that remain in
-   page layouts; their geometry and colour must resolve through the same
-   system as the reusable primitives above. Kept last so stale page rules
-   cannot turn a dark mobile surface white or a neutral CTA blue again. */
-.dash-shell :is(.wizard-file-cta, .wizard-footer .button, .dash-compact-primary, .clip-editor__header .button--primary, .dash-mobile-nav__new) {
-  background: var(--hp-brand) !important;
-  color: var(--hp-brand-foreground) !important;
-  border-radius: var(--hp-radius-control) !important;
-}
-.dash-shell :is(.wizard-file-cta, .wizard-footer .button, .dash-compact-primary, .clip-editor__header .button--primary, .dash-mobile-nav__new):hover {
-  background: var(--hp-brand-hover) !important;
-}
-.dash-shell :is(.dash-mobile-nav, .clip-editor__mobile-tabs, .wizard-footer) {
-  background: color-mix(in srgb, var(--hp-surface) 94%, transparent) !important;
-  border-color: var(--hp-line) !important;
-}
-.dash-shell :is(.dash-mobile-nav a, .clip-editor__mobile-tabs button) { color: var(--hp-text-muted); }
-.dash-shell :is(.dash-mobile-nav a.is-active, .clip-editor__mobile-tabs button.is-active) {
-  background: var(--hp-surface-raised);
-  color: var(--hp-text);
-}
-/* Form controls intentionally share the same optical radius at every height.
-   Cards/sheets retain --hp-radius-surface and are never mistaken for inputs. */
-.dash-shell :is(.dash-input, .dash-select, .wizard-url-input, .style-editor__name input, .dash-color-field, .clip-field input, .clip-field textarea, .clip-range-field input) {
-  border-radius: var(--hp-radius-control) !important;
-}
-.dash-shell :is(.option-card, .wizard-source-ready, .wizard-cost, .style-library-card, .style-library-add, .wizard-processing__card, .project-workspace, .moment-inspector) {
-  border-radius: var(--hp-radius-surface) !important;
-}
-
-/* Final visual contract. Dark product chrome remains neutral: blue is reserved
-   for a user's own media/brand choices, never for an application action. */
-.dash-shell :is(.wizard-file-cta, .wizard-footer .button, .dash-compact-primary, .clip-editor__header .button--primary, .dash-mobile-nav__new, .dash-primary-link) {
-  background: var(--hp-brand) !important;
-  color: var(--hp-brand-foreground) !important;
-}
-.dash-shell :is(.wizard-file-cta, .wizard-footer .button, .dash-compact-primary, .clip-editor__header .button--primary, .dash-mobile-nav__new, .dash-primary-link):hover {
-  background: var(--hp-brand-hover) !important;
-  color: var(--hp-brand-foreground) !important;
-}
-.dash-shell :is(.option-card, .style-library-card, .wizard-source-library button, .wizard-control-card, .wizard-style-options button) {
-  border-radius: var(--hp-radius-surface) !important;
-}
-.dash-shell :is(.wizard-source-ready__kind, .wizard-source-ready__media > span:last-child) {
-  border-radius: var(--hp-radius-control) !important;
-}
-.dash-shell .wizard-source-ready__media > span:last-child {
-  background: color-mix(in srgb, var(--hp-surface) 88%, transparent);
-  color: var(--hp-text);
-}
-
-/* Preserve the preset's semantic radius and indigo action roles after the
-   older responsive cascade. */
-.dash-shell :is(.button, .hp-action, .dash-primary-link, .dash-secondary-link, .wizard-file-cta) {
-  transition: background-color var(--hp-motion-interactive), border-color var(--hp-motion-interactive), color var(--hp-motion-interactive), opacity var(--hp-motion-interactive);
-}
-.dash-shell :is(.button--primary, .dash-primary-link, .wizard-file-cta, .wizard-footer .button, .dash-compact-primary, .dash-mobile-nav__new) {
-  background: var(--hp-brand) !important;
-  color: var(--hp-brand-foreground) !important;
-  border-color: transparent !important;
-}
-.dash-shell :is(.button--primary, .dash-primary-link, .wizard-file-cta, .wizard-footer .button, .dash-compact-primary, .dash-mobile-nav__new):is(:hover, [data-hovered]) {
-  background: var(--hp-brand-hover) !important;
-  color: var(--hp-brand-foreground) !important;
-}
-.dash-shell :is(.dash-secondary-link, .button--outline, .button--secondary) {
-  background: var(--hp-surface-raised) !important;
-  color: var(--hp-text) !important;
-  border-color: var(--hp-line) !important;
-}
-.dash-shell :is(.dash-secondary-link, .button--outline, .button--secondary):is(:hover, [data-hovered]) {
-  background: var(--hp-surface-subtle) !important;
-  border-color: var(--hp-line-strong) !important;
-}
-
-/* Fields/actions share one fixed optical corner at every size. Surfaces are
-   not controls, and get their own calmer radius — this avoids the visual
-   "random-radius" effect. */
-.dash-shell :is(
-  .hp-action,
-  .dash-input,
-  .dash-select,
-  .wizard-url-input,
-  .style-editor__name input,
-  .dash-color-field,
-  .clip-field input,
-  .clip-field textarea,
-  .clip-range-field input,
-  .wizard-source-ready__kind,
-  .wizard-source-ready__media > span:last-child,
-  .dash-status,
-  .value-badge
-) { border-radius: var(--hp-radius-control) !important; }
-.dash-shell :is(
-  .hp-action,
-  .dash-input,
-  .dash-select,
-  .wizard-url-input,
-  .style-editor__name input,
-  .dash-color-field,
-  .clip-field input,
-  .clip-field textarea,
-  .clip-range-field input,
-  .wizard-source-ready__kind,
-  .wizard-source-ready__media > span:last-child,
-  .dash-status,
-  .value-badge
-) { corner-shape: squircle; }
-.dash-shell :is(
-  .option-card,
-  .wizard-source-ready,
-  .wizard-source-library button,
-  .wizard-source-pane,
-  .wizard-source-dropzone,
-  .wizard-control-card,
-  .wizard-style-options button,
-  .wizard-summary,
-  .wizard-processing__card,
-  .progress-stage,
-  .style-library-card,
-  .style-library-add,
-  .style-editor,
-  .project-workspace,
-  .moment-inspector,
-  .dash-drawer-dialog,
-  [data-slot="modal-dialog"]
-) { border-radius: var(--hp-radius-surface) !important; }
-.dash-shell .media-thumb { border-radius: var(--hp-radius-media); }
-
-/* Selected product states use the preset indigo role rather than a local
-   accent alias. */
-.dash-shell :is(.option-card.is-selected, .style-library-card.is-active, .wizard-style-options button.is-selected) {
-  border-color: var(--hp-brand) !important;
-  background: color-mix(in oklch, var(--hp-brand) 14%, var(--hp-surface-subtle)) !important;
-  box-shadow: none !important;
-}
-.dash-shell :is(.option-card.is-selected .option-card__icon, .wizard-style-options button.is-selected > span:first-child) {
-  background: var(--hp-brand) !important;
-  color: var(--hp-brand-foreground) !important;
-}
-.dash-shell :is(.hp-action, .button, .option-card, .style-library-card, .wizard-source-library button):focus-visible {
-  outline: 2px solid var(--hp-focus-ring) !important;
-  outline-offset: 2px;
 }
 
 /* Styles are a sober control surface, not a faux phone mockup. */
