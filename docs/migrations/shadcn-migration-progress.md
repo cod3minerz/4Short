@@ -104,6 +104,10 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
   fallback outline only for its registry input slot, leaving the stock shadcn
   ring as the single focus signal. The auth title uses Geist; 360px browser QA
   found no overflow or console error.
+- Acceptance-gate refinement: `npm run audit:product-ui` now validates the
+  actual dark `b38miVLH6` roles, the `.625rem` preset radius and absence of
+  product legacy token bridges. It no longer asks for removed `--hp-*` tokens;
+  the current gate passes with 18 preset roles and 19 Hashpix compositions.
 
 ## Structural locks
 
