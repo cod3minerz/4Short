@@ -71,14 +71,14 @@ and media containers use `--hp-radius-surface`; only app workspaces use
 
 | Primitive | Job |
 | --- | --- |
-| `ActionButton` | Text action: brand, light, secondary, danger or quiet. |
+| `ActionButton` | Text action: brand, light, secondary, danger or quiet; composes shadcn Button. |
 | `IconButton` | One labelled icon action with Tooltip. |
 | `Field` | Label, input/control, hint and error as one unit. |
 | `SegmentedControl` | Mutually exclusive, immediately applied options. |
 | `MenuButton` + `Popover` | Contextual choices without persistent UI noise. |
 | `StatusBadge` | Compact state, never a call to action. |
 | `LockedField` | A recognised but unsupported capability and its true reason. |
-| `Dialog` / `Drawer` | Focused decision / long contextual work. |
+| `Dialog` / `Drawer` | Focused decision / long contextual work; compose shadcn Dialog/Sheet. |
 
 Do not implement the same anatomy per page. If a required pattern is absent,
 add a primitive and documented variants before using it.

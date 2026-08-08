@@ -21,11 +21,11 @@ Build a coherent production tool, not a collection of page-specific CSS fixes.
   shadow, transition, or spacing values in a page/component stylesheet.
 - Extend the named token layer when a real semantic role is missing. Do not
   duplicate a near-identical literal in a local component.
-- Build a missing recurring control in `app/dashboard/components/ui/` first.
+- Build a missing recurring control in `components/hashpix/` first.
   Then use it everywhere. Raw controls are allowed only inside an existing
   primitive.
-- Use HeroUI compound components and `onPress`, never a visually similar raw
-  button with a guessed `slot` attribute.
+- Use shadcn/Base UI compound components and standard React `onClick` props;
+  never recreate a library control with a guessed attribute.
 - Keep button shape constant through default, hover, pressed, loading and
   disabled states. Buttons are pills; fields and panels are not.
 - Do not use glass over a flat background. Glass is permitted only above real

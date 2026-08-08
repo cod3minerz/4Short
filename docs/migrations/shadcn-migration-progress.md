@@ -12,7 +12,7 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 - [ ] Fresh Codebase Memory full index with exclusions
 - [x] Shadcn foundation and MCP configuration
 - [ ] Shadcn skill installation (network retry pending)
-- [ ] Semantic token system
+- [x] Semantic token system
 - [ ] Official base primitives
 - [ ] Hashpix reusable component layer
 - [ ] Auth routes
