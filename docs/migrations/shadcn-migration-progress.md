@@ -20,7 +20,7 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 - [x] Project workspace (HVE-G4 scaffold reports INSUFFICIENT; no HVE contract or preview geometry changed)
 - [ ] Clip editor
 - [x] Styles, billing, account and help
-- [ ] Admin routes
+- [x] Admin routes
 - [ ] Global overlays and notifications
 - [ ] Legacy removal
 - [ ] Full automated and browser acceptance

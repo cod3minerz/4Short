@@ -1,6 +1,8 @@
 "use client";
 
-import { Button, Chip, SearchField } from "@heroui/react";
+import { StatusBadge } from "@/components/hashpix/status-badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Activity,
   ArrowLeft,
@@ -88,11 +90,11 @@ function formatMinutes(seconds: number) {
   return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 1 }).format(seconds / 60);
 }
 
-function statusColor(status: string): "default" | "success" | "warning" | "danger" | "accent" {
+function statusColor(status: string): "neutral" | "success" | "warning" | "danger" | "accent" {
   if (["ready", "succeeded", "active"].includes(status)) return "success";
   if (["failed", "suspended", "cancelled"].includes(status)) return "danger";
   if (["queued", "draft"].includes(status)) return "warning";
-  return "accent";
+  return "neutral";
 }
 
 function EmptyState({ children }: { children: React.ReactNode }) {
@@ -114,11 +116,11 @@ function Pager({
   if (pages <= 1) return null;
   return (
     <div className="admin-pager">
-      <Button variant="outline" size="sm" isDisabled={data.page <= 1} onPress={() => onPage(data.page - 1)}>
+      <Button variant="outline" size="sm" disabled={data.page <= 1} onClick={() => onPage(data.page - 1)}>
         Назад
       </Button>
       <span>{data.page} из {pages}</span>
-      <Button variant="outline" size="sm" isDisabled={data.page >= pages} onPress={() => onPage(data.page + 1)}>
+      <Button variant="outline" size="sm" disabled={data.page >= pages} onClick={() => onPage(data.page + 1)}>
         Далее
       </Button>
     </div>
@@ -145,19 +147,10 @@ function SectionHeader({
         <p>{description}</p>
       </div>
       {search !== undefined && setSearch && onSearch ? (
-        <SearchField
-          aria-label={`Поиск: ${title}`}
-          className="admin-search"
-          value={search}
-          onChange={setSearch}
-          onSubmit={onSearch}
-        >
-          <SearchField.Group>
-            <SearchField.SearchIcon><Search size={17} /></SearchField.SearchIcon>
-            <SearchField.Input placeholder="Найти…" />
-            <SearchField.ClearButton />
-          </SearchField.Group>
-        </SearchField>
+        <label className="admin-search">
+          <Search size={17} aria-hidden="true" />
+          <Input aria-label={`Поиск: ${title}`} value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") onSearch(); }} placeholder="Найти…" />
+        </label>
       ) : null}
     </div>
   );
@@ -186,9 +179,9 @@ function OverviewView({ data }: { data: AdminOverview | null }) {
         <section className="admin-panel">
           <div className="admin-panel__head">
             <div><Server size={19} /><h2>Media workers</h2></div>
-            <Chip color={data.workers.some((worker) => worker.online) ? "success" : "danger"} variant="soft">
+            <StatusBadge tone={data.workers.some((worker) => worker.online) ? "success" : "danger"}>
               {data.workers.filter((worker) => worker.online).length} онлайн
-            </Chip>
+            </StatusBadge>
           </div>
           {data.workers.length ? (
             <div className="admin-worker-list">
@@ -287,9 +280,9 @@ function UsersView({
                       </select>
                     </td>
                     <td data-label="Статус">
-                      <Chip color={statusColor(user.status)} variant="soft">
+                      <StatusBadge tone={statusColor(user.status)}>
                         {user.status === "active" ? "Активен" : "Заблокирован"}
-                      </Chip>
+                      </StatusBadge>
                     </td>
                     <td data-label="Действия">
                       {user.status === "active" ? (
@@ -301,11 +294,10 @@ function UsersView({
                             onChange={(event) => setReason((current) => ({ ...current, [user.id]: event.target.value }))}
                           />
                           <Button
-                            variant="danger-soft"
+                            variant="destructive"
                             size="sm"
-                            isPending={busy === user.id}
-                            isDisabled={!me.permissions.usersWrite || user.id === me.id || (reason[user.id]?.trim().length ?? 0) < 3}
-                            onPress={() => void mutate(
+                            disabled={busy === user.id || !me.permissions.usersWrite || user.id === me.id || (reason[user.id]?.trim().length ?? 0) < 3}
+                            onClick={() => void mutate(
                               user.id,
                               () => adminApi.updateUserStatus(user.id, "suspended", reason[user.id]),
                               "Доступ пользователя приостановлен",
@@ -318,9 +310,8 @@ function UsersView({
                         <Button
                           variant="outline"
                           size="sm"
-                          isPending={busy === user.id}
-                          isDisabled={!me.permissions.usersWrite}
-                          onPress={() => void mutate(
+                          disabled={busy === user.id || !me.permissions.usersWrite}
+                          onClick={() => void mutate(
                             user.id,
                             () => adminApi.updateUserStatus(user.id, "active"),
                             "Доступ пользователя восстановлен",
@@ -399,7 +390,7 @@ function WorkspacesView({
                 <article className="admin-workspace-card" key={workspace.id}>
                   <div className="admin-workspace-card__head">
                     <div><strong>{workspace.name}</strong><small>{workspace.slug}</small></div>
-                    <Chip color="accent" variant="soft">{planLabels[workspace.planCode]}</Chip>
+                    <StatusBadge tone="accent">{planLabels[workspace.planCode]}</StatusBadge>
                   </div>
                   <dl>
                     <div><dt>Баланс</dt><dd>{formatMinutes(workspace.availableSeconds)} мин.</dd></div>
@@ -442,9 +433,8 @@ function WorkspacesView({
                       <Button
                         variant="outline"
                         size="sm"
-                        isPending={busy === workspace.id}
-                        isDisabled={!me.permissions.minutesWrite || !Number.isFinite(minutes) || minutes === 0 || adjustment.reason.trim().length < 3}
-                        onPress={() => void mutate(
+                        disabled={busy === workspace.id || !me.permissions.minutesWrite || !Number.isFinite(minutes) || minutes === 0 || adjustment.reason.trim().length < 3}
+                        onClick={() => void mutate(
                           workspace.id,
                           () => adminApi.adjustMinutes(workspace.id, Math.round(minutes * 60), adjustment.reason),
                           "Баланс скорректирован",
@@ -513,7 +503,7 @@ function JobsView({
                     <td data-label="Задача"><strong>{job.type}</strong><small>{job.class} · {job.id.slice(0, 8)}</small></td>
                     <td data-label="Аккаунт / проект"><strong>{job.workspaceName}</strong><small>{job.projectTitle ?? "Системная задача"}</small></td>
                     <td data-label="Попытка">{job.attemptCount} / {job.maxAttempts}</td>
-                    <td data-label="Статус"><Chip color={statusColor(job.status)} variant="soft">{job.status}</Chip></td>
+                    <td data-label="Статус"><StatusBadge tone={statusColor(job.status)}>{job.status}</StatusBadge></td>
                     <td data-label="Обновлена">{formatDate(job.updatedAt)}</td>
                     <td data-label="Действия">
                       <div className="admin-job-actions">
@@ -521,18 +511,16 @@ function JobsView({
                           <Button
                             variant="outline"
                             size="sm"
-                            isPending={busy === job.id}
-                            isDisabled={!me.permissions.jobsWrite}
-                            onPress={() => void mutate(job, "retry")}
+                            disabled={busy === job.id || !me.permissions.jobsWrite}
+                            onClick={() => void mutate(job, "retry")}
                           ><RotateCcw size={14} /> Повторить</Button>
                         ) : null}
                         {["queued", "leased", "waiting_provider"].includes(job.status) ? (
                           <Button
-                            variant="danger-soft"
+                            variant="destructive"
                             size="sm"
-                            isPending={busy === job.id}
-                            isDisabled={!me.permissions.jobsWrite}
-                            onPress={() => void mutate(job, "cancel")}
+                            disabled={busy === job.id || !me.permissions.jobsWrite}
+                            onClick={() => void mutate(job, "cancel")}
                           ><X size={14} /> Отменить</Button>
                         ) : null}
                       </div>
@@ -675,7 +663,7 @@ export function AdminConsole({ initialView = "overview" }: { initialView?: Admin
       <aside className={`admin-sidebar ${menuOpen ? "is-open" : ""}`}>
         <div className="admin-sidebar__brand">
           <Link href="/" aria-label="Hashpix — на главную"><Logo priority /></Link>
-          <Chip color="accent" variant="soft">ADMIN</Chip>
+          <StatusBadge tone="accent">ADMIN</StatusBadge>
           <button type="button" onClick={() => setMenuOpen(false)} aria-label="Закрыть меню"><X size={21} /></button>
         </div>
         <nav aria-label="Разделы админ-панели">
@@ -698,14 +686,14 @@ export function AdminConsole({ initialView = "overview" }: { initialView?: Admin
         <header className="admin-mobile-header">
           <button type="button" onClick={() => setMenuOpen(true)} aria-label="Открыть меню"><Menu size={21} /></button>
           <Logo />
-          <Chip color="accent" variant="soft">ADMIN</Chip>
+          <StatusBadge tone="accent">ADMIN</StatusBadge>
         </header>
         <div className="admin-toolbar">
           <span><ShieldCheck size={16} /> {roleLabels[me.role]}{me.bootstrap ? " · bootstrap" : ""}</span>
           <Button
             variant="outline"
             size="sm"
-            onPress={() => {
+            onClick={() => {
               if (view === "overview") void adminApi.overview().then(setOverview);
               if (view === "users") void loadUsers(users?.page);
               if (view === "workspaces") void loadWorkspaces(workspaces?.page);

@@ -14,10 +14,10 @@
 | `/dashboard/billing` | Dashboard | dashboard buttons | Hashpix actions and states | Migrated | typecheck pass |
 | `/dashboard/account` | Dashboard | no legacy dependency | Field, Button, status | Migrated | source audit pass |
 | `/dashboard/help` | Dashboard | raw search input | Input and reusable states | Migrated | typecheck pass |
-| `/admin` | Admin | HeroUI/local light system | shared tokens, Button, Badge | Audited | Baseline pass |
-| `/admin/users` | Admin | HeroUI/table controls | Table, Select, AlertDialog | Audited | Baseline pass |
-| `/admin/workspaces` | Admin | HeroUI/forms | Table, Field, Select, Dialog | Audited | Baseline pass |
-| `/admin/jobs` | Admin | HeroUI/actions | Table, Badge, AlertDialog | Audited | Baseline pass |
-| `/admin/audit` | Admin | HeroUI/list controls | Table, filters, Badge | Audited | Baseline pass |
+| `/admin` | Admin | local admin system | shadcn Button, Hashpix StatusBadge | Migrated | typecheck pass |
+| `/admin/users` | Admin | HeroUI/table controls | shadcn Button, Hashpix StatusBadge | Migrated | typecheck pass |
+| `/admin/workspaces` | Admin | HeroUI/forms | shadcn Button, Hashpix StatusBadge | Migrated | typecheck pass |
+| `/admin/jobs` | Admin | HeroUI/actions | shadcn Button, Hashpix StatusBadge | Migrated | typecheck pass |
+| `/admin/audit` | Admin | HeroUI/list controls | shadcn Button, Hashpix StatusBadge | Migrated | typecheck pass |
 
 Public `/` and `/blog/**` are excluded from migration and remain mandatory regression checks.
