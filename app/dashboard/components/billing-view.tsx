@@ -3,6 +3,7 @@
 import { ArrowRight, Check, Clock3, CreditCard, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ActionButton } from "@/components/hashpix/action-button";
+import { Button } from "@/components/ui/button";
 import { minutePackages, productPlans } from "@/packages/product-config/src";
 import { minuteTransactions as previewTransactions } from "../data";
 import {
@@ -134,7 +135,8 @@ export function BillingView() {
             const minutes = item.seconds / 60;
             const isPopular = item.code === popularPackageCode;
             return (
-              <button
+              <Button
+                variant={selected === minutes ? "secondary" : "outline"}
                 className={`${selected === minutes ? "is-selected" : ""} ${isPopular ? "is-popular" : ""}`}
                 type="button"
                 key={item.code}
@@ -149,7 +151,7 @@ export function BillingView() {
                 <strong>{minutes} минут</strong>
                 <p>{packageNotes[item.code] ?? `Действует ${item.expiresDays / 30} месяцев`}</p>
                 <b>{formatRubles(item.priceKopecks)}</b>
-              </button>
+              </Button>
             );
           })}
           <div className="billing-purchase-summary">

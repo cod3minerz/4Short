@@ -74,6 +74,11 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
   compositions are now imported from `components/hashpix`; the obsolete folder
   is empty and removed. Registry primitives remain exclusively in
   `components/ui`.
+- Control audit: internal route JSX no longer contains raw `<button>` controls;
+  profile, admin mobile controls, billing package choices, transcript words and
+  editor mobile modes use registry Button/ToggleGroup. HVE-G4 remains
+  `INSUFFICIENT` because no evidence corpus exists; preview geometry was not
+  changed.
 
 ## Structural locks
 

@@ -703,7 +703,7 @@ export function AdminConsole({ initialView = "overview" }: { initialView?: Admin
         <div className="admin-sidebar__brand">
           <Link href="/" aria-label="Hashpix — на главную"><Logo priority /></Link>
           <Badge variant="secondary">ADMIN</Badge>
-          <button type="button" onClick={() => setMenuOpen(false)} aria-label="Закрыть меню"><X size={21} /></button>
+          <Button variant="ghost" size="icon" type="button" onClick={() => setMenuOpen(false)} aria-label="Закрыть меню"><X size={21} /></Button>
         </div>
         <nav aria-label="Разделы админ-панели">
           {views.map(({ id, label, icon: Icon }) => (
@@ -720,10 +720,10 @@ export function AdminConsole({ initialView = "overview" }: { initialView?: Admin
           <LogOut size={17} />
         </div>
       </aside>
-      {menuOpen ? <button className="admin-backdrop" type="button" onClick={() => setMenuOpen(false)} aria-label="Закрыть меню" /> : null}
+      {menuOpen ? <Button variant="ghost" className="admin-backdrop" type="button" onClick={() => setMenuOpen(false)} aria-label="Закрыть меню" /> : null}
       <main className="admin-main">
         <header className="admin-mobile-header">
-          <button type="button" onClick={() => setMenuOpen(true)} aria-label="Открыть меню"><Menu size={21} /></button>
+          <Button variant="ghost" size="icon" type="button" onClick={() => setMenuOpen(true)} aria-label="Открыть меню"><Menu size={21} /></Button>
           <Logo />
           <Badge variant="secondary">ADMIN</Badge>
         </header>

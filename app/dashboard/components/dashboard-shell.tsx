@@ -15,6 +15,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import { Logo } from "../../components/logo";
 import { ControlApiError, signOut } from "../lib/control-api";
 import { useDashboardStore } from "../store";
@@ -116,11 +117,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             </Link>
             <DropdownMenu>
               <DropdownMenuTrigger
-                render={<button className="dash-profile-menu" type="button" aria-label="Открыть меню профиля">
+                render={<Button variant="ghost" className="dash-profile-menu" type="button" aria-label="Открыть меню профиля">
                 <span className="dash-profile-menu__avatar">{initial}</span>
                 <span className="dash-profile-menu__name">{displayName}</span>
                 <ChevronDown size={14} />
-                </button>}
+                </Button>}
               />
               <DropdownMenuContent align="end" className="dash-profile-menu__popover hp-overlay-scope">
                 <DropdownMenuGroup>

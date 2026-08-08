@@ -29,9 +29,10 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ActionButton, IconButton } from "@/components/hashpix/action-button";
 import { ChoiceSelect, ChoiceSwitch } from "@/components/hashpix/choice-controls";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { defaultClipEditorState, transcript } from "../data";
-import { handleTablistKeyDown } from "../lib/a11y";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   applyEditorDraftCommands,
   commitEditorDraft,
@@ -1098,21 +1099,25 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
         </div>
       ) : null}
 
-      <div className="clip-editor__mobile-tabs" role="tablist" aria-label="Панели редактора" onKeyDown={handleTablistKeyDown}>
+      <ToggleGroup
+        className="clip-editor__mobile-tabs"
+        aria-label="Панели редактора"
+        value={[mobilePanel]}
+        onValueChange={(value) => {
+          const next = value[0] as typeof mobilePanel | undefined;
+          if (next) setMobilePanel(next);
+        }}
+      >
         {(["text", "tools", "properties"] as const).map((panel) => (
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mobilePanel === panel}
-            tabIndex={mobilePanel === panel ? 0 : -1}
+          <ToggleGroupItem
+            value={panel}
             className={mobilePanel === panel ? "is-active" : ""}
-            onClick={() => setMobilePanel(panel)}
             key={panel}
           >
             {panel === "text" ? "Текст" : panel === "tools" ? "Инструменты" : "Свойства"}
-          </button>
+          </ToggleGroupItem>
         ))}
-      </div>
+      </ToggleGroup>
 
       <div className={`clip-editor__workspace mobile-panel-${mobilePanel}`}>
         <aside className={`clip-transcript-panel ${leftOpen ? "" : "is-collapsed"}`}>
@@ -1128,7 +1133,8 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
           </label>
           <div className="clip-word-stream">
             {filteredWords.map((item, index) => (
-              <button
+              <Button
+                variant="ghost"
                 type="button"
                 className={`${item.seconds >= state.startSeconds && item.seconds <= state.endSeconds ? "is-in-range" : ""} ${selectedWord === item.id ? "is-selected" : ""}`}
                 title={`${item.speaker} · ${item.time}`}
@@ -1140,7 +1146,7 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
                 <i className={`${hiddenWords.includes(item.id) ? "is-hidden-caption" : ""} ${cutWords.includes(item.id) ? "is-cut" : ""}`}>
                   {wordEdits[item.id] ?? item.word}
                 </i>
-              </button>
+              </Button>
             ))}
           </div>
           <div className="clip-word-actions">
