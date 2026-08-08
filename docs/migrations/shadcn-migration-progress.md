@@ -33,6 +33,11 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 - `npm run build:vercel`: pass, 28 generated pages
 - `npm run audit:product-ui`: previous contract is superseded; it is not
   acceptance evidence for the canonical-preset pass.
+- Browser QA: `/sign-in` has one stock Input ring and no wrapper ring;
+  `/dashboard/projects` resolves the exact dark background, primary, border,
+  input, ring and `.625rem` radius values; profile menu aligns both actions
+  left and Escape returns focus to its trigger. No horizontal overflow in
+  these authenticated checks.
 
 ## Structural locks
 

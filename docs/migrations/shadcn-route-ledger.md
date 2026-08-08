@@ -2,12 +2,12 @@
 
 | Route | Area | Legacy dependencies | Target components | Status | Checks |
 | --- | --- | --- | --- | --- | --- |
-| `/sign-in` | Auth | custom focus/card styling | Button, Input, Field | Canonical preset pass | stock Input focus ring; typecheck, unit: 196 pass |
+| `/sign-in` | Auth | custom focus/card styling | Button, Input, Field | Canonical preset pass | stock Input focus ring verified: one 2px ring, wrapper has no shadow; no overflow |
 | `/sign-up` | Auth | shared AuthScreen | Button, Input, Label, Field | Migrated | typecheck, unit: 196 pass |
 | `/forgot-password` | Auth | shared AuthScreen | Button, Input, Label, Field | Migrated | typecheck, unit: 196 pass |
 | `/dashboard` | Dashboard | dashboard shell and wizard | product shell, shadcn forms and overlays | Migrated | typecheck, unit: 196 pass |
 | `/dashboard/new` | Dashboard | redirect only | dashboard route flow | Migrated | typecheck, unit: 196 pass |
-| `/dashboard/projects` | Dashboard | raw filter tabs | Button, Input, ToggleGroup, Dialog | Canonical preset pass | filters now use registry ToggleGroup; typecheck, unit: 196 pass |
+| `/dashboard/projects` | Dashboard | raw filter tabs | Button, Input, ToggleGroup, Dialog | Canonical preset pass | registry ToggleGroup; dark preset values and no overflow verified |
 | `/dashboard/projects/[id]` | Workspace | HeroUI controls/drawer | Hashpix choices, Sheet drawer, actions | Migrated | typecheck pass; HVE-G4 scaffold: INSUFFICIENT |
 | `/dashboard/projects/[id]/clips/[clipId]` | Editor | legacy dashboard actions/overlays | Hashpix choices, actions and shadcn Dialog | Migrated | typecheck pass; HVE-G4 scaffold: INSUFFICIENT |
 | `/dashboard/styles` | Dashboard | dashboard UI controls | Hashpix choices and actions | Migrated | typecheck pass |

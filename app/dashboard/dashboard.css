@@ -112,66 +112,9 @@
   --dash-warning-surface: color-mix(in oklch, oklch(0.828 0.189 84.429), transparent 88%);
   --dash-brand-youtube: #ff0033; /* YouTube brand red — not a semantic token */
 
-  /*
-   * HeroUI v3 reads component theming purely from these CSS custom
-   * properties (no <HeroUIProvider> in v3 — see the heroui-react skill).
-   * Scoped to .dash-shell rather than :root so the marketing pages,
-   * which share this same globals.css, are never affected. Values map
-   * onto the --dash-* tokens above wherever they mean the same thing,
-   * so hand-rolled and HeroUI components always render identically.
-   */
-  --radius: var(--dash-radius-control);
-  --field-radius: var(--dash-radius-control);
-  --border-width: 1px;
-  --surface: var(--dash-surface);
-  --surface-foreground: var(--ds-text);
-  --surface-secondary: var(--dash-surface-subtle);
-  --surface-secondary-foreground: var(--ds-text);
-  --surface-tertiary: var(--dash-surface-muted);
-  --surface-tertiary-foreground: var(--ds-text);
-  --overlay: var(--dash-surface);
-  --overlay-foreground: var(--ds-text);
-  --muted: var(--dash-text-muted);
-  --default: var(--dash-surface-muted);
-  --default-foreground: var(--ds-text);
-  --border: var(--dash-border);
-  --separator: var(--dash-border);
-  --accent: var(--hp-brand);
-  --accent-strong: var(--hp-brand-hover);
-  --accent-foreground: var(--hp-brand-foreground);
-  --field-background: var(--dash-surface);
-  --field-foreground: var(--ds-text);
-  --field-border: var(--dash-border);
-  --field-placeholder: var(--dash-text-muted);
-  --focus: var(--hp-focus-ring);
-  --success: var(--hp-success);
-  --success-foreground: var(--white);
-  --warning: var(--hp-warning);
-  --warning-foreground: var(--hp-canvas);
-  --danger: var(--hp-danger);
-  --danger-foreground: var(--white);
-
   min-height: 100dvh;
   background: var(--dash-bg);
   font-family: var(--font-manrope), Manrope, sans-serif;
-}
-
-/* HeroUI overlays render in a portal below <body>, outside .dash-shell.
-   They therefore need the same semantic values explicitly or they fall back
-   to the marketing site's blue accent. */
-.hp-overlay-scope {
-  --accent: var(--hp-brand);
-  --accent-strong: var(--hp-brand-hover);
-  --accent-foreground: var(--hp-brand-foreground);
-  --surface: var(--hp-surface);
-  --surface-secondary: var(--hp-surface-raised);
-  --surface-tertiary: var(--hp-surface-subtle);
-  --overlay: var(--hp-surface);
-  --overlay-foreground: var(--hp-text);
-  --border: var(--hp-line);
-  --separator: var(--hp-line);
-  --focus: var(--hp-focus-ring);
-  color: var(--hp-text);
 }
 
 /*
