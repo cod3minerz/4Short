@@ -86,6 +86,10 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 - Internal/marketing boundary pass: product CSS no longer reads the landing
   `--ds-*` palette; those legacy variables remain landing-only so public pages
   stay visually unchanged.
+- Contrast pass: billing credit value and help article headings now use the
+  dark-product `foreground` role. Both mobile screens were inspected at 360px;
+  a programmatic visible-text audit found no internal text resolved to the
+  light-root foreground token.
 
 ## Structural locks
 

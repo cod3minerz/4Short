@@ -593,7 +593,7 @@
 .wizard-source-library__media {
   flex: 0 0 72px;
   width: 72px;
-  border-radius: 10px;
+  border-radius: var(--radius);
 }
 
 .wizard-source-library button > span {
@@ -728,7 +728,7 @@
   align-items: center;
   gap: 10px;
   margin-top: 8px;
-  color: var(--accent);
+  color: var(--foreground);
   font-family: inherit;
   font-size: 40px;
   line-height: 1;
@@ -1688,11 +1688,12 @@
   align-items: center;
   gap: 12px;
   padding: 13px 4px;
+  color: var(--foreground);
 }
 .help-list a + a { border-top: 1px solid var(--border); }
 .help-list a > span { width: 32px; height: 32px; display: grid; place-items: center; border-radius: var(--radius-sm); background: color-mix(in oklch, var(--primary), transparent 90%); color: var(--primary-foreground); }
 .help-list small { color: var(--muted-foreground); font-size: 10px; }
-.help-list h2 { margin-top: 3px; font-size: 16px; line-height: 1.35; }
+.help-list h2 { margin-top: 3px; color: inherit; font-size: 16px; line-height: 1.35; }
 .help-list p { margin-top: 5px; color: color-mix(in oklch, var(--foreground), transparent 28%); font-size: 13px; line-height: 1.45; }
 .help-contact {
   display: grid;
@@ -2229,15 +2230,10 @@
 .clip-switch-row > span { font-size: 11px; }
 .clip-field { gap: 5px; margin-top: 10px; font-size: 10px; }
 .clip-field :is(input, select, textarea) {
-  outline: 0;
   min-height: 34px;
   padding: 7px 8px;
   border-radius: var(--radius-sm);
   font-size: 11px;
-}
-.clip-field :is(input, select, textarea):focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
 }
 .clip-upload-asset { min-height: 34px; margin-top: 10px; border-radius: var(--radius-sm); font-size: 10px; }
 .clip-help-text { margin-top: 8px; font-size: 9px; }
@@ -2278,7 +2274,6 @@
   transition: border-color 150ms ease, background 150ms ease;
 }
 .hp-selectable-row:hover { border-color: var(--ring); background: var(--secondary); }
-.hp-selectable-row:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 .hp-selectable-row.is-selected { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 12%, var(--card)); }
 .hp-selectable-row__leading { flex: 0 0 16px; display: grid; place-items: center; padding-top: 2px; color: var(--primary); }
 .hp-selectable-row__copy { display: grid; gap: 2px; min-width: 0; }
@@ -2357,7 +2352,7 @@
 .media-thumb {
   position: relative;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: var(--radius);
   background: var(--muted);
 }
 .media-thumb--16x9 { aspect-ratio: 16 / 9; }
@@ -2494,7 +2489,7 @@
   margin-top: 16px;
   padding: 20px;
   border: 1px solid var(--border);
-  border-radius: 21px;
+  border-radius: var(--radius);
   background: var(--secondary);
 }
 
@@ -3338,7 +3333,7 @@
   gap: 10px;
   padding: 30px;
   border: 1px dashed var(--ring);
-  border-radius: 24px;
+  border-radius: var(--radius);
   background: var(--card);
   text-align: center;
 }
@@ -4188,13 +4183,6 @@
 .wizard button,
 .wizard a {
   -webkit-tap-highlight-color: transparent;
-}
-
-.dash-shell :is(button, a, input, select, textarea):focus-visible,
-.editor-focus-shell :is(button, a, input, select, textarea):focus-visible,
-.wizard :is(button, a, input, select, textarea):focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
 }
 
 .dash-nav--utility a {
