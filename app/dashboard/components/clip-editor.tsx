@@ -971,9 +971,9 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
         align: "center",
         color: state.primaryColor,
         activeColor: state.activeColor,
-        // Canvas selection remains neutral in the dark product theme; blue is
-        // reserved for user media, never editor chrome.
-        outlineColor: "var(--hp-canvas)",
+        // Serialized renderer input must be a concrete contract-valid hex
+        // color, not a CSS variable. This is the canonical dark preset canvas.
+        outlineColor: "#0a0a0b",
         outlinePx: 4,
         shadow: true,
         background: state.subtitlePreset === "minimal_box",
@@ -1388,7 +1388,7 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
                       text="Abc"
                       preset={preset.id}
                       animate={false}
-                      color="var(--hp-text)"
+                      color="var(--foreground)"
                       activeColor={state.activeColor}
                     />
                   ),

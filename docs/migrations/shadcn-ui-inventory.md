@@ -27,9 +27,9 @@ The inventory is closed only when graph and source audits find no internal HeroU
 
 ## Finalisation audit note (2026-08-08)
 
-The residual legacy risk is concentrated in `app/dashboard/dashboard.css`: it
-still contains the temporary `--hp-*` bridge and duplicate late override
-blocks. Route components with raw controls are explicitly queued in the
+The residual legacy risk is concentrated in duplicate dashboard layout blocks
+and `--dash-*` geometry aliases. The temporary `--hp-*` bridge has been
+removed. Route components with raw controls are explicitly queued in the
 migration progress document; media range inputs are excluded because they are
 editor-native controls, not generic form primitives.
 

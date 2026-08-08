@@ -27,9 +27,9 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 
 ## Active finalisation queue
 
-1. Retire the `--hp-*` compatibility bridge and the duplicate dashboard CSS
-   override blocks. Obsolete HeroUI modal/drawer and `.hp-action` selector
-   families are now removed; the remaining bridge is limited to layout rules.
+1. Audit residual `--dash-*` layout aliases and duplicate dashboard CSS blocks.
+   The `--hp-*` compatibility bridge is deleted; obsolete HeroUI modal/drawer
+   and `.hp-action` selector families are also removed.
 2. Replace raw route controls in styles, billing, workspace, wizard and editor
    with installed Button/Input/Select/Switch/ToggleGroup primitives; preserve
    native range controls only where they are media-editor inputs.
@@ -65,6 +65,11 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
   drawer style choices now use registry Button/ToggleGroup/Input. The obsolete
   `app/admin/admin.css` cascade is deleted; admin is rendered exclusively by
   the full-viewport canonical token stylesheet.
+- Token-retirement pass: `rg -- '--hp-' app components` returns no matches.
+  Dashboard/editor CSS now resolves directly to the canonical preset roles;
+  the editor sends the contract-valid `#0a0a0b` subtitle outline rather than
+  leaking a CSS variable into the render EDL. HVE-G4 remains `INSUFFICIENT`
+  because the repository only provides a scaffold gate, never a false PASS.
 
 ## Structural locks
 
