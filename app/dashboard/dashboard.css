@@ -5167,6 +5167,92 @@
   border-top: 1px solid var(--border);
   background: var(--background);
 }
+
+/* The styles route has three distinct jobs: choose a real saved preset,
+   inspect its subtitle treatment without inventing footage, then change the
+   persisted controls. Keep those jobs in separate columns instead of making
+   a long, ambiguous form. */
+.styles-layout {
+  grid-template-columns: minmax(210px, 250px) minmax(250px, .8fr) minmax(360px, 480px);
+  gap: 20px;
+}
+.styles-library {
+  position: sticky;
+  top: 20px;
+}
+.style-preview {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+.style-preview__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 600;
+}
+.style-preview__format {
+  padding: 3px 7px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 500;
+}
+.style-preview__stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 420px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--muted);
+}
+.style-preview__stage::before {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(145deg, color-mix(in oklch, var(--card), transparent 10%), color-mix(in oklch, var(--background), transparent 6%));
+  content: "";
+}
+.style-preview__safe-zone {
+  position: absolute;
+  z-index: 1;
+  inset: 9% 12%;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+.style-preview__stage .subtitle-overlay { z-index: 2; }
+.style-preview__empty {
+  position: relative;
+  z-index: 2;
+  max-width: 180px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+}
+.style-preview__note { color: var(--muted-foreground); font-size: 11px; line-height: 1.4; }
+
+@media (max-width: 1280px) {
+  .styles-layout { grid-template-columns: minmax(200px, 240px) minmax(0, 1fr); }
+  .style-preview { grid-column: 2; }
+  .styles-editor-column { grid-column: 2; }
+}
+@media (max-width: 720px) {
+  .styles-layout { grid-template-columns: 1fr; }
+  .styles-library { position: static; flex-direction: row; overflow-x: auto; padding-bottom: 2px; scroll-snap-type: x proximity; }
+  .style-preview, .styles-editor-column { grid-column: auto; }
+  .style-preview__stage { min-height: 360px; }
+}
 .project-storage {
   padding: 1rem;
   border-radius: var(--radius-lg);
@@ -5203,6 +5289,11 @@
   text-align: right;
 }
 .wizard-source-ready__info > button { margin-top: 14px; color: var(--muted-foreground); }
+.wizard-platform-label { margin: 14px 0 6px; color: var(--muted-foreground); font-size: 11px; }
+.wizard-platform-row { gap: 12px; }
+.wizard-platform-row li { gap: 6px; color: var(--muted-foreground); font-size: 12px; }
+.platform-logo { width: 15px; height: 15px; flex: 0 0 auto; object-fit: contain; }
+.wizard-source-ready__kind .platform-logo { width: 17px; height: 17px; }
 .wizard-source-library button { min-height: 74px; padding: 8px; background: var(--card); }
 .wizard-source-library__media { flex-basis: 96px; width: 96px; }
 .wizard-source-library button > svg { margin-inline: 4px; color: var(--muted-foreground); }

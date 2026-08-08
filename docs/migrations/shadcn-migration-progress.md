@@ -90,6 +90,15 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
   dark-product `foreground` role. Both mobile screens were inspected at 360px;
   a programmatic visible-text audit found no internal text resolved to the
   light-root foreground token.
+- Source-flow and styles refinement: `/dashboard` now separates the real
+  source modes, an exact platform support row and the verified-source facts
+  from the later configuration steps. The four platform marks are local,
+  official brand assets; no Lucide substitute is used for them. `/dashboard/styles`
+  now has a responsive saved-style library, an honest subtitle-only preview
+  (never invented video media) and the actual persisted inspector. Browser
+  QA at 1440px and 360px reports no overflow or console errors. The confirmed
+  source card still requires a real retained source, so it remains an evidence
+  task rather than a fabricated success state.
 
 ## Structural locks
 

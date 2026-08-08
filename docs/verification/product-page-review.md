@@ -33,13 +33,14 @@ Use this sheet for every changed authenticated product route before it is descri
 
 ## Product-system check
 
-- [ ] All forward actions use the shared `ActionButton` primitive.
-- [ ] All icon-only actions have a named `IconButton` and `aria-label`.
+- [ ] All forward actions use a stock shadcn `Button` or the functional
+  `ActionButton` composition.
+- [ ] All icon-only actions use a named shadcn button and `aria-label`.
 - [ ] Choice rows use a semantic selector; they are not decorative cards.
-- [ ] New controls use only `--hp-*` tokens and documented sizes/radii.
-- [ ] A light action remains neutral on hover and pressed; it does not become brand blue.
-- [ ] Product chrome contains no blue state. Blue may appear only in actual
-  user media or an explicitly configured brand asset.
+- [ ] New controls use only canonical `b38miVLH6` CSS roles and
+  `--radius: .625rem`; no `--hp-*` bridge is introduced.
+- [ ] Primary actions use the preset indigo variant; neutral actions remain
+  neutral on hover and pressed.
 - [ ] No unsupported HVE capability looks executable.
 - [ ] Overlay surfaces use glass only above media or an ambient canvas.
 

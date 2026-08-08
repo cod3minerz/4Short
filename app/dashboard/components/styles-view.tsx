@@ -19,6 +19,7 @@ import type { StylePreset } from "../types";
 import { PageHeading } from "./page-heading";
 import { ColorField } from "@/components/hashpix/color-field";
 import { LockedField } from "@/components/hashpix/locked-field";
+import { SubtitlePreviewOverlay } from "@/components/hashpix/subtitle-preview-overlay";
 
 const subtitlePresets = [
   { id: "clean", label: "Clean", description: "Спокойный текст без подложки и анимации" },
@@ -148,6 +149,32 @@ export function StylesView() {
             <Plus size={20} />
             <span><strong>Создать новый стиль</strong><small>Настройте субтитры, кадр и брендирование</small></span>
           </Button>
+        </section>
+
+        <section className="style-preview" aria-labelledby="style-preview-title">
+          <div className="style-preview__toolbar">
+            <span id="style-preview-title">Предпросмотр субтитров</span>
+            <span className="style-preview__format">9:16</span>
+          </div>
+          <div className="style-preview__stage">
+            <div className="style-preview__safe-zone" aria-hidden="true" />
+            {active.captions === "Выключены" ? (
+              <p className="style-preview__empty">Субтитры выключены в этом стиле</p>
+            ) : (
+              <SubtitlePreviewOverlay
+                animate={false}
+                activeIndex={1}
+                color={active.colors[0]}
+                activeColor={active.colors[1]}
+                fontFamily={active.fontFamily}
+                fontSize={64}
+                position={active.subtitlePosition}
+                preset={active.subtitlePreset}
+                text="Настройте субтитры под ваш формат"
+              />
+            )}
+          </div>
+          <p className="style-preview__note">Это текстовый preview стиля. Видео появится только из добавленного вами источника.</p>
         </section>
 
         <div className="styles-editor-column">

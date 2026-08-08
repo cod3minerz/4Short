@@ -10,7 +10,6 @@ import {
   ArrowRight,
   Check,
   ChevronDown,
-  Clapperboard,
   FileUp,
   Frame,
   Zap,
@@ -22,10 +21,8 @@ import {
   SlidersHorizontal,
   Sparkles,
   Subtitles,
-  Twitch,
   UploadCloud,
   WandSparkles,
-  Youtube,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -49,6 +46,7 @@ import { InfoPanel } from "@/components/hashpix/info-panel";
 import { LockedField } from "@/components/hashpix/locked-field";
 import { MediaThumb } from "@/components/hashpix/media-thumb";
 import { OptionCard } from "@/components/hashpix/option-card";
+import { PlatformLogo } from "@/components/hashpix/platform-logo";
 import { ProcessingCard } from "@/components/hashpix/processing-card";
 import { RangeTimeline } from "@/components/hashpix/range-timeline";
 import { Stepper } from "@/components/hashpix/stepper";
@@ -61,10 +59,10 @@ import { ValueBadge } from "@/components/hashpix/value-badge";
  * shown as supported platforms; see backend-capability-map before adding more.
  */
 const SUPPORTED_PLATFORMS = [
-  { host: "youtube.com", altHost: "youtu.be", label: "YouTube", icon: Youtube },
-  { host: "vk.com", altHost: "vkvideo.ru", label: "VK Видео", icon: Clapperboard },
-  { host: "rutube.ru", altHost: null, label: "RuTube", icon: Clapperboard },
-  { host: "twitch.tv", altHost: "clips.twitch.tv", label: "Twitch", icon: Twitch },
+  { host: "youtube.com", altHost: "youtu.be", label: "YouTube", logo: "youtube" },
+  { host: "vk.com", altHost: "vkvideo.ru", label: "VK Видео", logo: "vk" },
+  { host: "rutube.ru", altHost: null, label: "RuTube", logo: "rutube" },
+  { host: "twitch.tv", altHost: "clips.twitch.tv", label: "Twitch", logo: "twitch" },
 ] as const;
 
 function detectPlatform(url: string) {
@@ -546,7 +544,7 @@ export function NewProjectWizard({
                   <OptionCard
                     icon={<Link2 size={19} />}
                     title="Ссылка"
-                    description="YouTube, VK, RuTube, Twitch"
+                    description="YouTube, VK Видео, RuTube, Twitch"
                     selected={sourceMode === "url"}
                     onSelect={() => { setSourceMode("url"); setError(""); }}
                   />
@@ -575,9 +573,10 @@ export function NewProjectWizard({
                         {verifying ? "Проверяем…" : "Проверить"}
                       </ActionButton>
                     </div>
+                    <p className="wizard-platform-label">Поддерживаемые площадки</p>
                     <ul className="wizard-platform-row" aria-label="Поддерживаемые площадки">
                       {SUPPORTED_PLATFORMS.map((platform) => (
-                        <li key={platform.host}><platform.icon size={15} />{platform.label}</li>
+                        <li key={platform.host}><PlatformLogo name={platform.logo} />{platform.label}</li>
                       ))}
                     </ul>
                   </div>
@@ -685,7 +684,7 @@ export function NewProjectWizard({
                 >
                   <span className="wizard-source-ready__kind">
                     {sourceType === "url"
-                      ? (sourcePlatform ? <sourcePlatform.icon size={17} /> : <Link2 size={17} />)
+                      ? (sourcePlatform ? <PlatformLogo name={sourcePlatform.logo} /> : <Link2 size={17} />)
                       : sourceType === "existing" ? <History size={17} /> : <FileUp size={17} />}
                   </span>
                 </MediaThumb>
