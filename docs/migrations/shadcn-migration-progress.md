@@ -22,21 +22,17 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 - [x] Styles, billing, account and help
 - [x] Admin routes
 - [ ] Global notifications (Sonner registry package is blocked by repeated npm `ECONNRESET`; existing inline field and autosave feedback remain intentionally inline)
-- [ ] Legacy product CSS selector retirement (in progress; preset values now bridge remaining selectors)
+- [x] Legacy visual-token retirement (`--hp-*`, `--dash-*`, `--ink` and `--white` product bridges removed)
 - [ ] Full automated and browser acceptance
 
 ## Active finalisation queue
 
-1. Audit residual `--dash-*` layout aliases and duplicate dashboard CSS blocks.
-   The `--hp-*` compatibility bridge is deleted; obsolete HeroUI modal/drawer
-   and `.hp-action` selector families are also removed.
-2. Replace raw route controls in styles, billing, workspace, wizard and editor
-   with installed Button/Input/Select/Switch/ToggleGroup primitives; preserve
-   native range controls only where they are media-editor inputs.
-3. Replace the remaining raw administrative navigation controls with shadcn
-   Buttons and remove the obsolete first-generation admin stylesheet.
-4. Re-run the complete browser route/state matrix, then only mark acceptance
-   complete when no legacy visual system remains.
+1. Add the global Sonner registry primitive when the package registry is
+   reachable; retain inline field and autosave feedback by design.
+2. Re-run the complete authenticated browser route/state matrix, including a
+   real dynamic workspace/editor record and every overlay state.
+3. Close only the evidence tasks that the repository can actually prove:
+   HVE-G4 is still a scaffold and must remain `INSUFFICIENT`, never PASS.
 
 ## Baseline evidence
 
@@ -65,8 +61,8 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
   drawer style choices now use registry Button/ToggleGroup/Input. The obsolete
   `app/admin/admin.css` cascade is deleted; admin is rendered exclusively by
   the full-viewport canonical token stylesheet.
-- Token-retirement pass: `rg -- '--hp-' app components` returns no matches.
-  Dashboard/editor CSS now resolves directly to the canonical preset roles;
+- Token-retirement pass: `rg -- '--(hp|dash|ink|white)-' app/dashboard app/admin app/sign-in components`
+  returns no matches. Dashboard/editor CSS now resolves directly to the canonical preset roles;
   the editor sends the contract-valid `#0a0a0b` subtitle outline rather than
   leaking a CSS variable into the render EDL. HVE-G4 remains `INSUFFICIENT`
   because the repository only provides a scaffold gate, never a false PASS.
@@ -79,6 +75,10 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
   editor mobile modes use registry Button/ToggleGroup. HVE-G4 remains
   `INSUFFICIENT` because no evidence corpus exists; preview geometry was not
   changed.
+- Direct-token pass: the dashboard shell uses Geist and the preset roles
+  directly, without a second Hashpix alias palette or radius scale. Browser QA
+  confirms `/dashboard/styles` at 1280px and 360px has no horizontal overflow;
+  a real `test@hashpix.local` Better Auth sign-in reaches `/dashboard/projects`.
 
 ## Structural locks
 
@@ -86,7 +86,6 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 - Preserve all API, database, HVE document and routing contracts.
 - Internal routes use the canonical `b38miVLH6` `base-mira` roles verbatim:
   `--radius: .625rem`, neutral surfaces, indigo primary and stock Base UI
-  focus treatment. A temporary CSS bridge maps residual legacy selectors to
-  those exact roles while the selectors are retired.
+  focus treatment; no product token bridge remains.
 - Public landing and blog remain visually unchanged.
 - Unsupported HVE capabilities remain `LockedField` controls with truthful reasons.
