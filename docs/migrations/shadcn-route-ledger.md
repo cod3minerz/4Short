@@ -2,7 +2,7 @@
 
 | Route | Area | Legacy dependencies | Target components | Status | Checks |
 | --- | --- | --- | --- | --- | --- |
-| `/sign-in` | Auth | custom focus/card styling | Button, Input, Field | Canonical preset pass | stock Input focus ring verified: one 2px ring, wrapper has no shadow; no overflow |
+| `/sign-in` | Auth | custom focus/card styling | Button, Input, Field | Canonical preset pass | 360px browser focus QA: stock Input has one 2px ring, global outline is suppressed only on registry Input, wrapper has no shadow; Geist heading, no overflow or console errors |
 | `/sign-up` | Auth | shared AuthScreen | Button, Input, Label, Field | Migrated | typecheck, unit: 196 pass |
 | `/forgot-password` | Auth | shared AuthScreen | Button, Input, Label, Field | Migrated | typecheck, unit: 196 pass |
 | `/dashboard` | Dashboard | dashboard shell and wizard | Button, Input, Dialog, ActionButton, real platform assets | Canonical source-flow pass | 1280/360 browser QA: no overflow or console errors; source-mode controls work; source-confirmed state remains evidence-blocked until a real retained source is available |

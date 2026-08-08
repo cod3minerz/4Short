@@ -100,6 +100,10 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
   QA at 1440px and 360px reports no overflow or console errors. The confirmed
   source card still requires a real retained source, so it remains an evidence
   task rather than a fabricated success state.
+- Auth focus refinement: the product auth Input suppresses the public-site
+  fallback outline only for its registry input slot, leaving the stock shadcn
+  ring as the single focus signal. The auth title uses Geist; 360px browser QA
+  found no overflow or console error.
 
 ## Structural locks
 
