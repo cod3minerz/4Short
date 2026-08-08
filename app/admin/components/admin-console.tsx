@@ -1,8 +1,9 @@
 "use client";
 
-import { StatusBadge } from "@/components/hashpix/status-badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Activity,
   ArrowLeft,
@@ -44,6 +45,19 @@ import {
 
 export type AdminView = "overview" | "users" | "workspaces" | "jobs" | "audit";
 type Notice = { tone: "success" | "danger"; text: string } | null;
+type AdminBootstrap = { me: AdminMe; overview: AdminOverview };
+
+let bootstrapSnapshot: AdminBootstrap | null = null;
+let bootstrapRequest: Promise<AdminBootstrap> | null = null;
+
+function loadAdminBootstrap() {
+  if (bootstrapSnapshot) return Promise.resolve(bootstrapSnapshot);
+  bootstrapRequest ??= Promise.all([adminApi.me(), adminApi.overview()]).then(([me, overview]) => {
+    bootstrapSnapshot = { me, overview };
+    return bootstrapSnapshot;
+  });
+  return bootstrapRequest;
+}
 
 const views: Array<{ id: AdminView; label: string; icon: typeof Gauge }> = [
   { id: "overview", label: "Обзор", icon: Gauge },
@@ -90,11 +104,11 @@ function formatMinutes(seconds: number) {
   return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: 1 }).format(seconds / 60);
 }
 
-function statusColor(status: string): "neutral" | "success" | "warning" | "danger" | "accent" {
-  if (["ready", "succeeded", "active"].includes(status)) return "success";
-  if (["failed", "suspended", "cancelled"].includes(status)) return "danger";
-  if (["queued", "draft"].includes(status)) return "warning";
-  return "neutral";
+function statusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
+  if (["failed", "suspended", "cancelled"].includes(status)) return "destructive";
+  if (["queued", "draft"].includes(status)) return "secondary";
+  if (["ready", "succeeded", "active"].includes(status)) return "default";
+  return "outline";
 }
 
 function EmptyState({ children }: { children: React.ReactNode }) {
@@ -179,9 +193,9 @@ function OverviewView({ data }: { data: AdminOverview | null }) {
         <section className="admin-panel">
           <div className="admin-panel__head">
             <div><Server size={19} /><h2>Media workers</h2></div>
-            <StatusBadge tone={data.workers.some((worker) => worker.online) ? "success" : "danger"}>
+            <Badge variant={data.workers.some((worker) => worker.online) ? "default" : "destructive"}>
               {data.workers.filter((worker) => worker.online).length} онлайн
-            </StatusBadge>
+            </Badge>
           </div>
           {data.workers.length ? (
             <div className="admin-worker-list">
@@ -266,28 +280,31 @@ function UsersView({
                       <small>{user.memberships[0]?.workspaceName ?? "Нет аккаунта"}</small>
                     </td>
                     <td data-label="Роль платформы">
-                      <select
+                      <Select
                         aria-label={`Роль ${user.email}`}
                         value={user.platformRole}
                         disabled={!me.permissions.rolesWrite || user.id === me.id || busy === user.id}
-                        onChange={(event) => void mutate(
+                        onValueChange={(value) => { if (value) void mutate(
                           user.id,
-                          () => adminApi.updateUserRole(user.id, event.target.value as PlatformRole),
+                          () => adminApi.updateUserRole(user.id, value as PlatformRole),
                           "Роль пользователя обновлена",
-                        )}
+                        ); }}
                       >
-                        {Object.entries(roleLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                      </select>
+                        <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                        <SelectContent className="hp-overlay-scope">
+                          {Object.entries(roleLabels).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </td>
                     <td data-label="Статус">
-                      <StatusBadge tone={statusColor(user.status)}>
+                      <Badge variant={statusVariant(user.status)}>
                         {user.status === "active" ? "Активен" : "Заблокирован"}
-                      </StatusBadge>
+                      </Badge>
                     </td>
                     <td data-label="Действия">
                       {user.status === "active" ? (
                         <div className="admin-inline-action">
-                          <input
+                          <Input
                             aria-label={`Причина блокировки ${user.email}`}
                             placeholder="Причина"
                             value={reason[user.id] ?? ""}
@@ -390,7 +407,7 @@ function WorkspacesView({
                 <article className="admin-workspace-card" key={workspace.id}>
                   <div className="admin-workspace-card__head">
                     <div><strong>{workspace.name}</strong><small>{workspace.slug}</small></div>
-                    <StatusBadge tone="accent">{planLabels[workspace.planCode]}</StatusBadge>
+                    <Badge variant="secondary">{planLabels[workspace.planCode]}</Badge>
                   </div>
                   <dl>
                     <div><dt>Баланс</dt><dd>{formatMinutes(workspace.availableSeconds)} мин.</dd></div>
@@ -400,22 +417,25 @@ function WorkspacesView({
                   <div className="admin-workspace-actions">
                     <label>
                       <span>Тариф</span>
-                      <select
+                      <Select
                         value={workspace.planCode}
                         disabled={!me.permissions.workspacesWrite || busy === workspace.id}
-                        onChange={(event) => void mutate(
+                        onValueChange={(value) => { if (value) void mutate(
                           workspace.id,
-                          () => adminApi.updateWorkspacePlan(workspace.id, event.target.value as AdminWorkspace["planCode"]),
+                          () => adminApi.updateWorkspacePlan(workspace.id, value as AdminWorkspace["planCode"]),
                           "Тариф аккаунта обновлён",
-                        )}
+                        ); }}
                       >
-                        {Object.entries(planLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                      </select>
+                        <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                        <SelectContent className="hp-overlay-scope">
+                          {Object.entries(planLabels).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </label>
                     <div className="admin-adjustment">
                       <label>
                         <span>Минуты, можно со знаком −</span>
-                        <input
+                        <Input
                           inputMode="numeric"
                           placeholder="+60"
                           value={adjustment.minutes}
@@ -424,7 +444,7 @@ function WorkspacesView({
                       </label>
                       <label>
                         <span>Основание</span>
-                        <input
+                        <Input
                           placeholder="Компенсация"
                           value={adjustment.reason}
                           onChange={(event) => updateAdjustment(workspace.id, { reason: event.target.value })}
@@ -503,7 +523,7 @@ function JobsView({
                     <td data-label="Задача"><strong>{job.type}</strong><small>{job.class} · {job.id.slice(0, 8)}</small></td>
                     <td data-label="Аккаунт / проект"><strong>{job.workspaceName}</strong><small>{job.projectTitle ?? "Системная задача"}</small></td>
                     <td data-label="Попытка">{job.attemptCount} / {job.maxAttempts}</td>
-                    <td data-label="Статус"><StatusBadge tone={statusColor(job.status)}>{job.status}</StatusBadge></td>
+                    <td data-label="Статус"><Badge variant={statusVariant(job.status)}>{job.status}</Badge></td>
                     <td data-label="Обновлена">{formatDate(job.updatedAt)}</td>
                     <td data-label="Действия">
                       <div className="admin-job-actions">
@@ -581,8 +601,8 @@ function AuditView({
 export function AdminConsole({ initialView = "overview" }: { initialView?: AdminView }) {
   const view = initialView;
   const [menuOpen, setMenuOpen] = useState(false);
-  const [me, setMe] = useState<AdminMe | null>(null);
-  const [overview, setOverview] = useState<AdminOverview | null>(null);
+  const [me, setMe] = useState<AdminMe | null>(() => bootstrapSnapshot?.me ?? null);
+  const [overview, setOverview] = useState<AdminOverview | null>(() => bootstrapSnapshot?.overview ?? null);
   const [users, setUsers] = useState<Paginated<AdminUser> | null>(null);
   const [workspaces, setWorkspaces] = useState<Paginated<AdminWorkspace> | null>(null);
   const [jobs, setJobs] = useState<Paginated<AdminJob> | null>(null);
@@ -591,7 +611,7 @@ export function AdminConsole({ initialView = "overview" }: { initialView?: Admin
     overview: "", users: "", workspaces: "", jobs: "", audit: "",
   });
   const [access, setAccess] = useState<"loading" | "ready" | "unconfigured" | "denied">(
-    isAdminApiConfigured() ? "loading" : "unconfigured",
+    !isAdminApiConfigured() ? "unconfigured" : bootstrapSnapshot ? "ready" : "loading",
   );
   const [error, setError] = useState("");
   const [notice, setNotice] = useState<Notice>(null);
@@ -599,7 +619,7 @@ export function AdminConsole({ initialView = "overview" }: { initialView?: Admin
   useEffect(() => {
     if (!isAdminApiConfigured()) return;
     let active = true;
-    void Promise.all([adminApi.me(), adminApi.overview()]).then(([actor, summary]) => {
+    void loadAdminBootstrap().then(({ me: actor, overview: summary }) => {
       if (!active) return;
       setMe(actor);
       setOverview(summary);
@@ -663,7 +683,7 @@ export function AdminConsole({ initialView = "overview" }: { initialView?: Admin
       <aside className={`admin-sidebar ${menuOpen ? "is-open" : ""}`}>
         <div className="admin-sidebar__brand">
           <Link href="/" aria-label="Hashpix — на главную"><Logo priority /></Link>
-          <StatusBadge tone="accent">ADMIN</StatusBadge>
+          <Badge variant="secondary">ADMIN</Badge>
           <button type="button" onClick={() => setMenuOpen(false)} aria-label="Закрыть меню"><X size={21} /></button>
         </div>
         <nav aria-label="Разделы админ-панели">
@@ -686,7 +706,7 @@ export function AdminConsole({ initialView = "overview" }: { initialView?: Admin
         <header className="admin-mobile-header">
           <button type="button" onClick={() => setMenuOpen(true)} aria-label="Открыть меню"><Menu size={21} /></button>
           <Logo />
-          <StatusBadge tone="accent">ADMIN</StatusBadge>
+          <Badge variant="secondary">ADMIN</Badge>
         </header>
         <div className="admin-toolbar">
           <span><ShieldCheck size={16} /> {roleLabels[me.role]}{me.bootstrap ? " · bootstrap" : ""}</span>

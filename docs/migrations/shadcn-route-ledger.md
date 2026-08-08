@@ -10,14 +10,14 @@
 | `/dashboard/projects` | Dashboard | raw filter tabs | Button, Input, ToggleGroup, Dialog | Canonical preset pass | registry ToggleGroup; dark preset values and no overflow verified |
 | `/dashboard/projects/[id]` | Workspace | HeroUI controls/drawer | Hashpix choices, Sheet drawer, actions | Migrated | typecheck pass; HVE-G4 scaffold: INSUFFICIENT |
 | `/dashboard/projects/[id]/clips/[clipId]` | Editor | legacy dashboard actions/overlays | Hashpix choices, actions and shadcn Dialog | Migrated | typecheck pass; HVE-G4 scaffold: INSUFFICIENT |
-| `/dashboard/styles` | Dashboard | dashboard UI controls | Hashpix choices and actions | Migrated | typecheck pass |
+| `/dashboard/styles` | Dashboard | legacy universal button/type rules | Button, Input, Select, Switch | Canonical preset pass | labels stack correctly; save button is 12px/36px/10px radius; no overflow |
 | `/dashboard/billing` | Dashboard | dashboard buttons | Hashpix actions and states | Migrated | typecheck pass |
 | `/dashboard/account` | Dashboard | no legacy dependency | Field, LockedField, Button, status | Canonical preset pass | authenticated session QA; 2FA remains honestly locked |
 | `/dashboard/help` | Dashboard | raw search input | Input and reusable states | Migrated | typecheck pass |
-| `/admin` | Admin | local admin system | shadcn Button, StatusBadge | Canonical preset pass | typecheck pass |
-| `/admin/users` | Admin | HeroUI/table controls | shadcn Button, Hashpix StatusBadge | Migrated | typecheck pass |
-| `/admin/workspaces` | Admin | HeroUI/forms | shadcn Button, Hashpix StatusBadge | Migrated | typecheck pass |
-| `/admin/jobs` | Admin | HeroUI/actions | shadcn Button, Hashpix StatusBadge | Migrated | typecheck pass |
-| `/admin/audit` | Admin | HeroUI/list controls | shadcn Button, Hashpix StatusBadge | Migrated | typecheck pass |
+| `/admin` | Admin | floating double CSS layout | Badge, Button, Input, Select | Canonical preset pass | full viewport, zero main radius, no overflow |
+| `/admin/users` | Admin | native selects/status wrapper | Badge, Button, Input, Select | Canonical preset pass | client navigation does not show access gate |
+| `/admin/workspaces` | Admin | native selects/status wrapper | Badge, Button, Input, Select | Canonical preset pass | client navigation does not show access gate |
+| `/admin/jobs` | Admin | status wrapper | Badge, Button | Canonical preset pass | client navigation does not show access gate |
+| `/admin/audit` | Admin | status wrapper | Badge, Input | Canonical preset pass | client navigation does not show access gate |
 
 Public `/` and `/blog/**` are excluded from migration and remain mandatory regression checks.

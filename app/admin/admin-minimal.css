@@ -380,3 +380,76 @@ body:has(.admin-shell) { background: var(--admin-bg); }
   .admin-mobile-header { border-bottom-color: var(--admin-line); background: rgba(17, 17, 18, .92); }
   .admin-mobile-header > button { background: rgba(255, 255, 255, .07); color: var(--admin-ink); }
 }
+
+/* Canonical shadcn administration shell. This final layer deliberately
+   replaces the former floating light card with a full-viewport product route. */
+.admin-shell {
+  width: 100%;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 16rem minmax(0, 1fr);
+  gap: 0;
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, sans-serif;
+}
+
+body:has(.admin-shell) { background: var(--background); }
+.admin-sidebar {
+  position: sticky;
+  top: 0;
+  width: auto;
+  height: 100dvh;
+  padding: 1rem;
+  border: 0;
+  border-right: 1px solid var(--sidebar-border);
+  background: var(--sidebar);
+}
+.admin-sidebar__brand { min-height: 2.5rem; padding-inline: .5rem; }
+.admin-sidebar__brand .brand-logo img { width: 6.5rem; }
+.admin-sidebar nav { gap: .25rem; margin-top: 1.5rem; }
+.admin-sidebar nav a {
+  min-height: 2.25rem;
+  padding-inline: .625rem;
+  border-radius: var(--radius-md);
+  color: var(--sidebar-foreground);
+  font-size: .75rem;
+  font-weight: 500;
+}
+.admin-sidebar nav a:hover,
+.admin-sidebar nav a.is-active { background: var(--sidebar-accent); color: var(--sidebar-accent-foreground); box-shadow: none; }
+.admin-sidebar nav a.is-active svg { color: var(--sidebar-primary); }
+.admin-dashboard-link { min-height: 2.25rem; border-top-color: var(--sidebar-border); color: var(--muted-foreground); }
+.admin-actor { padding: .5rem; border-radius: var(--radius-md); background: var(--sidebar-accent); }
+.admin-actor > span, .admin-identity > span { border-radius: var(--radius-sm); background: var(--sidebar-primary); color: var(--sidebar-primary-foreground); }
+.admin-main { min-height: 100dvh; border: 0; border-radius: 0; background: var(--background); }
+.admin-toolbar { min-height: 3.5rem; padding-inline: 1.5rem; border-bottom-color: var(--border); background: var(--background); backdrop-filter: none; }
+.admin-toolbar > span { color: var(--muted-foreground); font-size: .75rem; font-weight: 500; }
+.admin-content { max-width: 90rem; margin: 0; padding: 2rem 1.5rem 4rem; }
+.admin-section-head { margin-bottom: 1.5rem; }
+.admin-section-head h1 { font-family: var(--font-sans), Arial, sans-serif; font-size: 1.875rem; font-weight: 600; letter-spacing: -.025em; text-transform: none; }
+.admin-section-head p { margin-top: .5rem; color: var(--muted-foreground); font-size: .875rem; }
+.admin-search .search-field__group { min-height: auto; border-radius: 0; }
+.admin-metrics { gap: 1rem; }
+.admin-metric, .admin-panel, .admin-workspace-card, .admin-table-wrap, .admin-audit-list {
+  border-color: var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: none;
+}
+.admin-metric { padding: 1rem; }
+.admin-metric > span { border-radius: var(--radius-sm); background: var(--secondary); color: var(--secondary-foreground); }
+.admin-metric strong, .admin-panel--revenue strong { font-family: var(--font-sans), Arial, sans-serif; color: var(--foreground); }
+.admin-table th { background: var(--muted); color: var(--muted-foreground); }
+.admin-table td { border-color: var(--border); }
+.admin-table input, .admin-workspace-actions input { border-color: var(--input); background: var(--input); color: var(--foreground); }
+.admin-notice { border-radius: var(--radius-md); background: var(--popover); color: var(--popover-foreground); }
+
+@media (max-width: 900px) {
+  .admin-shell { display: block; }
+  .admin-sidebar { position: fixed; width: min(86vw, 18rem); background: var(--sidebar); }
+  .admin-main { min-height: 100dvh; }
+  .admin-mobile-header { background: var(--background); border-bottom-color: var(--border); }
+  .admin-mobile-header > button { border-radius: var(--radius-md); background: var(--secondary); color: var(--secondary-foreground); }
+}

@@ -5658,6 +5658,43 @@
 .wizard-source-ready__media { min-height: 190px; background: var(--hp-media); }
 .wizard-source-ready__info { padding: 10px 8px 10px 2px; }
 .wizard-source-ready__info h2 { margin-top: 12px; font-size: 19px; line-height: 1.25; }
+
+/* Canonical control anatomy for the styles route. Earlier legacy selectors
+   targeted every button and text node; these route rules restore the stock
+   shadcn control scale without changing any style/API behavior. */
+.dash-shell .styles-layout [data-slot="button"],
+.dash-shell .styles-layout [data-slot="select-trigger"],
+.dash-shell .styles-layout [data-slot="switch"] {
+  font-size: .75rem;
+  line-height: 1.25;
+}
+.style-editor__switch > span { min-width: 0; }
+.style-editor__switch strong,
+.style-editor__switch small { display: block; }
+.style-editor__switch strong { color: var(--foreground); font-size: .875rem; font-weight: 500; line-height: 1.25; }
+.style-editor__switch small { margin-top: .25rem; color: var(--muted-foreground); font-size: .75rem; line-height: 1.25; }
+.style-editor__footer {
+  padding: .75rem 0 0;
+  border-top: 1px solid var(--border);
+  background: var(--background);
+}
+.style-editor__footer [data-slot="button"] { height: 2.25rem; padding-inline: .75rem; }
+.dash-filter-row {
+  padding: .25rem;
+  border-radius: var(--radius-lg);
+  background: var(--muted);
+}
+.dash-filter-row [data-slot="toggle-group-item"] {
+  min-height: 2.25rem;
+  border-radius: var(--radius-md);
+  font-size: .75rem;
+  font-weight: 500;
+}
+.project-storage {
+  padding: 1rem;
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
 .wizard-source-ready__info .wizard-source-ready__facts {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

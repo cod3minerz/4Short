@@ -38,6 +38,10 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
   input, ring and `.625rem` radius values; profile menu aligns both actions
   left and Escape returns focus to its trigger. No horizontal overflow in
   these authenticated checks.
+- Canonical-pass audit: styles now uses 12px / 36px stock-control geometry and
+  stacked title/help copy; admin is full-viewport with a shadcn sidebar, badge,
+  select and input primitives. Client navigation `/admin` → `/admin/users`
+  keeps the shell mounted and does not render the access gate.
 
 ## Structural locks
 
