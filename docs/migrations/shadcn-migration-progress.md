@@ -29,8 +29,9 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 
 1. Add the global Sonner registry primitive when the package registry is
    reachable; retain inline field and autosave feedback by design.
-2. Re-run the complete authenticated browser route/state matrix, including a
-   real dynamic workspace/editor record and every overlay state.
+2. Complete the remaining authenticated dynamic workspace/editor and overlay
+   records. The 360/768/1024/1440 layout matrix now passes for `/dashboard`,
+   `/dashboard/styles`, `/dashboard/account` and `/admin`.
 3. Close only the evidence tasks that the repository can actually prove:
    HVE-G4 is still a scaffold and must remain `INSUFFICIENT`, never PASS.
 
