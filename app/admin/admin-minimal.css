@@ -86,8 +86,8 @@ body:has(.admin-shell) { background: var(--background); }
 .admin-worker-list { padding: .5rem 1rem 1rem; }
 .admin-worker-list > div { min-height: 3.25rem; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .625rem; border-bottom: 1px solid var(--border); }
 .admin-worker-list > div:last-child { border-bottom: 0; }
-.admin-worker-list > div > span { width: .5rem; height: .5rem; border-radius: 999px; background: var(--muted); }
-.admin-worker-list > div > span.is-online { background: #22c55e; }
+.admin-worker-list > div > span { width: .5rem; height: .5rem; border-radius: var(--radius); background: var(--muted); }
+.admin-worker-list > div > span.is-online { background: var(--primary); }
 .admin-worker-list strong { display: block; font-size: .8125rem; }.admin-worker-list small, .admin-worker-list time { color: var(--muted-foreground); font-size: .6875rem; }
 .admin-panel--revenue { padding: 1rem; }.admin-panel--revenue strong { display: block; margin-top: 1rem; font-size: 2rem; font-weight: 600; }.admin-panel--revenue p { color: var(--muted-foreground); font-size: .8125rem; }
 

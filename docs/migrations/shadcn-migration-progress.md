@@ -108,6 +108,12 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
   actual dark `b38miVLH6` roles, the `.625rem` preset radius and absence of
   product legacy token bridges. It no longer asks for removed `--hp-*` tokens;
   the current gate passes with 18 preset roles and 19 Hashpix compositions.
+- Final product-chrome literal pass: saved/default, processing, refund,
+  positive balance and worker state use the preset primary role; warnings use
+  destructive and the billing divider uses border. Browser QA at 1440px
+  confirms the styles/default state and admin shell have no overflow or
+  console errors. Profile and source-library overlays close with Escape and
+  restore their trigger focus.
 
 ## Structural locks
 

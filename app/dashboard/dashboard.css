@@ -1423,7 +1423,7 @@
   flex: 0 0 auto;
   align-items: center;
   gap: 3px;
-  color: oklch(0.723 0.191 149.579);
+  color: var(--primary);
   font-size: 10px;
   font-weight: 700;
 }
@@ -2418,7 +2418,7 @@
 
 .dash-status.tone-accent { background: var(--accent); color: var(--primary-foreground); }
 
-.dash-status.tone-success { background: color-mix(in oklch, oklch(0.723 0.191 149.579), transparent 87%); color: oklch(0.723 0.191 149.579); }
+.dash-status.tone-success { background: color-mix(in oklch, var(--primary), transparent 87%); color: var(--primary); }
 
 .dash-status.tone-danger { background: color-mix(in oklch, var(--destructive), transparent 88%); color: var(--destructive); }
 
@@ -2722,8 +2722,8 @@
 }
 
 .wizard-processing__mark.is-complete {
-  background: color-mix(in oklch, oklch(0.723 0.191 149.579), transparent 87%);
-  color: oklch(0.723 0.191 149.579);
+  background: color-mix(in oklch, var(--primary), transparent 87%);
+  color: var(--primary);
 }
 
 .wizard-processing__source {
@@ -3083,7 +3083,7 @@
 
 
 
-.project-warning { display: flex; gap: 10px; padding: 14px; border-radius: var(--radius-xl); background: color-mix(in oklch, oklch(0.828 0.189 84.429), transparent 88%); color: oklch(0.828 0.189 84.429); font-size: 12px; line-height: 1.45; }
+.project-warning { display: flex; gap: 10px; padding: 14px; border-radius: var(--radius-xl); background: color-mix(in oklch, var(--destructive), transparent 88%); color: var(--destructive); font-size: 12px; line-height: 1.45; }
 
 .project-results {
   padding: 30px clamp(24px, 4vw, 54px);
@@ -3135,7 +3135,7 @@
   flex-direction: row !important;
   align-items: center;
   gap: 6px;
-  color: oklch(0.723 0.191 149.579);
+  color: var(--primary);
   font-size: 12px;
   font-weight: 800;
 }
@@ -3158,7 +3158,7 @@
 
 .billing-purchase-summary dl { margin: 17px 0; }
 
-.billing-purchase-summary dl div { display: flex; justify-content: space-between; gap: 12px; padding-block: 8px; border-bottom: 1px solid rgba(7,91,121,.12); font-size: 12px; }
+.billing-purchase-summary dl div { display: flex; justify-content: space-between; gap: 12px; padding-block: 8px; border-bottom: 1px solid var(--border); font-size: 12px; }
 
 .billing-purchase-summary dd { margin: 0; font-weight: 800; }
 
@@ -3170,7 +3170,7 @@
 
 .billing-transaction-icon.tone-credit { background: color-mix(in oklch, var(--primary), transparent 82%); color: var(--primary-foreground); }
 
-.billing-transaction-icon.tone-refund { background: color-mix(in oklch, oklch(0.723 0.191 149.579), transparent 87%); color: oklch(0.723 0.191 149.579); }
+.billing-transaction-icon.tone-refund { background: color-mix(in oklch, var(--primary), transparent 87%); color: var(--primary); }
 
 .dashboard-connection-notice {
   display: flex;
@@ -3235,7 +3235,7 @@
   align-items: center;
   gap: 5px;
   margin-top: 7px;
-  color: oklch(0.828 0.189 84.429);
+  color: var(--destructive);
   font-size: 12px;
 }
 
@@ -4457,7 +4457,7 @@
 }
 
 .billing-history__table b.is-positive {
-  color: oklch(0.723 0.191 149.579);
+  color: var(--primary);
 }
 
 .help-contact > span {
@@ -4648,7 +4648,7 @@
 }
 
 .info-panel--accent { background: color-mix(in oklch, var(--primary), transparent 90%); }
-.info-panel--warning { background: color-mix(in oklch, oklch(0.828 0.189 84.429), transparent 88%); color: oklch(0.828 0.189 84.429); }
+.info-panel--warning { background: color-mix(in oklch, var(--destructive), transparent 88%); color: var(--destructive); }
 .info-panel--locked { background: var(--muted); color: var(--muted-foreground); }
 
 .info-panel__icon {
@@ -4657,7 +4657,7 @@
 }
 
 .info-panel--accent .info-panel__icon { color: var(--primary-foreground); }
-.info-panel--warning .info-panel__icon { color: oklch(0.828 0.189 84.429); }
+.info-panel--warning .info-panel__icon { color: var(--destructive); }
 
 .info-panel__body {
   display: flex;
@@ -4990,7 +4990,7 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: oklch(0.723 0.191 149.579);
+  background: var(--primary);
   animation: dash-skeleton-shimmer 1.2s ease-in-out infinite;
 }
 
@@ -5309,7 +5309,7 @@
 .progress-stage { background: var(--secondary); }
 .progress-stage__fill { background: var(--foreground); }
 .progress-stage__dot { animation: none; }
-.wizard-footer__notice { flex: 1 1 100%; order: 3; color: oklch(0.828 0.189 84.429); font-size: 12px; text-align: right; }
+.wizard-footer__notice { flex: 1 1 100%; order: 3; color: var(--destructive); font-size: 12px; text-align: right; }
 
 /* Glass is used only for floating navigation/overlays, never for every card. */
 .dash-shell :is(.dash-mobile-nav, .clip-editor__mobile-tabs, .wizard-footer) {

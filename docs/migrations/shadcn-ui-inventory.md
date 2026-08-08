@@ -19,8 +19,8 @@ Codebase Memory project: `Users-kirill-Documents-4Short`
 | Admin light/local primitives | `app/admin` | 5 routes | shared dark tokens and shadcn controls | High | Audited |
 | Auth local form controls | `app/sign-in` shared by 3 routes | one multi-step flow | shadcn form primitives | High | Audited |
 | Notifications | Internal application | no toast provider found | Sonner plus retained inline field errors | Medium | Audited |
-| Product CSS literals | dashboard/admin/auth CSS | 177 color-function matches | semantic shadcn/`--hp-*` tokens | High | In progress |
-| Local radius declarations | dashboard/admin/auth CSS | 247 declarations | 14/18/24px semantic radius family | High | In progress |
+| Product CSS literals | dashboard/admin/auth CSS | media overlay/renderer values only; product chrome uses canonical roles | semantic shadcn roles | High | Audited |
+| Local radius declarations | dashboard/admin/auth CSS | media/editor micro-geometry and intentional list seams only | generated shadcn radius scale for shared controls/surfaces | High | Audited |
 | Public HeroUI consumers | landing and blog | 4 files | deliberately retained outside scope | Landing regression | Excluded |
 
 The inventory is closed only when graph and source audits find no internal HeroUI import, primitive duplicate, legacy provider, or unjustified literal.
@@ -38,3 +38,8 @@ is now the single product-specific layout layer and resolves every visual role
 through the canonical preset variables. The old dashboard-local `ui` directory
 is also removed: product compositions live in `components/hashpix`, while
 `components/ui` remains registry-only.
+
+The final literal pass replaced custom success/warning/refund/worker colours
+with the preset `primary` and `destructive` roles, and the only worker-state
+dot now uses `--radius`. Video/subtitle-overlay values remain data/rendering
+concerns rather than product control tokens.
