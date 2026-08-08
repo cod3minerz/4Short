@@ -89,21 +89,10 @@
   font-family: var(--font-sans), Arial, sans-serif;
 }
 
-/*
- * HeroUI's Modal/Drawer portal their content straight onto <body> (via
- * React Aria's Overlay, confirmed — no UNSTABLE_PortalProvider is
- * configured anywhere in this app), so their heading renders OUTSIDE
- * `.dash-shell`/`.editor-focus-shell` no matter where the Dialog/Drawer
- * component is used in the tree. The `.dash-shell h1, h2` override above
- * can never reach it. Confirmed live: the "Прошлые исходники" dialog's
- * heading rendered as `<h2 data-slot="modal-heading">` with
- * `font-family: Ermilov, ...` — the global marketing rule in
- * app/globals.css leaking through every dialog/drawer in the dashboard.
- * This rule is deliberately unscoped (no `.dash-shell` ancestor exists to
- * scope it to) and protects every current and future Dialog/Drawer at once.
- */
-[data-slot="modal-heading"],
-[data-slot="drawer-heading"] {
+/* Registry portals mount outside the dashboard shell, so the product heading
+ * font must be set directly on their stock Dialog and Sheet title slots. */
+[data-slot="dialog-title"],
+[data-slot="sheet-title"] {
   font-family: var(--font-sans), Arial, sans-serif;
 }
 
@@ -750,19 +739,17 @@
 }
 
 /*
- * HeroUI ToggleButtonGroup (our SegmentedControl primitive) restyled to the
- * dashboard's track-with-raised-thumb language, so it matches the tab rows
- * around it instead of reading inverted — heavy unselected, faint selected —
- * with HeroUI's stock look.
+ * Stock shadcn ToggleGroup uses the same compact segmented anatomy across
+ * project filters and workspace tabs.
  */
-.dash-shell [data-slot="toggle-button-group"] {
+.dash-shell [data-slot="toggle-group"] {
   padding: 3px;
   border: 1px solid var(--dash-border);
   border-radius: var(--dash-radius-control);
   background: var(--dash-surface-subtle);
 }
 
-.dash-shell [data-slot="toggle-button"] {
+.dash-shell [data-slot="toggle-group-item"] {
   min-height: var(--dash-control-sm);
   gap: 6px;
   border: 0;
@@ -773,12 +760,12 @@
   font-weight: 700;
 }
 
-.dash-shell [data-slot="toggle-button"]:hover { color: var(--ink); }
+.dash-shell [data-slot="toggle-group-item"]:hover { color: var(--foreground); }
 
-.dash-shell [data-slot="toggle-button"][data-selected] {
-  background: var(--dash-surface);
-  color: var(--ink);
-  box-shadow: 0 1px 4px rgba(10, 35, 44, .08);
+.dash-shell [data-slot="toggle-group-item"][data-pressed] {
+  background: var(--card);
+  color: var(--foreground);
+  box-shadow: none;
 }
 
 /* Step 2 — live credit cost + trim range. */
@@ -2636,15 +2623,8 @@
 }
 
 /*
- * `.wizard-advanced-grid select` / `.wizard-control-card select` /
- * `.style-editor select` used to live here targeting a literal `<select>`
- * element, but the real `Select` primitive (`ui/Select.tsx`) wraps HeroUI's
- * compound Select and renders a `<button data-slot="select-trigger">` —
- * never a `<select>` tag. The rule matched nothing, anywhere it was used,
- * leaving every Select trigger in the app completely unstyled by the
- * dashboard's own control tokens. Fixed with one rule below, scoped to the
- * real `data-slot`, covering every Select usage at once instead of
- * per-container dead selectors that have to be kept in sync by hand.
+ * Select triggers are Base UI/shadcn buttons rather than native `<select>`
+ * elements, so the layout rule targets their registry slot explicitly.
  */
 .wizard-advanced-grid label {
   display: flex;
