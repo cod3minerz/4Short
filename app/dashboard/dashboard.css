@@ -37,9 +37,6 @@
   --hp-radius-control: var(--radius);
   --hp-radius-surface: var(--radius-lg);
   --hp-radius-workspace: var(--radius-xl);
-  --hp-action-light: var(--primary);
-  --hp-action-light-hover: color-mix(in oklch, var(--primary), var(--foreground) 12%);
-  --hp-action-light-pressed: color-mix(in oklch, var(--primary), var(--background) 12%);
   --hp-control-sm: 28px;
   --hp-control-md: 32px;
   --hp-control-lg: 36px;
@@ -453,8 +450,8 @@
   gap: 7px;
   padding-inline: 13px;
   border-radius: var(--dash-radius-sm);
-  background: var(--hp-action-light);
-  color: var(--hp-canvas);
+  background: var(--primary);
+  color: var(--primary-foreground);
   font-size: 13px;
   font-weight: 760;
 }
@@ -688,8 +685,8 @@
 .wizard-file-cta {
   gap: 8px;
   padding-inline: 18px;
-  background: var(--hp-action-light);
-  color: var(--hp-canvas);
+  background: var(--primary);
+  color: var(--primary-foreground);
   font-weight: 800;
   display: inline-flex;
   align-items: center;
@@ -1996,7 +1993,6 @@
 
 .clip-editor__header nav { display: flex; align-items: center; gap: 4px; }
 .clip-editor__header .button { min-height: var(--hp-control-sm); padding-inline: 11px; border-radius: var(--hp-radius-action); font-size: 11px; box-shadow: none; transform: none !important; }
-.clip-editor__header .button--primary { background: var(--accent); color: white; }
 
 .clip-editor__notice {
   position: fixed;
@@ -2483,8 +2479,8 @@
 .dash-primary-link {
   min-width: 158px;
   padding-inline: 22px;
-  background: var(--hp-action-light);
-  color: var(--hp-canvas);
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .dash-secondary-link {
@@ -3831,8 +3827,8 @@
     height: 42px;
     justify-content: center;
     border-radius: var(--dash-radius-lg);
-    background: var(--hp-action-light);
-    color: var(--hp-canvas) !important;
+    background: var(--primary);
+    color: var(--primary-foreground) !important;
     transform: translateY(-7px);
   }
   .dash-mobile-nav__new + a { grid-column: 3; }
@@ -3971,7 +3967,7 @@
   .dash-mobile-nav > a,
   .dash-mobile-nav > button { min-height: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0; border: 0; border-radius: var(--dash-radius-lg); background: transparent; color: var(--dash-text-muted); font-size: var(--dash-text-xs); }
   .dash-mobile-nav > .is-active { color: var(--ink); }
-  .dash-mobile-nav__new { width: 50px; justify-self: center; border-radius: var(--dash-radius-control) !important; background: var(--hp-action-light) !important; color: var(--hp-canvas) !important; transform: translateY(-10px); }
+  .dash-mobile-nav__new { width: 50px; justify-self: center; transform: translateY(-10px); }
   .dash-page { width: min(calc(100% - 32px), 820px); padding-block: 30px 110px; }
   .dash-page-heading { align-items: flex-start; }
   .dash-page-heading__actions { flex-shrink: 0; }
@@ -5313,7 +5309,6 @@
   -webkit-backdrop-filter: blur(18px);
 }
 .clip-editor__header > div > small { color: var(--dash-text-muted); }
-.clip-editor__header .button--primary { background: var(--accent); color: var(--accent-foreground); }
 .clip-editor__notice,
 .clip-trim,
 .clip-editor__mobile-tabs { background: var(--dash-surface); color: var(--ds-text); }

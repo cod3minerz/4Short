@@ -1,11 +1,11 @@
 {
     "schema_version": 2,
-    "commit": "7f9b80cb20c5ef51b0432956333ff2418d4b4310",
-    "indexed_at": "2026-08-08T17:43:02Z",
+    "commit": "eb5ff818aa5e9a47189fd7c97fc04abbf394680a",
+    "indexed_at": "2026-08-08T17:44:49Z",
     "project": "Users-kirill-Documents-4Short",
     "nodes": 354,
     "edges": 647,
     "original_size": 2818048,
-    "compressed_size": 450659,
+    "compressed_size": 450621,
     "compression_level": 3
 }
