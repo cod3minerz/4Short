@@ -2,7 +2,8 @@
 
 import { Check, Copy, Palette, Plus, Subtitles } from "lucide-react";
 import { useState } from "react";
-import { ActionButton } from "@/components/hashpix/action-button";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ChoiceSelect, ChoiceSwitch } from "@/components/hashpix/choice-controls";
 import { ControlApiError } from "../lib/control-api";
 import { trackApp } from "../lib/track-app";
@@ -109,9 +110,9 @@ export function StylesView() {
         title="Стили"
         description="Сохраните оформление один раз и применяйте его ко всем новым проектам."
         actions={
-          <ActionButton onClick={startNewStyle}>
+          <Button onClick={startNewStyle} size="lg">
             <Plus size={18} /> Новый стиль
-          </ActionButton>
+          </Button>
         }
       />
 
@@ -120,9 +121,9 @@ export function StylesView() {
       <div className="styles-layout">
         <section className="styles-library" aria-label="Сохранённые стили">
           {styles.map((style) => (
-            <button
+            <Button
+              variant="outline"
               className={`style-library-card ${activeId === style.id ? "is-active" : ""}`}
-              type="button"
               key={style.id}
               onClick={() => setActiveOverride(style.id)}
             >
@@ -141,12 +142,12 @@ export function StylesView() {
                   {style.captions === "Выключены" ? "Без субтитров" : style.captions}
                 </span>
               </span>
-            </button>
+            </Button>
           ))}
-          <ActionButton className="style-library-add" tone="secondary" onClick={startNewStyle}>
+          <Button className="style-library-add" variant="outline" onClick={startNewStyle}>
             <Plus size={20} />
             <span><strong>Создать новый стиль</strong><small>Настройте субтитры, кадр и брендирование</small></span>
-          </ActionButton>
+          </Button>
         </section>
 
         <div className="styles-editor-column">
@@ -157,8 +158,8 @@ export function StylesView() {
                 <span className="dash-eyebrow">Редактирование стиля</span>
                 <h2>{active.name}</h2>
               </div>
-              <ActionButton
-                tone="secondary"
+              <Button
+                variant="outline"
                 className="style-editor__duplicate"
                 onClick={() => {
                   const id = duplicateStyle(active.id);
@@ -166,12 +167,12 @@ export function StylesView() {
                 }}
               >
                 <Copy size={16} /> Дублировать
-              </ActionButton>
+              </Button>
             </header>
 
             <label className="style-field style-editor__name">
               <span><strong>Название</strong><small>Видно только вам</small></span>
-              <input value={active.name} onChange={(event) => patch({ name: event.target.value })} />
+              <Input value={active.name} onChange={(event) => patch({ name: event.target.value })} />
             </label>
 
             <section className="style-section">
@@ -299,8 +300,8 @@ export function StylesView() {
 
         <div className="style-editor__footer">
           {active.id !== defaultStyleId ? (
-            <ActionButton
-              tone="secondary"
+            <Button
+              variant="outline"
               onClick={async () => {
                 setSaveError("");
                 try {
@@ -311,10 +312,11 @@ export function StylesView() {
               }}
             >
               Использовать по умолчанию
-            </ActionButton>
+            </Button>
           ) : <span className="style-saved-state"><Check size={15} /> Стиль по умолчанию</span>}
-          <ActionButton
-            loading={savingStyleId === active.id}
+          <Button
+            disabled={savingStyleId === active.id}
+            aria-busy={savingStyleId === active.id || undefined}
             onClick={async () => {
               setSaveError("");
               try {
@@ -328,7 +330,7 @@ export function StylesView() {
             }}
           >
             {saved && !active.dirty ? <><Check size={16} /> Сохранено</> : "Сохранить изменения"}
-          </ActionButton>
+          </Button>
           {saveError ? <p className="dash-field-error" role="alert">{saveError}</p> : null}
         </div>
         </div>

@@ -3,6 +3,7 @@
 import { ActionButton } from "@/components/hashpix/action-button";
 import { ChoiceSegmented, ChoiceSelect, ChoiceSwitch } from "@/components/hashpix/choice-controls";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -581,7 +582,8 @@ export function NewProjectWizard({
                     </ul>
                   </div>
                 ) : (
-                  <button
+                  <Button
+                    variant="outline"
                     className="wizard-source-dropzone"
                     type="button"
                     disabled={Boolean(storage?.blocked)}
@@ -596,7 +598,7 @@ export function NewProjectWizard({
                     <UploadCloud size={24} />
                     <span><strong>{uploading ? "Загружаем видео…" : "Перетащите видео или выберите файл"}</strong><small>MP4, MOV, WebM · до 10 ГБ</small></span>
                     <span className="wizard-file-cta"><FileUp size={17} /> Выбрать видео</span>
-                  </button>
+                  </Button>
                 )}
 
                 {storage?.blocked ? (
@@ -635,7 +637,9 @@ export function NewProjectWizard({
                             : source.kind === "youtube" ? "Видео с YouTube" : "Загруженное видео";
                           const durationLabel = source.durationMs ? formatDuration(Math.round(source.durationMs / 1000)) : "—";
                           return (
-                            <button
+                            <Button
+                              variant="outline"
+                              className="wizard-source-library__item"
                               type="button"
                               key={source.id}
                               onClick={() => {
@@ -657,7 +661,7 @@ export function NewProjectWizard({
                               />
                               <span><strong>{title}</strong><small>{source.kind === "youtube" ? "YouTube" : "Файл"} · {durationLabel}</small></span>
                               <ArrowRight size={16} />
-                            </button>
+                            </Button>
                           );
                         })}
                       </div>
@@ -723,7 +727,7 @@ export function NewProjectWizard({
                       </dd>
                     </div>
                   </dl>
-                  <button type="button" onClick={resetSource}>Выбрать другое видео</button>
+                  <Button variant="ghost" type="button" onClick={resetSource}>Выбрать другое видео</Button>
                 </div>
               </div>
             )}
@@ -756,15 +760,15 @@ export function NewProjectWizard({
                 onSelect={() => setCuttingMode("smart")}
               />
 
-              <button
+              <Button
+                variant="ghost"
                 className="wizard-more-intents"
-                type="button"
                 aria-expanded={otherModesOpen}
                 onClick={() => setOtherModesOpen((value) => !value)}
               >
                 Нужен другой тип нарезки?
                 <ChevronDown className={otherModesOpen ? "is-open" : ""} size={17} />
-              </button>
+              </Button>
               {otherModesOpen ? (
                 <div className="option-card-grid">
                   {/* "uniform" and "manual" aren't real modes yet: find_moments always
@@ -896,9 +900,9 @@ export function NewProjectWizard({
                     }}
                   />
                   {isTrimmed ? (
-                    <button type="button" onClick={() => { setTrimStartSeconds(0); setTrimEndSeconds(null); }}>
+                    <Button variant="ghost" type="button" onClick={() => { setTrimStartSeconds(0); setTrimEndSeconds(null); }}>
                       Вернуть всё видео
-                    </button>
+                    </Button>
                   ) : null}
                 </div>
               ) : null}
@@ -910,15 +914,15 @@ export function NewProjectWizard({
               ) : null}
             </div>
 
-            <button
+            <Button
+              variant="ghost"
               className="wizard-advanced-trigger"
-              type="button"
               aria-expanded={advancedOpen}
               onClick={() => setAdvancedOpen((value) => !value)}
             >
               Дополнительные настройки
               <ChevronDown className={advancedOpen ? "is-open" : ""} size={18} />
-            </button>
+            </Button>
             {advancedOpen ? (
               <div className="wizard-advanced-grid">
                 <label>
@@ -966,7 +970,7 @@ export function NewProjectWizard({
             ) : null}
 
             <div className="wizard-footer">
-              <button className="wizard-back" type="button" onClick={() => setStep(1)}>Назад</button>
+              <Button className="wizard-back" variant="ghost" type="button" onClick={() => setStep(1)}>Назад</Button>
               <ActionButton disabled={notEnoughCredits || !sourceCostKnown} onClick={() => setStep(3)}>
                 Выбрать оформление
                 <ArrowRight size={18} />
@@ -1015,7 +1019,8 @@ export function NewProjectWizard({
                 {styleMode === "preset" ? (
                   <div className="wizard-style-options">
                     {styles.map((style) => (
-                      <button
+                      <Button
+                        variant={styleId === style.id ? "secondary" : "outline"}
                         className={styleId === style.id ? "is-selected" : ""}
                         type="button"
                         key={style.id}
@@ -1025,7 +1030,7 @@ export function NewProjectWizard({
                         <b>{style.name}</b>
                         <small>{style.captions === "Выключены" ? "Без субтитров" : `${style.captions} · ${style.framing}`}</small>
                         {styleId === style.id ? <Check size={17} /> : null}
-                      </button>
+                      </Button>
                     ))}
                     <Link className="wizard-style-options__manage" href="/dashboard/styles">
                       Управление пресетами в разделе «Стили»
@@ -1117,7 +1122,7 @@ export function NewProjectWizard({
             </div>
 
             <div className="wizard-footer wizard-footer--style">
-              <button className="wizard-back" type="button" onClick={() => setStep(2)}>Назад</button>
+              <Button className="wizard-back" variant="ghost" type="button" onClick={() => setStep(2)}>Назад</Button>
               <span>Настройки сохранятся для следующего проекта.</span>
             </div>
           </section>

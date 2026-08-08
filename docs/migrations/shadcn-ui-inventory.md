@@ -24,3 +24,15 @@ Codebase Memory project: `Users-kirill-Documents-4Short`
 | Public HeroUI consumers | landing and blog | 4 files | deliberately retained outside scope | Landing regression | Excluded |
 
 The inventory is closed only when graph and source audits find no internal HeroUI import, primitive duplicate, legacy provider, or unjustified literal.
+
+## Finalisation audit note (2026-08-08)
+
+The residual legacy risk is concentrated in `app/dashboard/dashboard.css`: it
+still contains the temporary `--hp-*` bridge and duplicate late override
+blocks. Route components with raw controls are explicitly queued in the
+migration progress document; media range inputs are excluded because they are
+editor-native controls, not generic form primitives.
+
+The old `app/admin/admin.css` cascade is removed. `app/admin/admin-minimal.css`
+is now the single product-specific layout layer and resolves every visual role
+through the canonical preset variables.

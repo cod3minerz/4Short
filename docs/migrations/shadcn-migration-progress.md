@@ -25,6 +25,18 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 - [ ] Legacy product CSS selector retirement (in progress; preset values now bridge remaining selectors)
 - [ ] Full automated and browser acceptance
 
+## Active finalisation queue
+
+1. Retire the `--hp-*` compatibility bridge and the duplicate dashboard CSS
+   override blocks (including old modal/drawer slot names).
+2. Replace raw route controls in styles, billing, workspace, wizard and editor
+   with installed Button/Input/Select/Switch/ToggleGroup primitives; preserve
+   native range controls only where they are media-editor inputs.
+3. Replace the remaining raw administrative navigation controls with shadcn
+   Buttons and remove the obsolete first-generation admin stylesheet.
+4. Re-run the complete browser route/state matrix, then only mark acceptance
+   complete when no legacy visual system remains.
+
 ## Baseline evidence
 
 - `npm run typecheck`: pass
@@ -47,6 +59,11 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
   passes; the public landing stylesheet is deliberately excluded.
 - Admin cold-load audit: access verification now keeps a full shadcn shell
   skeleton in place, rather than rendering the disruptive access-gate screen.
+- Finalisation pass: wizard source cards, source-library rows and style
+  choices now use the registry Button; workspace rows, transcript actions and
+  drawer style choices now use registry Button/ToggleGroup/Input. The obsolete
+  `app/admin/admin.css` cascade is deleted; admin is rendered exclusively by
+  the full-viewport canonical token stylesheet.
 
 ## Structural locks
 

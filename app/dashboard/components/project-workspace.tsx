@@ -4,7 +4,10 @@ import { ActionButton, IconButton } from "@/components/hashpix/action-button";
 import { ChoiceSelect, ChoiceSwitch } from "@/components/hashpix/choice-controls";
 import { HashpixDrawer } from "@/components/hashpix/drawer";
 import { StatusBadge } from "@/components/hashpix/status-badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -27,7 +30,6 @@ import {
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { moments as demoMoments, readyClips as demoClips, transcript as demoTranscript } from "../data";
-import { handleTablistKeyDown } from "../lib/a11y";
 import {
   ControlApiError,
   createMomentSearch,
@@ -538,22 +540,22 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
         </div>
       ) : null}
 
-      <div className="project-tabs" role="tablist" aria-label="Основные режимы проекта" onKeyDown={handleTablistKeyDown}>
+      <ToggleGroup
+        className="project-tabs"
+        aria-label="Основные режимы проекта"
+        value={[tab]}
+        onValueChange={(next) => { const selected = next[0] as Tab | undefined; if (selected) setTab(selected); }}
+      >
         {tabs.map((item) => (
-          <button
-            role="tab"
-            aria-selected={tab === item.id}
-            tabIndex={tab === item.id ? 0 : -1}
-            className={tab === item.id ? "is-active" : ""}
-            type="button"
+          <ToggleGroupItem
             key={item.id}
-            onClick={() => setTab(item.id)}
+            value={item.id}
           >
             {item.label}
             <span>{item.id === "moments" ? items.length : clips.length}</span>
-          </button>
+          </ToggleGroupItem>
         ))}
-      </div>
+      </ToggleGroup>
 
       {renderState === "rendering" ? (
         <div className="project-render-banner">
@@ -602,7 +604,8 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
 
             {items.map((moment, index) => (
               <article className={`moment-row ${activeId === moment.id ? "is-active" : ""}`} key={moment.id}>
-                <button
+                <Button
+                  variant="outline"
                   className={`moment-check ${moment.selected ? "is-selected" : ""}`}
                   type="button"
                   aria-label={`${moment.selected ? "Исключить" : "Выбрать"} момент «${moment.title}»`}
@@ -610,8 +613,8 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                   onClick={() => void toggleMoment(moment.id)}
                 >
                   {moment.selected ? <Check size={16} /> : index + 1}
-                </button>
-                <button className="moment-row__content" type="button" onClick={() => setActiveId(moment.id)}>
+                </Button>
+                <Button variant="ghost" className="moment-row__content" type="button" onClick={() => setActiveId(moment.id)}>
                   <span className="moment-row__top">
                     <span>{moment.topic}</span>
                     <time>{moment.start}–{moment.end} · {moment.duration}</time>
@@ -621,10 +624,10 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                   {moment.warnings?.length ? (
                     <span className="moment-row__warning"><AlertTriangle size={13} /> {moment.warnings[0]}</span>
                   ) : null}
-                </button>
-                <button className="moment-row__open" type="button" aria-label="Открыть момент" onClick={() => setActiveId(moment.id)}>
+                </Button>
+                <Button variant="ghost" size="icon" className="moment-row__open" type="button" aria-label="Открыть момент" onClick={() => setActiveId(moment.id)}>
                   <ChevronRight size={19} />
-                </button>
+                </Button>
               </article>
             ))}
           </section>
@@ -651,7 +654,7 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
               <span className="dash-eyebrow">{active.topic}</span>
               <label className="moment-title-field">
                 <span className="sr-only">Название момента</span>
-                <input
+                <Input
                   value={active.title}
                   onChange={(event) => setItems((list) => list.map((item) => item.id === active.id ? { ...item, title: event.target.value } : item))}
                   onBlur={(event) => void updateActive({ title: event.target.value })}
@@ -766,7 +769,7 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
             <label className="dash-search transcript-search">
               <Search size={18} />
               <span className="sr-only">Найти в транскрипте</span>
-              <input type="search" placeholder="Найти слово или фразу" value={search} onChange={(event) => setSearch(event.target.value)} />
+              <Input type="search" placeholder="Найти слово или фразу" value={search} onChange={(event) => setSearch(event.target.value)} />
             </label>
             {editingTranscript ? (
               <div className="transcript-editor">
@@ -791,7 +794,8 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
             ) : (
               <div className="transcript-lines">
                 {filteredTranscript.map((line) => (
-                  <button
+                  <Button
+                    variant="ghost"
                     className={
                       line.time === boundaryStart || line.time === boundaryEnd
                         ? "is-boundary"
@@ -806,7 +810,7 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                     {line.time === boundaryStart ? <span className="transcript-line-mark">Начало</span>
                       : line.time === boundaryEnd ? <span className="transcript-line-mark">Конец</span>
                         : line.active ? <span className="transcript-line-mark">В моменте</span> : null}
-                  </button>
+                  </Button>
                 ))}
               </div>
             )}
@@ -875,7 +879,8 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
               <h3>Как оформить</h3>
               <div className="project-drawer-styles">
                 {styles.map((style) => (
-                  <button
+                  <Button
+                    variant={styleId === style.id ? "secondary" : "outline"}
                     className={styleId === style.id ? "is-selected" : ""}
                     type="button"
                     key={style.id}
@@ -888,7 +893,7 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                     <span className="project-drawer-styles__mark" aria-hidden="true"><Subtitles size={15} /></span>
                     <b>{style.name}</b>
                     {styleId === style.id ? <Check size={15} /> : null}
-                  </button>
+                  </Button>
                 ))}
               </div>
               <div className="project-setting-row">

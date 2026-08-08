@@ -8,9 +8,9 @@
 | `/dashboard` | Dashboard | dashboard shell and wizard | product shell, shadcn forms and overlays | Migrated | typecheck, unit: 196 pass |
 | `/dashboard/new` | Dashboard | redirect only | dashboard route flow | Migrated | typecheck, unit: 196 pass |
 | `/dashboard/projects` | Dashboard | raw filter tabs | Button, Input, ToggleGroup, Dialog | Canonical preset pass | registry ToggleGroup; dark preset values and no overflow verified |
-| `/dashboard/projects/[id]` | Workspace | HeroUI controls/drawer | Hashpix choices, Sheet drawer, actions | Migrated | typecheck pass; HVE-G4 scaffold: INSUFFICIENT |
+| `/dashboard/projects/[id]` | Workspace | raw tablist and search inputs | ToggleGroup, Input, Sheet drawer, actions | Canonical preset pass in progress | registry tabs/search; typecheck pass; HVE-G4 scaffold: INSUFFICIENT |
 | `/dashboard/projects/[id]/clips/[clipId]` | Editor | legacy dashboard actions/overlays | Hashpix choices, actions and shadcn Dialog | Migrated | typecheck pass; HVE-G4 scaffold: INSUFFICIENT |
-| `/dashboard/styles` | Dashboard | legacy universal button/type rules | Button, Input, Select, Switch | Canonical preset pass | labels stack correctly; save button is 12px/36px/10px radius; no overflow |
+| `/dashboard/styles` | Dashboard | legacy universal button/type rules | Button, Input, Select, Switch | Canonical preset pass | direct Button/Input composition; labels stack correctly; save button is 12px/36px/10px radius; no overflow |
 | `/dashboard/billing` | Dashboard | dashboard buttons | Hashpix actions and states | Migrated | typecheck pass |
 | `/dashboard/account` | Dashboard | no legacy dependency | Field, LockedField, Button, status | Canonical preset pass | real Better Auth QA: menu items left-aligned; portal radius 14px; 2FA remains honestly locked |
 | `/dashboard/help` | Dashboard | raw search input | Input and reusable states | Migrated | typecheck pass |

@@ -2,7 +2,8 @@
 
 import { Check } from "lucide-react";
 import type { ReactNode } from "react";
-import { cn } from "../../lib/cn";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface OptionCardProps {
   icon?: ReactNode;
@@ -22,8 +23,8 @@ interface OptionCardProps {
  * Icon-tile + title + subtitle + selection state, the single most repeated
  * pattern in the wizard: source type, cutting mode, video format, style
  * mode, render-quality tier. Replaces ~20 near-duplicate hand-rolled cards.
- * Renders as a real <button> — selection always has a real onSelect, never
- * a decorative is-active class with no handler.
+ * Uses the canonical shadcn button primitive — selection always has a real
+ * onSelect, never a decorative is-active class with no handler.
  */
 export function OptionCard({
   icon,
@@ -37,7 +38,8 @@ export function OptionCard({
   className,
 }: OptionCardProps) {
   return (
-    <button
+    <Button
+      variant={selected ? "secondary" : "outline"}
       className={cn("option-card", selected && "is-selected", disabled && "is-disabled", className)}
       type="button"
       disabled={disabled}
@@ -54,6 +56,6 @@ export function OptionCard({
         {description ? <span className="option-card__description">{description}</span> : null}
       </span>
       {selected ? <Check className="option-card__check" size={16} aria-hidden="true" /> : null}
-    </button>
+    </Button>
   );
 }
