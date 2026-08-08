@@ -42,6 +42,9 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
   stacked title/help copy; admin is full-viewport with a shadcn sidebar, badge,
   select and input primitives. Client navigation `/admin` → `/admin/users`
   keeps the shell mounted and does not render the access gate.
+- Overlay audit: dialog, dropdown and sheet portal roots consume the canonical
+  dark preset surface/border/radius values. Product CSS dark-surface audit
+  passes; the public landing stylesheet is deliberately excluded.
 
 ## Structural locks
 

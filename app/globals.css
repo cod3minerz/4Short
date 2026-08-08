@@ -150,6 +150,22 @@
   --ring: oklch(0.556 0 0);
 }
 
+/* Base UI portals are outside the route's `.dark` ancestor. Keep their
+   geometry and surfaces identical to the installed shadcn primitives. */
+.hp-overlay-scope[data-slot="dialog-content"],
+.hp-overlay-scope[data-slot="dropdown-menu-content"] {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: none;
+}
+.hp-overlay-scope[data-slot="sheet-content"] {
+  border-color: var(--border);
+  background: var(--popover);
+  color: var(--popover-foreground);
+}
+
 * {
   box-sizing: border-box;
 }
