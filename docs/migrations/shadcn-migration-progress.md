@@ -22,7 +22,7 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 - [x] Styles, billing, account and help
 - [x] Admin routes
 - [ ] Global overlays and notifications
-- [ ] Legacy removal
+- [x] Internal HeroUI wrapper removal and preset token alignment
 - [ ] Full automated and browser acceptance
 
 ## Baseline evidence

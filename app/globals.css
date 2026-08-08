@@ -87,27 +87,27 @@
 .admin-shell,
 .auth-shell,
 .hp-overlay-scope {
-  --hp-canvas: #0a0a0b;
-  --hp-surface: #121214;
-  --hp-surface-raised: #18181b;
-  --hp-surface-subtle: #202024;
-  --hp-media: #09090a;
-  --hp-line: #2b2b30;
-  --hp-line-strong: #48484f;
-  --hp-text: #f5f5f2;
-  --hp-text-muted: #a5a5ae;
-  --hp-text-subtle: #777780;
-  --hp-brand: #f5f5f2;
-  --hp-brand-hover: #e6e6e2;
-  --hp-brand-pressed: #d5d5d0;
-  --hp-brand-foreground: #0b0b0c;
-  --hp-success: #32c982;
-  --hp-warning: #e8b34c;
-  --hp-danger: #f06b73;
-  --hp-focus-ring: rgb(245 245 242 / 0.9);
-  --hp-radius-control: 14px;
-  --hp-radius-surface: 18px;
-  --hp-radius-workspace: 24px;
+  --hp-canvas: oklch(0.145 0 0);
+  --hp-surface: oklch(0.205 0 0);
+  --hp-surface-raised: oklch(0.269 0 0);
+  --hp-surface-subtle: oklch(0.269 0 0);
+  --hp-media: oklch(0.145 0 0);
+  --hp-line: oklch(0.371 0 0);
+  --hp-line-strong: oklch(0.556 0 0);
+  --hp-text: oklch(0.985 0 0);
+  --hp-text-muted: oklch(0.708 0 0);
+  --hp-text-subtle: oklch(0.556 0 0);
+  --hp-brand: oklch(0.585 0.233 277.117);
+  --hp-brand-hover: oklch(0.511 0.262 276.966);
+  --hp-brand-pressed: oklch(0.457 0.24 277.023);
+  --hp-brand-foreground: oklch(0.985 0 0);
+  --hp-success: oklch(0.723 0.191 149.579);
+  --hp-warning: oklch(0.828 0.189 84.429);
+  --hp-danger: oklch(0.637 0.237 25.331);
+  --hp-focus-ring: oklch(0.585 0.233 277.117);
+  --hp-radius-control: var(--radius);
+  --hp-radius-surface: calc(var(--radius) + 4px);
+  --hp-radius-workspace: calc(var(--radius) + 8px);
   --hp-motion-fast: 120ms;
   --hp-motion-normal: 160ms;
   --hp-motion-slow: 240ms;
@@ -129,7 +129,7 @@
   --border: var(--hp-line);
   --input: var(--hp-line);
   --ring: var(--hp-focus-ring);
-  --radius: var(--hp-radius-control);
+  --radius: 0.625rem;
   color: var(--hp-text);
   font-family: "Geist Variable", Arial, sans-serif;
 }

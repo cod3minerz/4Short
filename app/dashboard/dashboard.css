@@ -13,28 +13,11 @@
 /* Canonical Hashpix product tokens. They live on :root so portals (Dialog,
    Drawer and Tooltip) inherit the exact same contract as the application. */
 :root {
-  --hp-canvas: #0a0a0b;
-  --hp-surface: #121214;
-  --hp-surface-raised: #18181b;
-  --hp-surface-subtle: #202024;
-  --hp-media: #09090a;
-  --hp-line: #2b2b30;
-  --hp-line-strong: #48484f;
-  --hp-text: #f5f5f2;
-  --hp-text-muted: #a5a5ae;
-  --hp-text-subtle: #777780;
   /* Product actions are neutral in the dark theme. Blue belongs only to
      user media/brand content, never to generic navigation or CTAs. */
-  --hp-brand: #f5f5f2;
-  --hp-brand-hover: #e6e6e2;
-  --hp-brand-pressed: #d5d5d0;
-  --hp-brand-foreground: #0b0b0c;
-  --hp-action-light: #f5f5f2;
-  --hp-action-light-hover: #e6e6e2;
-  --hp-action-light-pressed: #d5d5d0;
-  --hp-success: #32C982;
-  --hp-warning: #E8B34C;
-  --hp-danger: #F06B73;
+  --hp-action-light: var(--primary);
+  --hp-action-light-hover: color-mix(in oklch, var(--primary), white 12%);
+  --hp-action-light-pressed: color-mix(in oklch, var(--primary), black 12%);
   --hp-control-sm: 32px;
   --hp-control-md: 36px;
   --hp-control-lg: 40px;
@@ -42,9 +25,6 @@
      radius is less noisy than turning every 32/36/40px control into a
      differently proportioned pill. Browsers that support `corner-shape`
      receive the same soft squircle finish without relying on it. */
-  --hp-radius-control: 14px;
-  --hp-radius-surface: 18px;
-  --hp-radius-workspace: 24px;
   --hp-radius-action: var(--hp-radius-control);
   --hp-radius-field: var(--hp-radius-control);
   --hp-radius-overlay: var(--hp-radius-surface);
