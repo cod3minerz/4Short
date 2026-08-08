@@ -123,6 +123,11 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 - Style studio refinement: the saved-style library, true subtitle-only preview
   and persisted inspector now have deliberate three-column widths at desktop,
   while the 360px layout collapses to one column without horizontal overflow.
+- Registry-anatomy corrective pass: every remaining dashboard CSS `.button`
+  selector was either converted to the real shadcn `[data-slot="button"]`
+  layout hook or removed as a dead visual override. The source-step CTA now
+  uses the stock `lg` Button size, aligns right on desktop, and stacks below
+  its URL field at 360px without overflow.
 
 ## Structural locks
 

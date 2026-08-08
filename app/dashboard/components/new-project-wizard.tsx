@@ -732,7 +732,7 @@ export function NewProjectWizard({
             )}
 
             <div className="wizard-footer wizard-footer--source">
-              <ActionButton disabled={!sourceReady || !sourceCostKnown} onClick={() => setStep(2)}>
+              <ActionButton size="lg" disabled={!sourceReady || !sourceCostKnown} onClick={() => setStep(2)}>
                 Продолжить
                 <ArrowRight size={18} />
               </ActionButton>
@@ -970,7 +970,7 @@ export function NewProjectWizard({
 
             <div className="wizard-footer">
               <Button className="wizard-back" variant="ghost" type="button" onClick={() => setStep(1)}>Назад</Button>
-              <ActionButton disabled={notEnoughCredits || !sourceCostKnown} onClick={() => setStep(3)}>
+              <ActionButton size="lg" disabled={notEnoughCredits || !sourceCostKnown} onClick={() => setStep(3)}>
                 Выбрать оформление
                 <ArrowRight size={18} />
               </ActionButton>

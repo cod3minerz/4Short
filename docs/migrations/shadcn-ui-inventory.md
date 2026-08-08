@@ -43,3 +43,8 @@ The final literal pass replaced custom success/warning/refund/worker colours
 with the preset `primary` and `destructive` roles, and the only worker-state
 dot now uses `--radius`. Video/subtitle-overlay values remain data/rendering
 concerns rather than product control tokens.
+
+The final registry-anatomy sweep removed obsolete `.button` selectors from
+the product stylesheet. Layout hooks target actual registry output through
+`[data-slot="button"]`; visual sizing, radius and focus remain owned by the
+canonical shadcn primitive.
