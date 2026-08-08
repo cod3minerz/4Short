@@ -8,6 +8,7 @@ Codebase Memory project: `Users-kirill-Documents-4Short`
 | --- | --- | ---: | --- | --- | --- |
 | HeroUI internal imports | `app/dashboard`, `app/admin` | 11 files | shadcn/Radix primitives | High: interaction props and overlays | Audited |
 | Legacy dashboard UI folder | `app/dashboard/components/ui` | 22 files | `components/ui` plus `components/hashpix` | High: shared across editor/workspace | Audited |
+| Hashpix product compositions | `components/hashpix` | ActionButton, IconButton, Field, LockedField, StatusBadge | shadcn/Base UI primitives with Hashpix semantics | Medium | Established |
 | Raw action buttons | Internal route components | 44 matches / 19 files | `Button`, `ActionButton`, `IconButton` | Medium | Audited |
 | Raw text/form inputs | Internal route components | 24 matches / 15 files | `Input`, `Textarea`, `Field` | Medium | Audited |
 | Select and switch wrappers | Dashboard/admin | 7 select matches plus 5 shared wrapper consumers | shadcn `Select`, `Switch` | High: value API changes | Audited |

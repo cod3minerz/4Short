@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 import "./landing.css";
 
@@ -24,5 +25,5 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="ru"><body>{children}</body></html>;
+  return <html lang="ru"><body><TooltipProvider>{children}</TooltipProvider></body></html>;
 }

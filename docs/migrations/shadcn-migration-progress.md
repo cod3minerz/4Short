@@ -9,12 +9,12 @@ Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
 - [x] Baseline Git and build verification
 - [x] Specification stored in repository
 - [x] Initial graph-first inventory and 17-route ledger
-- [ ] Fresh Codebase Memory full index with exclusions
+- [x] Fresh Codebase Memory full index with exclusions (6,511 nodes / 15,047 edges)
 - [x] Shadcn foundation and MCP configuration
 - [ ] Shadcn skill installation (network retry pending)
 - [x] Semantic token system
-- [ ] Official base primitives
-- [ ] Hashpix reusable component layer
+- [x] Official base primitives (20 registry components; Sonner retry remains pending)
+- [x] Hashpix reusable component layer (ActionButton, IconButton, Field, LockedField, StatusBadge)
 - [ ] Auth routes
 - [ ] Dashboard shell, wizard and projects
 - [ ] Project workspace
