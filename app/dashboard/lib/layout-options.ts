@@ -1,14 +1,14 @@
 import {
-  Blend,
-  Focus,
-  LayoutGrid,
-  MonitorPlay,
-  PictureInPicture2,
-  Sparkles,
-  User,
-  Users2,
-  type LucideIcon,
-} from "lucide-react";
+  BlurIcon,
+  ComputerVideoCallIcon,
+  FocusIcon,
+  GridViewIcon,
+  MagicWand01Icon,
+  PictureInPictureExitIcon,
+  UserIcon,
+  UserMultiple02Icon,
+} from "@hugeicons/core-free-icons";
+import type { IconSvgElement } from "@hugeicons/react";
 import type { ClipLayout } from "../types";
 
 /**
@@ -22,15 +22,15 @@ import type { ClipLayout } from "../types";
  * `false` until face_track stops returning FACE_MODEL_NOT_INSTALLED. Keep
  * this in sync with render.py and the skill's table in the same change.
  */
-export const layoutOptions: Array<{ id: ClipLayout; label: string; hint: string; icon: LucideIcon; rendersToday: boolean }> = [
-  { id: "auto", label: "Автоматически", hint: "Мы подберём кадрирование по содержимому", icon: Sparkles, rendersToday: true },
-  { id: "solo", label: "Соло", hint: "Фиксированный кадр по центру, без слежения за лицом", icon: User, rendersToday: true },
-  { id: "blur", label: "Размытый фон", hint: "Видео 16:9 с размытыми полями под 9:16", icon: Blend, rendersToday: true },
-  { id: "active_speaker", label: "Активный спикер", hint: "Камера следует за тем, кто говорит", icon: Focus, rendersToday: false },
-  { id: "podcast", label: "Подкаст, 2 спикера", hint: "Два спикера рядом, горизонтальный сплит", icon: Users2, rendersToday: false },
-  { id: "panel", label: "Панель", hint: "Несколько участников в сетке", icon: LayoutGrid, rendersToday: false },
-  { id: "screen_speaker", label: "Экран + спикер", hint: "Запись экрана с камерой спикера", icon: MonitorPlay, rendersToday: false },
-  { id: "picture_in_picture", label: "Картинка в картинке", hint: "Камера поверх основного видео", icon: PictureInPicture2, rendersToday: false },
+export const layoutOptions: Array<{ id: ClipLayout; label: string; hint: string; icon: IconSvgElement; rendersToday: boolean }> = [
+  { id: "auto", label: "Автоматически", hint: "Мы подберём кадрирование по содержимому", icon: MagicWand01Icon, rendersToday: true },
+  { id: "solo", label: "Соло", hint: "Фиксированный кадр по центру, без слежения за лицом", icon: UserIcon, rendersToday: true },
+  { id: "blur", label: "Размытый фон", hint: "Видео 16:9 с размытыми полями под 9:16", icon: BlurIcon, rendersToday: true },
+  { id: "active_speaker", label: "Активный спикер", hint: "Камера следует за тем, кто говорит", icon: FocusIcon, rendersToday: false },
+  { id: "podcast", label: "Подкаст, 2 спикера", hint: "Два спикера рядом, горизонтальный сплит", icon: UserMultiple02Icon, rendersToday: false },
+  { id: "panel", label: "Панель", hint: "Несколько участников в сетке", icon: GridViewIcon, rendersToday: false },
+  { id: "screen_speaker", label: "Экран + спикер", hint: "Запись экрана с камерой спикера", icon: ComputerVideoCallIcon, rendersToday: false },
+  { id: "picture_in_picture", label: "Картинка в картинке", hint: "Камера поверх основного видео", icon: PictureInPictureExitIcon, rendersToday: false },
 ];
 
 export function layoutToApi(layout: ClipLayout) {

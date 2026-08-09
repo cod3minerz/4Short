@@ -88,7 +88,7 @@ remain baseline facts until their assigned foundation/component phases.
 | `components/hashpix/field.tsx` | no active imports | DEFER / REMOVE IN PHASE 7 | Do not use; registry `Field` is the only future field composition |
 | `ChoiceSegmented` | former one wizard consumer; wraps ToggleGroup with legacy classes | REMOVED — Phase 7.2 | Wizard now uses direct registry ToggleGroup; no active code consumer remains |
 | `HashpixDrawer` | workspace-only Sheet wrapper | REMOVED — Phase 7.3 | Direct registry Sheet now owns the workspace drawers; no consumer remains |
-| `OptionCard` | wizard/editor choices with feature state and local classes | DEFER | Replace with ToggleGroup/Card semantics per feature migration |
+| `OptionCard` | final editor choice consumer was the save-scope selector | REMOVED — Phase 7.4 | Replaced by direct registry `ToggleGroup`; no compatibility wrapper remains |
 | `InfoPanel` | one wizard consumer, legacy tone/icons/classes | DEFER | Re-evaluate against primitive/alert content during wizard migration |
 
 The target preset and complete canonical primitive set remain registry-verified.
@@ -119,7 +119,16 @@ unchanged. See `shadcn-phase-7-1-auth-audit.md`.
 `/dashboard` and `/dashboard/projects` now consume canonical Vega primitives
 without changing their approved shell, wizard or projects-list architecture.
 `Sidebar` remains an installed-but-unused primitive because adopting it would
-replace the product sidebar composition. `OptionCard` remains only for deferred
-clip-editor work; `ChoiceSegmented` is removed after the wizard moved to direct
+replace the product sidebar composition. `OptionCard` and `ChoiceSegmented` are
+removed after their final editor/wizard consumers moved to direct registry
 `ToggleGroup`. The detailed current classification is
 `shadcn-phase-7-2-dashboard-audit.md`; final browser state coverage is pending.
+
+## Phase 7.4 Clip Editor state
+
+The Clip Editor now uses canonical Vega controls and Phase 5 compositions for
+ordinary UI while retaining specialist HVE/media/timeline geometry. Its native
+colour picker is an explicitly documented exception; `RangeTimeline`, preview
+overlays and timecode retain their functional geometry. The audit record is
+`shadcn-phase-7-4-clip-editor-audit.md`. Browser verification is blocked by
+the rejected local test-admin credential, not considered complete.

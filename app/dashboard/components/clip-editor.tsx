@@ -1,38 +1,46 @@
 "use client";
 
 import {
-  ArrowLeft,
-  Check,
-  ChevronDown,
-  Crop,
-  Eye,
-  LoaderCircle,
-  PanelLeftClose,
-  PanelLeftOpen,
-  PanelRightClose,
-  PanelRightOpen,
-  Pause,
-  Play,
-  Redo2,
-  Save,
-  Search,
-  Sparkles,
-  Subtitles,
-  Type,
-  Undo2,
-  Volume2,
-  WandSparkles,
-  ZoomIn,
-  X,
-} from "lucide-react";
+  ArrowDown01Icon,
+  ArrowLeft01Icon,
+  Cancel01Icon,
+  CropIcon,
+  EyeIcon,
+  MagicWand01Icon,
+  PanelLeftCloseIcon,
+  PanelLeftOpenIcon,
+  PanelRightCloseIcon,
+  PanelRightOpenIcon,
+  PauseIcon,
+  PlayIcon,
+  Redo02Icon,
+  SaveIcon,
+  Search01Icon,
+  SparklesIcon,
+  SubtitleIcon,
+  TextIcon,
+  Tick02Icon,
+  Undo02Icon,
+  VolumeHighIcon,
+  ZoomInAreaIcon,
+} from "@hugeicons/core-free-icons";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActionButton, IconButton } from "@/components/hashpix/action-button";
-import { ChoiceSelect, ChoiceSwitch } from "@/components/hashpix/choice-controls";
+import { AppIcon } from "@/components/hashpix/app-icon";
+import { AsyncButton } from "@/components/hashpix/async-button";
+import { IconButton } from "@/components/hashpix/action-button";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { defaultClipEditorState, transcript } from "../data";
+import { Field, FieldContent, FieldDescription, FieldLabel, FieldTitle } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Textarea } from "@/components/ui/textarea";
+import { defaultClipEditorState, transcript } from "../data";
 import {
   applyEditorDraftCommands,
   commitEditorDraft,
@@ -64,11 +72,8 @@ import {
 } from "../lib/hve-offline-command-queue";
 import { layoutFromApi, layoutOptions, layoutToApi } from "../lib/layout-options";
 import { toEditorWords, type EditorWord } from "../lib/transcript";
-import { ColorField } from "@/components/hashpix/color-field";
-import { OptionCard } from "@/components/hashpix/option-card";
 import { RangeTimeline } from "@/components/hashpix/range-timeline";
 import { SampleList } from "@/components/hashpix/sample-list";
-import { SelectableRow } from "@/components/hashpix/selectable-row";
 import { SubtitlePreviewOverlay } from "@/components/hashpix/subtitle-preview-overlay";
 import { HveCompositionPreview } from "./HveCompositionPreview";
 import { trackApp } from "../lib/track-app";
@@ -96,11 +101,11 @@ type SourceReviewComposition = Extract<ApiEditorManifest["composition"], { statu
  * desktop controls drifting into two different sets of available tools.
  */
 const editorSections = [
-  { id: "clip", icon: WandSparkles, label: "Клип" },
-  { id: "frame", icon: Crop, label: "Кадр" },
-  { id: "captions", icon: Subtitles, label: "Субтитры" },
-  { id: "title", icon: Type, label: "Заголовок" },
-] as const satisfies ReadonlyArray<{ id: InspectorSection; icon: typeof WandSparkles; label: string }>;
+  { id: "clip", icon: MagicWand01Icon, label: "Клип" },
+  { id: "frame", icon: CropIcon, label: "Кадр" },
+  { id: "captions", icon: SubtitleIcon, label: "Субтитры" },
+  { id: "title", icon: TextIcon, label: "Заголовок" },
+] as const;
 
 function EditorSectionTools({
   active,
@@ -111,27 +116,27 @@ function EditorSectionTools({
   onChange: (section: InspectorSection) => void;
   compact?: boolean;
 }) {
-  return editorSections.map(({ id, icon: Icon, label }) => compact ? (
+  return editorSections.map(({ id, icon, label }) => compact ? (
     <IconButton
       key={id}
       label={label}
       tooltip={label}
+      variant={active === id ? "secondary" : "ghost"}
       aria-pressed={active === id}
-      className={active === id ? "is-active" : undefined}
       onClick={() => onChange(id)}
     >
-      <Icon size={17} />
+      <AppIcon icon={icon} size="sm" aria-hidden="true" />
     </IconButton>
   ) : (
-    <ActionButton
+    <AsyncButton
       key={id}
-      tone="secondary"
-      className={active === id ? "is-active" : undefined}
+      variant={active === id ? "secondary" : "ghost"}
+      aria-pressed={active === id}
       onClick={() => onChange(id)}
     >
-      <Icon size={17} />
+      <AppIcon icon={icon} size="sm" aria-hidden="true" />
       {label}
-    </ActionButton>
+    </AsyncButton>
   ));
 }
 
@@ -1071,66 +1076,69 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
     <main className={`clip-editor ${uiHidden ? "is-ui-hidden" : ""} ${leftOpen ? "" : "is-left-collapsed"} ${rightOpen ? "" : "is-right-collapsed"}`}>
       <header className="clip-editor__header">
         <div>
-          <Link href={`/dashboard/projects/${projectId}`} aria-label="Вернуться к проекту"><ArrowLeft size={19} /></Link>
-          <input ref={titleRef} value={state.title} onChange={(event) => commit({ title: event.target.value })} />
+          <Button
+            nativeButton={false}
+            render={<Link href={`/dashboard/projects/${projectId}`} />}
+            variant="ghost"
+            size="icon"
+            aria-label="Вернуться к проекту"
+          >
+            <AppIcon icon={ArrowLeft01Icon} aria-hidden="true" />
+          </Button>
+          <Input ref={titleRef} className="clip-editor__title" aria-label="Название клипа" value={state.title} onChange={(event) => commit({ title: event.target.value })} />
           <small>
             {draftStatus === "saving" ? "Сохраняем…" : draftStatus === "changed" ? "Есть изменения" : "Черновик сохранён"}
           </small>
         </div>
         <nav aria-label="История и сохранение">
-          <IconButton label="Отменить" tooltip="Отменить" disabled={!past.length} onClick={undo}><Undo2 size={18} /></IconButton>
-          <IconButton label="Повторить" tooltip="Повторить" disabled={!future.length} onClick={redo}><Redo2 size={18} /></IconButton>
-          <ActionButton tone="quiet" aria-label="Применить изменения" onClick={() => setScopeOpen(true)}>
+          <IconButton variant="ghost" label="Отменить" tooltip="Отменить" disabled={!past.length} onClick={undo}><AppIcon icon={Undo02Icon} aria-hidden="true" /></IconButton>
+          <IconButton variant="ghost" label="Повторить" tooltip="Повторить" disabled={!future.length} onClick={redo}><AppIcon icon={Redo02Icon} aria-hidden="true" /></IconButton>
+          <AsyncButton variant="ghost" aria-label="Применить изменения" onClick={() => setScopeOpen(true)}>
             Применить
-            <ChevronDown size={15} />
-          </ActionButton>
-          <ActionButton aria-label="Обновить клип" disabled={busy} onClick={runRerender}>
-            {busy ? <LoaderCircle className="is-spinning" size={17} /> : <Sparkles size={17} />}
+            <AppIcon icon={ArrowDown01Icon} size="sm" aria-hidden="true" />
+          </AsyncButton>
+          <AsyncButton aria-label="Обновить клип" loading={busy} onClick={runRerender}>
+            {!busy ? <AppIcon icon={SparklesIcon} size="sm" aria-hidden="true" /> : null}
             Обновить клип
-          </ActionButton>
+          </AsyncButton>
         </nav>
       </header>
 
       {notice ? (
-        <div className="clip-editor__notice" role="status">
-          <Check size={16} />
+        <Card className="clip-editor__notice px-4 py-3" role="status">
+          <AppIcon icon={Tick02Icon} size="sm" aria-hidden="true" />
           <span>{notice}</span>
-          <IconButton label="Скрыть сообщение" tooltip="Закрыть" onClick={() => setNotice("")}><X size={16} /></IconButton>
-        </div>
+          <IconButton variant="ghost" label="Скрыть сообщение" tooltip="Закрыть" onClick={() => setNotice("")}><AppIcon icon={Cancel01Icon} size="sm" aria-hidden="true" /></IconButton>
+        </Card>
       ) : null}
 
-      <ToggleGroup
+      <Tabs
         className="clip-editor__mobile-tabs"
         aria-label="Панели редактора"
-        value={[mobilePanel]}
-        onValueChange={(value) => {
-          const next = value[0] as typeof mobilePanel | undefined;
-          if (next) setMobilePanel(next);
-        }}
+        value={mobilePanel}
+        onValueChange={(value) => setMobilePanel(value as typeof mobilePanel)}
       >
-        {(["text", "tools", "properties"] as const).map((panel) => (
-          <ToggleGroupItem
-            value={panel}
-            className={mobilePanel === panel ? "is-active" : ""}
-            key={panel}
-          >
-            {panel === "text" ? "Текст" : panel === "tools" ? "Инструменты" : "Свойства"}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+        <TabsList>
+          {(["text", "tools", "properties"] as const).map((panel) => (
+            <TabsTrigger value={panel} key={panel}>
+              {panel === "text" ? "Текст" : panel === "tools" ? "Инструменты" : "Свойства"}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       <div className={`clip-editor__workspace mobile-panel-${mobilePanel}`}>
         <aside className={`clip-transcript-panel ${leftOpen ? "" : "is-collapsed"}`}>
           <header>
-            <strong className="clip-transcript-panel__title">Транскрипт</strong>
-            <IconButton label={leftOpen ? "Свернуть левую панель" : "Развернуть левую панель"} tooltip={leftOpen ? "Свернуть панель" : "Развернуть панель"} onClick={() => setLeftOpen((value) => !value)}>
-              {leftOpen ? <PanelLeftClose size={17} /> : <PanelLeftOpen size={17} />}
+            <FieldTitle className="clip-transcript-panel__title">Транскрипт</FieldTitle>
+            <IconButton variant="ghost" label={leftOpen ? "Свернуть левую панель" : "Развернуть левую панель"} tooltip={leftOpen ? "Свернуть панель" : "Развернуть панель"} onClick={() => setLeftOpen((value) => !value)}>
+              <AppIcon icon={leftOpen ? PanelLeftCloseIcon : PanelLeftOpenIcon} size="sm" aria-hidden="true" />
             </IconButton>
           </header>
-          <label className="clip-transcript-search">
-            <Search size={15} />
-            <input value={wordQuery} onChange={(event) => setWordQuery(event.target.value)} placeholder="Найти в тексте" />
-          </label>
+          <div className="clip-transcript-search">
+            <AppIcon icon={Search01Icon} size="sm" aria-hidden="true" />
+            <Input aria-label="Найти в тексте" value={wordQuery} onChange={(event) => setWordQuery(event.target.value)} placeholder="Найти в тексте" />
+          </div>
           <div className="clip-word-stream">
             {filteredWords.map((item, index) => (
               <Button
@@ -1151,9 +1159,9 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
           </div>
           <div className="clip-word-actions">
             {activeWord ? (
-              <label>
-                <span>Исправить слово</span>
-                <input
+              <Field>
+                <FieldLabel>Исправить слово</FieldLabel>
+                <Input
                   value={wordEdits[activeWord.id] ?? activeWord.word}
                   onChange={(event) => {
                     commitTranscript({ wordEdits: { ...wordEdits, [activeWord.id]: event.target.value } });
@@ -1161,14 +1169,14 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
                     setDraftStatus("changed");
                   }}
                 />
-              </label>
+              </Field>
             ) : <p>Выберите слово для точечной правки.</p>}
             <div>
-              <ActionButton tone="secondary" disabled={!selectedWord} onClick={() => setBoundaryFromWord("start")}>Начало</ActionButton>
-              <ActionButton tone="secondary" disabled={!selectedWord} onClick={() => setBoundaryFromWord("end")}>Конец</ActionButton>
+              <AsyncButton variant="secondary" disabled={!selectedWord} onClick={() => setBoundaryFromWord("start")}>Начало</AsyncButton>
+              <AsyncButton variant="secondary" disabled={!selectedWord} onClick={() => setBoundaryFromWord("end")}>Конец</AsyncButton>
             </div>
-            <ActionButton
-              tone="secondary"
+            <AsyncButton
+              variant="secondary"
               disabled={!selectedWord}
               aria-pressed={selectedWord ? hiddenWords.includes(selectedWord) : false}
               onClick={() => {
@@ -1179,9 +1187,9 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
               }}
             >
               {selectedWord && hiddenWords.includes(selectedWord) ? "Вернуть в субтитры" : "Скрыть из субтитров"}
-            </ActionButton>
-            <ActionButton
-              tone="secondary"
+            </AsyncButton>
+            <AsyncButton
+              variant="secondary"
               disabled={!selectedWord}
               aria-pressed={selectedWord ? cutWords.includes(selectedWord) : false}
               onClick={() => {
@@ -1192,7 +1200,7 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
               }}
             >
               {selectedWord && cutWords.includes(selectedWord) ? "Вернуть звук" : "Вырезать со звуком"}
-            </ActionButton>
+            </AsyncButton>
           </div>
         </aside>
 
@@ -1211,13 +1219,13 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
 
         <section className="clip-preview-stage">
           {!leftOpen ? (
-            <IconButton className="clip-panel-restore is-left" label="Развернуть левую панель" tooltip="Развернуть текст" onClick={() => setLeftOpen(true)}>
-              <PanelLeftOpen size={17} />
+            <IconButton variant="ghost" className="clip-panel-restore is-left" label="Развернуть левую панель" tooltip="Развернуть текст" onClick={() => setLeftOpen(true)}>
+              <AppIcon icon={PanelLeftOpenIcon} size="sm" aria-hidden="true" />
             </IconButton>
           ) : null}
           {!rightOpen ? (
-            <IconButton className="clip-panel-restore is-right" label="Развернуть панель свойств" tooltip="Развернуть свойства" onClick={() => setRightOpen(true)}>
-              <PanelRightOpen size={17} />
+            <IconButton variant="ghost" className="clip-panel-restore is-right" label="Развернуть панель свойств" tooltip="Развернуть свойства" onClick={() => setRightOpen(true)}>
+              <AppIcon icon={PanelRightOpenIcon} size="sm" aria-hidden="true" />
             </IconButton>
           ) : null}
           <div
@@ -1286,20 +1294,26 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
             ) : null}
             {playbackUrl ? <p className="clip-phone-preview__rendered">Финальный рендер</p> : null}
             {safeZonesVisible && !sourceReviewUrl && !playbackUrl ? <div className="clip-phone-preview__safe-zone" /> : null}
-            {(playbackUrl || sourceReviewUrl) ? <IconButton className="clip-phone-preview__play" tone="light" label={playing ? "Пауза" : "Воспроизвести"} tooltip={playing ? "Пауза" : "Воспроизвести"} onClick={() => setPlaying((value) => !value)}>
-              {playing ? <Pause fill="currentColor" size={20} /> : <Play fill="currentColor" size={20} />}
+            {(playbackUrl || sourceReviewUrl) ? <IconButton className="clip-phone-preview__play" variant="secondary" label={playing ? "Пауза" : "Воспроизвести"} tooltip={playing ? "Пауза" : "Воспроизвести"} onClick={() => setPlaying((value) => !value)}>
+              <AppIcon icon={playing ? PauseIcon : PlayIcon} aria-hidden="true" />
             </IconButton> : null}
           </div>
           <div className="clip-trim">
             <div className="clip-transport">
-              <IconButton label={playing ? "Пауза" : "Воспроизвести"} tooltip={playing ? "Пауза" : "Воспроизвести"} onClick={() => setPlaying((value) => !value)}>
-                {playing ? <Pause fill="currentColor" size={15} /> : <Play fill="currentColor" size={15} />}
+              <IconButton variant="ghost" label={playing ? "Пауза" : "Воспроизвести"} tooltip={playing ? "Пауза" : "Воспроизвести"} onClick={() => setPlaying((value) => !value)}>
+                <AppIcon icon={playing ? PauseIcon : PlayIcon} size="sm" aria-hidden="true" />
               </IconButton>
               <span>{formatClock(currentTime)}</span>
               <strong>{Math.round(timelineEnd - timelineStart)} сек.</strong>
               <span>{formatClock(timelineEnd)}</span>
-              <Volume2 size={15} />
-              <label><ZoomIn size={14} /><input aria-label="Масштаб холста" type="range" min={50} max={100} step={25} value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /><span>{zoom}%</span></label>
+              <AppIcon icon={VolumeHighIcon} size="sm" aria-hidden="true" />
+              <Field className="clip-zoom-control" orientation="horizontal">
+                <AppIcon icon={ZoomInAreaIcon} size="sm" aria-hidden="true" />
+                <FieldContent>
+                  <Slider aria-label="Масштаб холста" min={50} max={100} step={25} value={[zoom]} onValueChange={(value) => setZoom((Array.isArray(value) ? value[0] : value) ?? zoom)} />
+                </FieldContent>
+                <output>{zoom}%</output>
+              </Field>
             </div>
             <RangeTimeline
               min={timelineMin}
@@ -1321,8 +1335,8 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
 
         <aside className={`clip-inspector ${rightOpen ? "" : "is-collapsed"}`}>
           <header>
-            <strong>{editorSections.find(({ id }) => id === inspectorSection)?.label}</strong>
-            <IconButton label="Свернуть свойства" tooltip="Свернуть панель" onClick={() => setRightOpen(false)}><PanelRightClose size={17} /></IconButton>
+            <FieldTitle>{editorSections.find(({ id }) => id === inspectorSection)?.label}</FieldTitle>
+            <IconButton variant="ghost" label="Свернуть свойства" tooltip="Свернуть панель" onClick={() => setRightOpen(false)}><AppIcon icon={PanelRightCloseIcon} size="sm" aria-hidden="true" /></IconButton>
           </header>
 
           <div className="clip-inspector__content">
@@ -1333,53 +1347,48 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
             <div className="clip-inspector__body">
               {inspectorSection === "clip" ? (
                 <section className="clip-inspector__section" aria-label="Общие настройки клипа">
-              <label className="clip-field"><span>Название</span><input value={state.title} onChange={(event) => commit({ title: event.target.value })} /></label>
-              <div className="clip-switch-row"><span>Удалять длинные паузы</span><ChoiceSwitch checked={state.silenceRemoval} label="Удалять паузы" onCheckedChange={(value) => commit({ silenceRemoval: value })} /></div>
+              <Field className="clip-field"><FieldLabel>Название</FieldLabel><Input value={state.title} onChange={(event) => commit({ title: event.target.value })} /></Field>
+              <Field className="clip-switch-row" orientation="horizontal"><FieldTitle>Удалять длинные паузы</FieldTitle><Switch checked={state.silenceRemoval} aria-label="Удалять длинные паузы" onCheckedChange={(value) => commit({ silenceRemoval: value })} /></Field>
               <div className="clip-inspector__group">
-                <span className="clip-inspector__group-label">Экспорт</span>
-                <div className="option-card-grid clip-option-grid--two">
-                  <OptionCard title="720p" selected={state.exportHeight === 1280} onSelect={() => commit({ exportHeight: 1280 })} />
-                  <OptionCard title="1080p" selected={state.exportHeight === 1920} onSelect={() => commit({ exportHeight: 1920 })} />
-                </div>
-                <p className="clip-help-text">MP4, SRT и VTT создаются вместе.</p>
+                <FieldTitle>Экспорт</FieldTitle>
+                <ToggleGroup aria-label="Качество экспорта" className="clip-option-grid clip-option-grid--two" value={[String(state.exportHeight)]} onValueChange={(value) => { if (value[0]) commit({ exportHeight: Number(value[0]) as 1280 | 1920 }); }} variant="outline" spacing={2}>
+                  <ToggleGroupItem value="1280">720p</ToggleGroupItem>
+                  <ToggleGroupItem value="1920">1080p</ToggleGroupItem>
+                </ToggleGroup>
+                <FieldDescription>MP4, SRT и VTT создаются вместе.</FieldDescription>
               </div>
               <div className="clip-inspector__group">
-                <span className="clip-inspector__group-label">Для публикации</span>
-                <label className="clip-field"><span>Заголовок</span><input value={state.socialTitle} onChange={(event) => commit({ socialTitle: event.target.value })} /></label>
-                <label className="clip-field"><span>Описание</span><textarea rows={4} value={state.socialDescription} onChange={(event) => commit({ socialDescription: event.target.value })} /></label>
+                <FieldTitle>Для публикации</FieldTitle>
+                <Field className="clip-field"><FieldLabel>Заголовок</FieldLabel><Input value={state.socialTitle} onChange={(event) => commit({ socialTitle: event.target.value })} /></Field>
+                <Field className="clip-field"><FieldLabel>Описание</FieldLabel><Textarea rows={4} value={state.socialDescription} onChange={(event) => commit({ socialDescription: event.target.value })} /></Field>
               </div>
                 </section>
               ) : null}
 
               {inspectorSection === "frame" ? (
                 <section className="clip-inspector__section" aria-label="Настройки кадра">
-              <div className="option-card-grid">
-                {layoutOptions.filter(({ rendersToday }) => rendersToday).map(({ id, label, hint, icon: Icon }) => (
-                  <OptionCard
-                    key={id}
-                    icon={<Icon size={17} />}
-                    title={label}
-                    selected={state.layout === id}
-                    tooltip={hint}
-                    onSelect={() => commit({ layout: id })}
-                  />
+              <ToggleGroup aria-label="Формат кадра" className="clip-layout-options" value={[state.layout]} onValueChange={(value) => { if (value[0]) commit({ layout: value[0] as ClipEditorState["layout"] }); }} variant="outline" spacing={2}>
+                {layoutOptions.filter(({ rendersToday }) => rendersToday).map(({ id, label, hint, icon }) => (
+                  <ToggleGroupItem key={id} value={id} title={hint}>
+                    <AppIcon icon={icon} size="sm" aria-hidden="true" />
+                    {label}
+                  </ToggleGroupItem>
                 ))}
-              </div>
-              <ActionButton
-                className="clip-upload-asset"
-                tone="secondary"
+              </ToggleGroup>
+              <AsyncButton
+                variant="secondary"
                 aria-pressed={safeZonesVisible}
                 onClick={() => setSafeZonesVisible((value) => !value)}
               >
-                <Eye size={16} /> {safeZonesVisible ? "Скрыть safe zones" : "Показать safe zones"}
-              </ActionButton>
-              <p className="clip-help-text">Доступные режимы показаны без трекинга лиц. Более сложные композиции появятся только после подключения HVE-анализа.</p>
+                <AppIcon icon={EyeIcon} size="sm" aria-hidden="true" /> {safeZonesVisible ? "Скрыть safe zones" : "Показать safe zones"}
+              </AsyncButton>
+              <FieldDescription>Доступные режимы показаны без трекинга лиц. Более сложные композиции появятся только после подключения HVE-анализа.</FieldDescription>
                 </section>
               ) : null}
 
               {inspectorSection === "captions" ? (
                 <section className="clip-inspector__section" aria-label="Настройки субтитров">
-              <div className="clip-switch-row"><span>Показывать субтитры</span><ChoiceSwitch checked={state.captionsEnabled} label="Показывать субтитры" onCheckedChange={(value) => commit({ captionsEnabled: value })} /></div>
+              <Field className="clip-switch-row" orientation="horizontal"><FieldTitle>Показывать субтитры</FieldTitle><Switch checked={state.captionsEnabled} aria-label="Показывать субтитры" onCheckedChange={(value) => commit({ captionsEnabled: value })} /></Field>
               <SampleList
                 aria-label="Стиль субтитров"
                 value={state.subtitlePreset}
@@ -1401,49 +1410,22 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
                 }))}
               />
               <div className="clip-field-pair">
-                <label className="clip-field">
-                  <span>Шрифт</span>
-                  <ChoiceSelect
-                    aria-label="Шрифт субтитров"
-                    fullWidth
-                    value={state.fontFamily}
-                    onValueChange={(value) => commit({ fontFamily: value })}
-                    options={fontOptions.map((name) => ({ id: name, label: name }))}
-                  />
-                </label>
-                <label className="clip-field">
-                  <span>Позиция</span>
-                  <ChoiceSelect
-                    aria-label="Позиция субтитров"
-                    fullWidth
-                    value={state.subtitlePosition}
-                    onValueChange={(value) => commit({ subtitlePosition: value as ClipEditorState["subtitlePosition"] })}
-                    options={positionOptions}
-                  />
-                </label>
+                <Field className="clip-field"><FieldLabel>Шрифт</FieldLabel><Select value={state.fontFamily} onValueChange={(value) => value && commit({ fontFamily: value })}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent>{fontOptions.map((name) => <SelectItem key={name} value={name}>{name}</SelectItem>)}</SelectContent></Select></Field>
+                <Field className="clip-field"><FieldLabel>Позиция</FieldLabel><Select value={state.subtitlePosition} onValueChange={(value) => value && commit({ subtitlePosition: value as ClipEditorState["subtitlePosition"] })}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent>{positionOptions.map((option) => <SelectItem key={option.id} value={option.id}>{option.label}</SelectItem>)}</SelectContent></Select></Field>
               </div>
-              <label className="clip-range-field"><span>Размер <b>{state.fontSize}px</b></span><input type="range" min={28} max={112} value={state.fontSize} onChange={(event) => commit({ fontSize: Number(event.target.value) })} /></label>
+              <Field className="clip-range-field"><FieldTitle>Размер <output>{state.fontSize}px</output></FieldTitle><Slider aria-label="Размер субтитров" min={28} max={112} value={[state.fontSize]} onValueChange={(value) => commit({ fontSize: (Array.isArray(value) ? value[0] : value) ?? state.fontSize })} /></Field>
               <div className="clip-colors">
-                <ColorField label="Основной" value={state.primaryColor} onChange={(value) => commit({ primaryColor: value })} />
-                <ColorField label="Активный" value={state.activeColor} onChange={(value) => commit({ activeColor: value })} />
+                <Field className="clip-color-field"><FieldLabel htmlFor="clip-primary-colour">Основной</FieldLabel><input id="clip-primary-colour" type="color" value={state.primaryColor} onChange={(event) => commit({ primaryColor: event.target.value })} /><output>{state.primaryColor.toUpperCase()}</output></Field>
+                <Field className="clip-color-field"><FieldLabel htmlFor="clip-active-colour">Активный</FieldLabel><input id="clip-active-colour" type="color" value={state.activeColor} onChange={(event) => commit({ activeColor: event.target.value })} /><output>{state.activeColor.toUpperCase()}</output></Field>
               </div>
                 </section>
               ) : null}
 
               {inspectorSection === "title" ? (
                 <section className="clip-inspector__section" aria-label="Настройки заголовка">
-              <div className="clip-switch-row"><span>Показывать заголовок</span><ChoiceSwitch checked={state.titleEnabled} label="Показывать заголовок" onCheckedChange={(value) => commit({ titleEnabled: value })} /></div>
-              <label className="clip-field"><span>Текст</span><textarea rows={3} value={state.title} onChange={(event) => commit({ title: event.target.value })} /></label>
-              <label className="clip-field">
-                <span>Позиция</span>
-                <ChoiceSelect
-                  aria-label="Позиция заголовка"
-                  fullWidth
-                  value={state.titlePosition}
-                  onValueChange={(value) => commit({ titlePosition: value as ClipEditorState["titlePosition"] })}
-                  options={positionOptions}
-                />
-              </label>
+              <Field className="clip-switch-row" orientation="horizontal"><FieldTitle>Показывать заголовок</FieldTitle><Switch checked={state.titleEnabled} aria-label="Показывать заголовок" onCheckedChange={(value) => commit({ titleEnabled: value })} /></Field>
+              <Field className="clip-field"><FieldLabel>Текст</FieldLabel><Textarea rows={3} value={state.title} onChange={(event) => commit({ title: event.target.value })} /></Field>
+              <Field className="clip-field"><FieldLabel>Позиция</FieldLabel><Select value={state.titlePosition} onValueChange={(value) => value && commit({ titlePosition: value as ClipEditorState["titlePosition"] })}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent>{positionOptions.map((option) => <SelectItem key={option.id} value={option.id}>{option.label}</SelectItem>)}</SelectContent></Select></Field>
                 </section>
               ) : null}
             </div>
@@ -1455,29 +1437,28 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
         <DialogContent>
           <DialogHeader><DialogTitle>Куда применить?</DialogTitle><DialogDescription>Явная область изменений</DialogDescription></DialogHeader>
           <div className="clip-scope-options">
-          {([
-            ["clip", "Только этот клип", "Создать новую версию текущего клипа."],
-            ["project", "Ко всему проекту", "Сделать эти настройки проектными, не меняя пресет."],
-            ["style", "Обновить стиль", "Создать новую неизменяемую версию текущего стиля."],
-            ["new_style", "Сохранить новым стилем", "Оставить исходный стиль без изменений."],
-          ] as const).map(([id, title, text]) => (
-            <SelectableRow
-              key={id}
-              title={title}
-              description={text}
-              selected={scope === id}
-              onClick={() => setScope(id)}
-            />
-          ))}
+            <ToggleGroup aria-label="Область применения" className="w-full" orientation="vertical" variant="outline" value={[scope]} onValueChange={(value) => { if (value[0]) setScope(value[0] as ApplyScope); }}>
+              {([
+                ["clip", "Только этот клип", "Создать новую версию текущего клипа."],
+                ["project", "Ко всему проекту", "Сделать эти настройки проектными, не меняя пресет."],
+                ["style", "Обновить стиль", "Создать новую неизменяемую версию текущего стиля."],
+                ["new_style", "Сохранить новым стилем", "Оставить исходный стиль без изменений."],
+              ] as const).map(([id, title, text]) => (
+                <ToggleGroupItem className="clip-scope-choice" key={id} value={id}>
+                  <span>{title}</span>
+                  <small>{text}</small>
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
           </div>
           {scope === "new_style" ? (
-            <label className="clip-field"><span>Название стиля</span><input value={styleName} onChange={(event) => setStyleName(event.target.value)} /></label>
+            <Field className="clip-field"><FieldLabel>Название стиля</FieldLabel><Input value={styleName} onChange={(event) => setStyleName(event.target.value)} /></Field>
           ) : null}
           <DialogFooter>
-            <ActionButton tone="secondary" onClick={() => setScopeOpen(false)}>Отменить</ActionButton>
-            <ActionButton disabled={busy} onClick={saveVersion}>
-              {busy ? <LoaderCircle className="is-spinning" size={17} /> : <Save size={17} />}Сохранить версию
-            </ActionButton>
+            <AsyncButton variant="secondary" onClick={() => setScopeOpen(false)}>Отменить</AsyncButton>
+            <AsyncButton loading={busy} onClick={saveVersion}>
+              {!busy ? <AppIcon icon={SaveIcon} size="sm" aria-hidden="true" /> : null}Сохранить версию
+            </AsyncButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

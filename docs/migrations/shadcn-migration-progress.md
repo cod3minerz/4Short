@@ -17,6 +17,7 @@ Target UI foundation: `b37sSWfzM`
   - [x] Phase 7.1 — auth (`/sign-in`, `/sign-up`, `/forgot-password`)
   - [ ] Phase 7.2 — implementation committed; final browser evidence is blocked
   - [ ] Phase 7.3 — Project Workspace implementation committed; real API/state evidence remains blocked
+  - [ ] Phase 7.4 — Clip Editor implementation committed; authenticated browser evidence remains blocked
 
 ## Phase 0 record
 
@@ -306,3 +307,43 @@ Target UI foundation: `b37sSWfzM`
   transcript persistence, render/download/polling and saved screenshot
   evidence remain **blocked**; they are not claimed as checked.
 - Phase 7.2 responsive/state evidence debt is preserved without modification.
+
+## Phase 7.4 record — Clip Editor and overlays
+
+- Preserved the editor workspace, preview/timeline/inspector placement, HVE
+  document and draft semantics, ClipEDL/render/control contracts, preview
+  clock and playback synchronisation, crop/layout geometry, media transforms
+  and `RangeTimeline` mechanics.
+- Standard editor controls now use canonical Vega `Button`, `Input`,
+  `Textarea`, `Select`, `Switch`, `Slider`, `Tabs`, `ToggleGroup`, `Card`,
+  `Dialog` and `Field`, with the Phase 5 `AsyncButton`, `IconButton` and
+  Hugeicons `AppIcon` compositions.
+- The two colour controls remain native browser colour pickers inside registry
+  Field anatomy. `RangeTimeline`, media canvas/overlays, subtitle samples and
+  compact timecodes remain documented specialist editor surfaces.
+- Removed the last consumers of `ChoiceSelect`, `ChoiceSwitch`, `ColorField`,
+  `OptionCard` and `SelectableRow`; their files and dead helper CSS are gone.
+  The shared layout-icon data is now Hugeicons so editor and wizard never
+  require a Lucide compatibility bridge.
+- See `shadcn-phase-7-4-clip-editor-audit.md` for the classification and
+  boundary evidence. No Phase 7.5 work is included.
+
+## Phase 7.4 verification
+
+- `git diff --check`, `npm run typecheck`, `npm run lint` and the focused
+  `hve-editor-manifest` unit suite — pass.
+- `npm run hve:smoke:g4` — pass. HVE-G3 is not applicable because no
+  preview/render/media/timeline geometry or implementation is changed.
+- `npx shadcn@latest diff`, `npm run audit:product-ui` and
+  `npm run audit:dark-surfaces` — pass; the registry reports `No updates
+  found.` and the product audit reports 18 preset roles / 20 compositions.
+- `npm run test:unit` — 197 pass; `npm run test` — 197 unit and 11 rendered
+  HTML/SSR checks pass; `npm run build:vercel` — pass with 27 routes.
+- Codebase Memory full reindex/impact audit — pass (6,872 nodes, 15,900
+  edges). The updated ClipEditor graph retains its critical HVE/control calls
+  and has no deleted editor-helper node.
+- Authenticated browser evidence is **blocked**: the route session expired and
+  the documented local development credential was rejected by Better Auth.
+  The only observed populated editor DOM at 1280px had no horizontal overflow
+  before redirect; no editor interaction, console or responsive matrix is
+  claimed as passed without a reproducible authenticated fixture.

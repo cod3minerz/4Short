@@ -1,7 +1,8 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Tick02Icon } from "@hugeicons/core-free-icons";
 import { useMemo, type ReactNode } from "react";
+import { AppIcon } from "./app-icon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -56,7 +57,7 @@ export function SampleList({ items, value, onChange, className, ...rest }: Sampl
             >
               <span className="sample-list__sample">{item.sample}</span>
               <span className="sample-list__label">{item.label}</span>
-              {value === item.id ? <Check className="sample-list__check" size={15} aria-hidden="true" /> : null}
+              {value === item.id ? <AppIcon icon={Tick02Icon} size="sm" className="sample-list__check" aria-hidden="true" /> : null}
             </Button>
           </div>
         );

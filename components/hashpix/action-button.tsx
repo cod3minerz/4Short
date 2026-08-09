@@ -52,6 +52,7 @@ export function IconButton({
   tooltip = label,
   children,
   tone = "brand",
+  variant,
   ...props
 }: IconButtonProps) {
   return (
@@ -60,7 +61,7 @@ export function IconButton({
         render={
           <AsyncButton
             {...props}
-            variant={legacyToneVariants[tone]}
+            variant={variant ?? legacyToneVariants[tone]}
             size="icon"
             aria-label={label}
           >

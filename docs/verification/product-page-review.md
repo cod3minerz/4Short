@@ -156,3 +156,19 @@ Do not change `blocked` to `verified` based on static code inspection alone.
   mutation, render/download/polling, destructive confirmation (not present on
   this route) and retained screenshot evidence remain open. Phase 7.2 debts
   are not reclassified by this record.
+
+---
+
+## 2026-08-10 — Phase 7.4 Clip Editor and overlays
+
+- Route: `/dashboard/projects/podcast-24/clips/clip-1`; initial local browser
+  navigation exposed the populated preview editor at 1280px with no horizontal
+  document overflow.
+- Intended checks: toolbar, inspector, save-scope Dialog, slider/switch/select,
+  preview controls, specialised timeline, keyboard/focus return, console and
+  360/768/1024/1440 responsive matrix.
+- Result: `blocked`. The session subsequently redirected to sign-in and the
+  documented local credential `test@hashpix.local` / `test` is rejected by
+  Better Auth. No authenticated editor interaction, dialog/focus, console or
+  responsive assertion is claimed. A valid local test-admin session plus the
+  reproducible preview fixture is needed to close this route evidence.

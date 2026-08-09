@@ -89,8 +89,8 @@ const durations = ["до 30 секунд", "30–60 секунд", "60–90 се
 
 /**
  * A real button for each wizard decision. This is intentionally local to the
- * source flow: it keeps that product geometry while leaving the editor's
- * deferred option-card migration out of this wave.
+ * source flow: it keeps the approved product geometry while relying on the
+ * canonical registry Button for its control semantics.
  */
 function WizardOption({
   icon,
@@ -874,18 +874,18 @@ export function NewProjectWizard({
                 Подскажите, как выглядит видео — от этого зависит кадрирование под вертикаль.
               </SectionDescription>
               <div className="grid gap-2 sm:grid-cols-2">
-                {layoutOptions.map(({ id, label, hint, icon: Icon, rendersToday }) => (
+                {layoutOptions.map(({ id, label, hint, icon, rendersToday }) => (
                   rendersToday ? (
                     <WizardOption
                       key={id}
-                      icon={<Icon size={19} />}
+                      icon={<AppIcon icon={icon} size="md" />}
                       title={label}
                       description={hint}
                       selected={layout === id}
                       onSelect={() => setLayout(id)}
                     />
                   ) : (
-                    <LockedField key={id} icon={<Icon size={16} />} label={label} reason="Нужен трекинг лица — скоро" />
+                    <LockedField key={id} icon={<AppIcon icon={icon} size="sm" />} label={label} reason="Нужен трекинг лица — скоро" />
                   )
                 ))}
               </div>

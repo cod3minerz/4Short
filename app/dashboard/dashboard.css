@@ -259,9 +259,8 @@
 }
 
 
-/* Generic section wrapper for step 2 (cutting mode, format) — a plain
-   heading + hint above whatever the section contains, usually an
-   option-card-grid. */
+/* Generic section wrapper for step 2 (cutting mode, format): a plain
+   heading + hint above the registry-button decision grid. */
 .wizard-section {
   margin-top: 28px;
   padding-top: 20px;
@@ -396,25 +395,6 @@
 }
 
 .wizard-source-pane { padding-top: 16px; }
-
-/*
- * `.wizard-source-cards` and `.option-card-grid` both target this same
- * container element (`new-project-wizard.tsx`'s source-type grid) with
- * equal specificity (one class each) — `.option-card-grid`'s own 2-column
- * rule is declared later in the file, so at equal specificity it silently
- * won the cascade and forced the 3 source cards to wrap 2-then-1 instead of
- * sitting in one row. The combined selector below has higher specificity
- * than either single-class rule, so it wins regardless of source order.
- */
-.option-card-grid.wizard-source-cards {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 14px;
-}
-.wizard-source-cards .option-card {
-  min-height: 108px;
-  padding: 20px;
-}
 
 .wizard-platform-row {
   display: flex;
@@ -1567,33 +1547,15 @@
   gap: 7px;
 }
 
-.clip-editor__header > div > a,
+.clip-editor__header > div > [data-slot="button"],
 .clip-editor__header nav > [data-slot="button"] {
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
+  flex: 0 0 auto;
 }
 
-.clip-editor__header > div > a:hover,
-.clip-editor__header nav > [data-slot="button"]:hover { background: var(--secondary); }
-
-.clip-editor__header input {
+.clip-editor__title {
   width: min(36vw, 360px);
   min-width: 140px;
-  padding: 5px 7px;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 720;
 }
-.clip-editor__header input:hover,
-.clip-editor__header input:focus { border-color: var(--border); background: var(--secondary); outline: 0; }
 
 .clip-editor__header > div > small {
   color: var(--muted-foreground);
@@ -1602,7 +1564,6 @@
 }
 
 .clip-editor__header nav { display: flex; align-items: center; gap: 4px; }
-.clip-editor__header [data-slot="button"] { min-height: 28px; padding-inline: 11px; font-size: 11px; box-shadow: none; transform: none !important; }
 
 .clip-editor__notice {
   position: fixed;
@@ -1611,13 +1572,7 @@
   left: 50%;
   width: max-content;
   max-width: calc(100% - 32px);
-  min-height: 36px;
   transform: translateX(-50%);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--card);
-  box-shadow: 0 8px 24px rgba(20,28,38,.08);
-  font-size: 11px;
 }
 
 .clip-editor__workspace {
@@ -1656,21 +1611,15 @@
   border-bottom: 1px solid var(--border);
 }
 
-.clip-inspector > header strong { font-size: 12px; }
 .clip-transcript-panel > header > [data-slot="button"],
 .clip-inspector > header > [data-slot="button"] { flex: 0 0 auto; }
 
-.clip-transcript-panel__title { font-size: 12px; }
-
 .clip-transcript-search {
-  min-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin: 8px 10px 4px;
-  padding-inline: 9px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--secondary);
 }
-.clip-transcript-search input { font-size: 11px; }
 
 /*
  * Wrapping flex row of word chips. Previously the container was a block and
@@ -1734,16 +1683,7 @@
   background: var(--card);
 }
 .clip-word-actions > p { color: var(--muted-foreground); font-size: 10px; }
-.clip-word-actions > label { display: flex; flex-direction: column; gap: 4px; font-size: 9px; }
-.clip-word-actions > label input {
-  min-height: 32px;
-  padding-inline: 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 11px;
-}
 .clip-word-actions > div { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-.clip-word-actions [data-slot="button"] { min-height: 28px; padding-inline: 8px; font-size: 10px; }
 .clip-word-actions > [data-slot="button"]:last-child { color: var(--destructive); }
 
 .clip-preview-stage {
@@ -1870,12 +1810,6 @@
   z-index: 20;
   right: 12px;
   bottom: 12px;
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  aspect-ratio: 1;
-  border-radius: var(--radius);
 }
 
 .clip-trim {
@@ -1890,26 +1824,20 @@
 }
 .clip-transport {
   display: grid !important;
-  grid-template-columns: 28px auto 1fr auto 18px minmax(110px, 150px);
+  grid-template-columns: 36px auto 1fr auto 20px minmax(110px, 150px);
   align-items: center;
   gap: 8px;
   color: var(--muted-foreground);
   font-size: 9px;
 }
-.clip-transport > [data-slot="button"] { width: 26px; height: 26px; min-height: 26px; }
 .clip-transport strong { color: var(--foreground); font-size: 9px; text-align: center; }
-.clip-transport > label { display: grid; grid-template-columns: 14px 1fr auto; align-items: center; gap: 5px; }
-.clip-transport input { width: 100%; }
-.clip-trim > label { display: block; height: 10px; }
-.clip-trim > label input { width: 100%; height: 10px; }
+.clip-zoom-control { display: grid; grid-template-columns: auto minmax(72px, 1fr) auto; align-items: center; gap: 5px; }
+.clip-zoom-control output { font-variant-numeric: tabular-nums; }
 
 .clip-panel-restore {
   position: absolute;
   z-index: 20;
   top: 10px;
-  width: 30px;
-  height: 30px;
-  min-height: 30px;
 }
 .clip-panel-restore.is-left { left: 10px; }
 .clip-panel-restore.is-right { right: 10px; }
@@ -1940,20 +1868,6 @@
   background: var(--card);
 }
 
-.clip-inspector__rail [data-slot="button"] {
-  color: var(--muted-foreground);
-}
-
-.clip-inspector__rail [data-slot="button"]:hover,
-.clip-inspector__rail [data-slot="button"].is-active {
-  background: var(--accent);
-  color: var(--foreground);
-}
-
-.clip-inspector__rail [data-slot="button"].is-active {
-  color: color-mix(in oklch, var(--primary), var(--foreground) 10%);
-}
-
 .clip-inspector__section {
   display: flex;
   flex-direction: column;
@@ -1969,21 +1883,10 @@
   border-top: 1px solid var(--border);
 }
 
-.clip-inspector__group-label {
-  color: var(--muted-foreground);
-  font-size: 10px;
-  font-weight: 720;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-}
-
-.clip-option-grid { gap: 6px; grid-template-columns: repeat(2, 1fr); }
-.clip-option-grid .option-card {
-  min-height: 38px;
-  padding: 7px;
-  border-radius: var(--radius-sm);
-  font-size: 10px;
-}
+.clip-option-grid { display: grid; width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.clip-option-grid [data-slot="toggle-group-item"] { width: 100%; }
+.clip-layout-options { display: grid; width: 100%; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.clip-layout-options [data-slot="toggle-group-item"] { width: 100%; }
 /* Sections that have nothing to configure yet — see no-dead-ui skill. */
 /* Compact subtitle-preset sample inside SampleList — the full overlay is
    built for the phone-preview's absolute positioning context; here it needs
@@ -1996,18 +1899,8 @@
   font-size: 11px;
   text-shadow: none;
 }
-.clip-option-grid .option-card.is-selected { border-color: color-mix(in oklch, var(--primary), transparent 75%); background: color-mix(in oklch, var(--primary), transparent 90%); box-shadow: none; }
-.clip-switch-row { min-height: 42px; padding: 8px 0; border: 0; border-bottom: 1px solid var(--muted); }
-.clip-switch-row > span { font-size: 11px; }
-.clip-field { gap: 5px; margin-top: 10px; font-size: 10px; }
-.clip-field :is(input, select, textarea) {
-  min-height: 34px;
-  padding: 7px 8px;
-  border-radius: var(--radius-sm);
-  font-size: 11px;
-}
-.clip-upload-asset { min-height: 34px; margin-top: 10px; border-radius: var(--radius-sm); font-size: 10px; }
-.clip-help-text { margin-top: 8px; font-size: 9px; }
+.clip-switch-row { padding-block: 8px; border-bottom: 1px solid var(--border); }
+.clip-field { margin-top: 10px; }
 .clip-panel-status {
   color: var(--muted-foreground);
   font-size: 10px;
@@ -2029,36 +1922,6 @@
   flex-direction: column;
   gap: 6px;
 }
-
-.hp-selectable-row {
-  min-height: 54px;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card);
-  color: var(--foreground);
-  text-align: left;
-  transition: border-color 150ms ease, background 150ms ease;
-}
-.hp-selectable-row:hover { border-color: var(--ring); background: var(--secondary); }
-.hp-selectable-row.is-selected { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 12%, var(--card)); }
-.hp-selectable-row__leading { flex: 0 0 16px; display: grid; place-items: center; padding-top: 2px; color: var(--primary); }
-.hp-selectable-row__copy { display: grid; gap: 2px; min-width: 0; }
-.hp-selectable-row__copy strong { font-size: 12px; }
-.hp-selectable-row__copy small { color: var(--muted-foreground); font-size: 11px; line-height: 1.35; }
-
-.clip-scope-options > button > div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.clip-scope-options > button small { color: var(--muted-foreground); font-size: 10px; }
-
 
 /* --- Rules retained from the legacy dashboard.css (still referenced by current markup) --- */
 
@@ -2340,40 +2203,6 @@
 /* Lost in the stylesheet consolidation: without it .is-spinning referenced a
    non-existent animation and every loading spinner sat frozen. */
 @keyframes dash-spin { to { transform: rotate(360deg); } }
-
-/* Colour picker primitive (ColorField) — swatch plus the readable hex value. */
-.dash-color-field {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.dash-color-field__input {
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: none;
-  cursor: pointer;
-}
-
-.dash-color-field__input::-webkit-color-swatch-wrapper { padding: 2px; }
-.dash-color-field__input::-webkit-color-swatch { border: 0; border-radius: var(--radius-sm); }
-
-.dash-color-field__label {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  cursor: pointer;
-}
-
-.dash-color-field__label span { font-size: 12px; font-weight: 700; }
-.dash-color-field__label code {
-  color: var(--muted-foreground);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 10px;
-}
 
 /*
  * Shared subtitle preview (SubtitlePreviewOverlay). One implementation for the
@@ -2990,40 +2819,10 @@
   pointer-events: none;
 }
 
-.clip-option-grid button.is-selected {
-  border-color: var(--foreground);
-  box-shadow: inset 0 0 0 1px var(--foreground);
-}
-
-.clip-option-grid--two button {
-  justify-content: center;
-}
-
-.clip-field,
-.clip-range-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 9px;
-  color: var(--muted-foreground);
-  font-size: 12px;
-  font-weight: 750;
-}
-
 .clip-field-pair {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 7px;
-}
-
-.clip-range-field > span {
-  display: flex;
-  justify-content: space-between;
-}
-
-.clip-range-field input {
-  width: 100%;
-  accent-color: var(--foreground);
 }
 
 .clip-colors {
@@ -3033,31 +2832,37 @@
   margin-top: 9px;
 }
 
-.clip-colors label {
-  min-height: 43px;
-  display: flex;
+.clip-color-field {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
-  padding: 7px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--muted-foreground);
-  font-size: 10px;
+  gap: 7px;
 }
 
-.clip-colors input {
+.clip-color-field [data-slot="field-label"] { grid-column: 1 / -1; }
+
+.clip-color-field input[type="color"] {
   width: 28px;
   height: 28px;
   padding: 0;
   border: 0;
-  border-radius: var(--radius-sm);
   background: transparent;
 }
 
-.clip-scope-options > button.is-selected {
-  border-color: var(--accent);
-  background: var(--accent);
+.clip-color-field output { min-width: 0; color: var(--muted-foreground); font-size: 0.75rem; }
+
+.clip-scope-choice {
+  height: auto;
+  min-height: 2.25rem;
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+  padding-block: 0.625rem;
+  text-align: left;
+  white-space: normal;
 }
+
+.clip-scope-choice small { color: var(--muted-foreground); font-size: 0.75rem; line-height: 1.35; }
 
 /* --- Responsive rules --- */
 
@@ -3090,7 +2895,7 @@
     grid-template-rows: 44px minmax(0, 1fr) 48px;
   }
   .clip-editor__header { min-height: 44px; padding-inline: 6px; }
-  .clip-editor__header input { width: min(45vw, 230px); }
+  .clip-editor__title { width: min(45vw, 230px); }
   .clip-editor__header > div > small { display: none; }
   /*
    * Undo/redo and "Применить" (which opens the only save-version dialog)
@@ -3099,7 +2904,6 @@
    * users could not save a version or undo a change. There is enough header
    * width for all four controls at this breakpoint; shrink instead of hide.
    */
-  .clip-editor__header [data-slot="button"] { min-height: 30px; padding-inline: 9px; font-size: 10px; }
   .clip-editor__workspace,
   .clip-editor.is-left-collapsed .clip-editor__workspace,
   .clip-editor.is-right-collapsed .clip-editor__workspace {
@@ -3151,35 +2955,31 @@
   }
   .clip-mobile-tools [data-slot="button"] {
     justify-content: flex-start;
-    min-height: 36px;
   }
-  .clip-mobile-tools [data-slot="button"].is-active { border-color: var(--primary); background: var(--accent); }
   .clip-mobile-tools > p { max-width: 300px; margin: 0; font-size: 12px; }
   .clip-editor__mobile-tabs {
     position: fixed;
     z-index: 90;
     inset: auto 0 0;
     height: 48px;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: block;
     padding: 4px;
     border-top: 1px solid var(--border);
-    background: var(--card);
   }
-  .clip-editor__mobile-tabs button {
-    border: 0;
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--muted-foreground);
-    font-size: 10px;
+  .clip-editor__mobile-tabs [data-slot="tabs-list"] {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  .clip-editor__mobile-tabs button.is-active { background: var(--secondary); color: var(--foreground); }
+  .clip-editor__mobile-tabs [data-slot="tabs-trigger"] {
+    width: 100%;
+  }
   .clip-inspector__rail { display: none; }
   .clip-inspector__content { grid-template-columns: minmax(0, 1fr); }
   .clip-panel-restore { display: none !important; }
   .clip-trim { width: 100%; }
-  .clip-transport { grid-template-columns: 28px auto 1fr auto 16px; }
-  .clip-transport > label { display: none; }
+  .clip-transport { grid-template-columns: 36px auto 1fr auto 16px; }
+  .clip-zoom-control { display: none; }
   .clip-editor__notice { top: 50px; }
 }
 
@@ -3462,10 +3262,6 @@
     min-height: 44px !important;
   }
 
-  .option-card-grid,
-  .option-card-grid.wizard-source-cards,
-  .wizard-source-cards { grid-template-columns: 1fr; }
-
   /* Icon + input + button in one row leaves the input unusably narrow
      (~114px, truncating the placeholder) once the panel is down to phone
      width — stack the button under the input instead. */
@@ -3597,15 +3393,9 @@
    * on a phone was "Обновить клип" (a re-render), not an actual save. They
    * fit at 28px each once the title field's min-width is trimmed below.
    */
-  .clip-editor__header nav > [data-slot="button"] {
-    width: 40px;
-    height: 40px;
-  }
-
-  .clip-editor__header input {
+  .clip-editor__title {
     width: clamp(72px, 24vw, 110px);
     min-width: 0;
-    min-height: 40px;
   }
 
   .clip-editor__header nav [data-slot="button"] {
@@ -3633,27 +3423,15 @@
 
   .clip-editor__mobile-tabs {
     height: 58px;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 4px;
+    display: block;
     padding: 7px 10px;
     border-bottom: 1px solid var(--border);
-    background: var(--card);
   }
 
-  .clip-editor__mobile-tabs button {
-    min-height: 44px;
-    border: 0;
-    border-radius: var(--radius);
-    background: transparent;
-    color: var(--muted-foreground);
-    font-size: 12px;
-    font-weight: 800;
-  }
-
-  .clip-editor__mobile-tabs button.is-active {
-    background: var(--accent);
-    color: var(--primary-foreground);
+  .clip-editor__mobile-tabs [data-slot="tabs-list"] {
+    display: grid;
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .clip-editor__workspace {
@@ -3692,18 +3470,8 @@
     max-height: calc(100dvh - 280px);
   }
 
-  .clip-phone-preview__play {
-    width: 40px;
-    height: 40px;
-  }
-
   .clip-transport {
-    grid-template-columns: 40px auto 1fr auto 16px;
-  }
-
-  .clip-transport > button {
-    width: 40px;
-    height: 40px;
+    grid-template-columns: 36px auto 1fr auto 16px;
   }
 
   .clip-trim {
@@ -3736,15 +3504,14 @@
 @media (max-width: 359px) {
   .clip-editor__header { gap: 2px; padding-inline: 6px; }
   .clip-editor__header > div { gap: 3px; }
-  .clip-editor__header > div > a,
+  .clip-editor__header > div > [data-slot="button"],
   .clip-editor__header nav > [data-slot="button"] {
-    width: 40px;
-    height: 40px;
+    flex: 0 1 auto;
   }
   .clip-editor__header > div { grid-template-columns: 40px minmax(0, 1fr); }
-  .clip-editor__header input { width: 52px; }
+  .clip-editor__title { width: 52px; }
   .clip-editor__header nav { gap: 2px; }
-  .clip-editor__header nav [data-slot="button"] { min-width: 40px; min-height: 40px; padding-inline: 8px; }
+  .clip-editor__header nav [data-slot="button"] { min-width: 0; padding-inline: 8px; }
 }
 
 
@@ -4088,86 +3855,10 @@
 }
 
 /* ==========================================================================
-   New primitives — mechanics-doc redesign (OptionCard, InfoPanel,
+   New primitives — mechanics-doc redesign (InfoPanel,
    LockedField, Stepper, PanelSection, SampleList, Skeleton, ProgressStage,
    ValueBadge). See app/dashboard/components/ui/*.
    ========================================================================== */
-
-/* --- OptionCard --------------------------------------------------------- */
-
-.option-card {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--card);
-  text-align: left;
-  cursor: pointer;
-  transition: border-color 120ms ease, background-color 120ms ease;
-}
-
-.option-card:hover:not(.is-disabled) { border-color: var(--ring); }
-
-.option-card.is-selected {
-  border-color: var(--foreground);
-  background: var(--secondary);
-}
-
-.option-card.is-disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.option-card__icon {
-  display: grid;
-  flex: 0 0 auto;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius);
-  background: var(--secondary);
-  color: var(--foreground);
-}
-
-.option-card.is-selected .option-card__icon { background: var(--foreground); color: var(--card); }
-
-.option-card__body {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.option-card__title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.option-card__description {
-  color: var(--muted-foreground);
-  font-size: 12px;
-  line-height: 1.4;
-}
-
-.option-card__check {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  color: var(--foreground);
-}
-
-.option-card-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
 
 /* --- InfoPanel ----------------------------------------------------------- */
 
@@ -4289,25 +3980,6 @@
 .wizard-panel--source .wizard-panel__heading h1 { font-size: 28px; }
 .wizard-panel--source .wizard-panel__heading p { font-size: 15px; }
 .wizard-source-compact { max-width: none; }
-.option-card-grid.wizard-source-cards {
-  gap: 0;
-  margin-bottom: 20px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card);
-}
-.wizard-source-cards .option-card {
-  min-height: 100px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-.wizard-source-cards .option-card + .option-card { border-left: 1px solid var(--border); }
-.wizard-source-cards .option-card.is-selected {
-  box-shadow: inset 0 0 0 1px var(--ring);
-  background: var(--secondary);
-}
 .wizard-source-pane {
   min-height: 0;
   padding: 24px;
@@ -4336,9 +4008,6 @@
   .wizard-step-badge { align-self: flex-start; }
   .wizard-body { margin-top: 34px; }
   .wizard-panel--source .wizard-panel__heading h1 { font-size: 24px; }
-  .option-card-grid.wizard-source-cards { gap: 1px; background: var(--border); }
-  .wizard-source-cards .option-card + .option-card { border-left: 0; }
-  .wizard-source-cards .option-card { min-height: 84px; }
   .wizard-source-pane { padding: 16px; }
   .wizard-footer--source { position: static; display: grid; gap: 16px; }
   .wizard-footer--source > [data-slot="button"] { width: 100%; margin-left: 0; }
@@ -4580,8 +4249,7 @@
   .wizard-control-card,
   .wizard-processing__card,
   .billing-history__table,
-  .dash-secondary-link,
-  .clip-editor__mobile-tabs
+  .dash-secondary-link
 ) { background: var(--card); }
 
 .dash-shell :is(
@@ -4638,37 +4306,18 @@
 .clip-editor { background: var(--background); color: var(--foreground); }
 .clip-editor__header {
   border-color: var(--border);
-  background: rgba(17, 17, 18, .9);
+  background: var(--background);
   color: var(--foreground);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
 }
 .clip-editor__header > div > small { color: var(--muted-foreground); }
-.clip-editor__notice,
-.clip-trim,
-.clip-editor__mobile-tabs { background: var(--card); color: var(--foreground); }
+.clip-trim { background: var(--card); color: var(--foreground); }
 .clip-preview-stage { background: var(--background); }
 .clip-trim { border-color: var(--border); }
-.clip-editor__header > div > a,
-.clip-editor__header nav > [data-slot="button"],
-.clip-transcript-panel > header > [data-slot="button"],
-.clip-inspector > header > [data-slot="button"],
-.clip-panel-restore,
-.clip-transport > [data-slot="button"] { color: var(--muted-foreground); }
-.clip-editor__header > div > a:hover,
-.clip-editor__header nav > [data-slot="button"]:hover,
-.clip-transcript-panel > header > [data-slot="button"]:hover,
-.clip-inspector > header > [data-slot="button"]:hover,
-.clip-panel-restore:hover,
-.clip-transport > [data-slot="button"]:hover { background: var(--secondary); color: var(--foreground); }
-.clip-editor__notice { border-color: var(--border); box-shadow: 0 10px 28px rgba(0,0,0,.36); }
-.clip-phone-preview__play,
 .moment-preview > button,
 .wizard-source-ready__media > span:last-child { background: var(--muted); color: var(--foreground); }
 
 @media (max-width: 900px) {
-  .dash-mobile-nav,
-  .clip-editor__mobile-tabs { border-color: var(--border); background: rgba(17,17,18,.92); box-shadow: 0 14px 35px rgba(0,0,0,.36); }
+  .dash-mobile-nav { border-color: var(--border); background: rgba(17,17,18,.92); box-shadow: 0 14px 35px rgba(0,0,0,.36); }
   .dash-mobile-nav > .is-active { color: var(--foreground); }
 }
 
@@ -4858,7 +4507,7 @@
 .wizard-footer__notice { flex: 1 1 100%; order: 3; color: var(--destructive); font-size: 12px; text-align: right; }
 
 /* Glass is used only for floating navigation/overlays, never for every card. */
-.dash-shell :is(.dash-mobile-nav, .clip-editor__mobile-tabs, .wizard-footer) {
+.dash-shell :is(.dash-mobile-nav, .wizard-footer) {
   background: color-mix(in srgb, var(--card) 88%, transparent) !important;
   border-color: color-mix(in srgb, var(--ring) 75%, transparent) !important;
   backdrop-filter: blur(22px) saturate(110%);
