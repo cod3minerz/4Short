@@ -110,3 +110,26 @@ Do not change `blocked` to `verified` based on static code inspection alone.
 - Result: `verified`. The controller is faster than a browser-frame capture,
   so transient loading is deterministically verified by the auth unit test
   (`aria-busy`, disabled canonical `h-9` Button) rather than a screenshot.
+
+---
+
+## 2026-08-09 — Phase 7.2 dashboard/source/projects wave
+
+- Routes: `/dashboard`, `/dashboard/new` entry and `/dashboard/projects`;
+  authenticated local Better Auth admin at 1280×720.
+- Source checks: source type Buttons expose selected state; malformed URL keeps
+  the existing textual supported-platform error; source frame has
+  `min-height: 0`, `overflow-y: visible`, no nested scroll and no horizontal
+  document overflow. Profile `DropdownMenu` opened, closed with Escape and
+  returned focus to its trigger.
+- Projects checks: loading progressed to real empty/storage state; search and
+  ToggleGroup changed state, and no horizontal/nested scroll was observed.
+- System: Buttons, DropdownMenu, Field/Input, ToggleGroup, Card, Dialog,
+  Progress, Skeleton, EmptyState, StatusBadge and Hugeicons/AppIcon were used
+  without reimplementing the dashboard shell or projects information
+  architecture. The native file input is the source-upload exception.
+- Result: `blocked`. This browser connection provides only a 1280×720 viewport;
+  no 360/768/1024/1440 evidence can be captured. The local admin has no actual
+  verified, processing, ready or failed project, so source-confirmed/
+  processing, populated/deletion-dialog and error/retry matrices remain open.
+  These are evidence gaps, not a static-code PASS.

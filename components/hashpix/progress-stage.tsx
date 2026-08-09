@@ -1,5 +1,8 @@
 "use client";
 
+import { Progress, ProgressIndicator } from "@/components/ui/progress";
+import { typographyVariants } from "./typography";
+
 interface ProgressStageProps {
   /** Human title of the current stage, e.g. "Загружаем видео". */
   title: string;
@@ -29,24 +32,17 @@ function formatDuration(totalSeconds: number) {
  */
 export function ProgressStage({ title, current, total, description, metric, percent, secondsInStage }: ProgressStageProps) {
   return (
-    <section className="progress-stage" aria-live="polite">
-      <header className="progress-stage__head">
-        <div>
-          <strong>{title}</strong>
-          <span className="progress-stage__count">Этап {current} из {total}</span>
-        </div>
+    <section className="flex w-full flex-col gap-3 text-left" aria-live="polite">
+      <header className="flex flex-wrap items-baseline justify-between gap-2">
+        <span className={typographyVariants({ role: "label" })}>{title}</span>
+        <span className={typographyVariants({ role: "caption" })}>Этап {current} из {total}</span>
       </header>
       {percent !== undefined ? (
-        <div className="progress-stage__bar" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
-          <div className="progress-stage__fill" style={{ width: `${Math.min(100, Math.max(0, percent))}%` }} />
-        </div>
+        <Progress value={percent} aria-label={`Выполнено ${Math.round(percent)}%`}><ProgressIndicator /></Progress>
       ) : null}
-      <p className="progress-stage__description">{description}</p>
-      <footer className="progress-stage__footer">
-        <span className="progress-stage__status">
-          <i className="progress-stage__dot" aria-hidden="true" />
-          Обработка идёт
-        </span>
+      <p className={typographyVariants({ role: "muted" })}>{description}</p>
+      <footer className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+        <span>Обработка идёт</span>
         {metric ? <span>{metric}</span> : null}
         {secondsInStage !== undefined ? <span>Этап начат {formatDuration(secondsInStage)} назад</span> : null}
         <span>Статус обновится автоматически</span>

@@ -15,7 +15,7 @@ Target UI foundation: `b37sSWfzM`
 - [x] Phase 6 — remove `/dashboard/styles` management route
 - [ ] Phase 7 — remaining route waves, legacy cleanup and final verification
   - [x] Phase 7.1 — auth (`/sign-in`, `/sign-up`, `/forgot-password`)
-  - [ ] Phase 7.2 — not started
+  - [ ] Phase 7.2 — implementation committed; final browser evidence is blocked
 
 ## Phase 0 record
 
@@ -239,4 +239,38 @@ Target UI foundation: `b37sSWfzM`
   entries.
 - Codebase Memory full reindex and auth impact audit — pass; the shared
   `AuthScreen` remains connected only to its retained Better Auth actions.
-  Phase 7.2 remains unstarted.
+  Phase 7.2 had not started at the time of that auth-only commit.
+
+## Phase 7.2 record — dashboard shell, source flow and projects
+
+- The existing dashboard shell, sidebar/mobile navigation, source-wizard frame
+  and footer, and projects list/table architecture are retained. This wave does
+  not introduce the registry Sidebar layout or a projects-card-grid redesign.
+- Standard controls now use the canonical Vega primitives and Phase 5 shared
+  compositions: Button, DropdownMenu, Card, Field/Input, ToggleGroup, Dialog,
+  Progress, Skeleton, EmptyState, StatusBadge, AsyncButton and AppIcon.
+- Touched route code uses Hugeicons; `ChoiceSegmented` had no remaining
+  consumer and is removed. The editor-owned `OptionCard` and shared
+  `layoutOptions` Lucide dependency remain explicitly deferred to Phase 7.4.
+- Source API, validation, analytics, billing calculations and HVE/renderer
+  contracts are unchanged. The source wizard has no added viewport min-height
+  or nested scroll constraint.
+- See `shadcn-phase-7-2-dashboard-audit.md` for classifications, reverted
+  structural experiment and the route-state evidence ledger.
+
+## Phase 7.2 verification
+
+- 1280×720 authenticated browser checks — source empty/error, profile menu
+  Escape/focus return, projects loading/empty/filter/search and no horizontal
+  or nested scroll — pass.
+- Full responsive/state browser acceptance is **blocked**: the attached local
+  browser surface exposes only 1280×720 and the real test account has no
+  project in confirmed/processing/ready/failed/delete states. Per the
+  verification protocol this phase remains unchecked, not falsely complete.
+- `npm run audit:product-ui` and `npm run audit:dark-surfaces` — pass after
+  the product-contract verifier was corrected to assert the active root-theme
+  portal inheritance contract instead of its retired b38 portal scope.
+- `git diff --check`, `npx shadcn@latest diff`, typecheck, lint, full unit
+  suite (197 pass) and production build (27 routes) — pass. Live Codebase
+  Memory reindex/impact tracing completed; its empty persistence placeholder
+  was not committed over the existing binary artifact.

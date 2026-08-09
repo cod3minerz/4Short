@@ -21,8 +21,8 @@ for (const token of requiredTokens) {
   if (!rootBlock.includes(`${token}:`)) failures.push(`Missing canonical token in the internal preset scope: ${token}`);
 }
 
-// b38miVLH6 uses the neutral/indigo Mira palette. These checks prevent a
-// second Hashpix token bridge from silently overriding the actual preset.
+// The approved b37sSWfzM Vega foundation uses this neutral/indigo dark map.
+// These checks prevent a second product token bridge from overriding it.
 for (const [token, value] of [
   ["--primary", "oklch(0.398 0.195 277.366)"],
   ["--primary-foreground", "oklch(0.962 0.018 272.314)"],
@@ -35,8 +35,8 @@ if (!/--radius:\s*0\.625rem/.test(css)) {
   failures.push("Canonical token --radius must be 0.625rem in the preset root scope");
 }
 
-if (!css.includes(".hp-overlay-scope")) {
-  failures.push("Missing portal token scope; dialogs and drawers would inherit the marketing accent");
+if (css.includes(".hp-overlay-scope")) {
+  failures.push("Legacy portal token scope remains; Base UI portals must inherit the document theme");
 }
 
 // These names belonged to the old demo-only phone/preset artwork. A product

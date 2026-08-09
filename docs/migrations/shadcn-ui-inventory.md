@@ -86,7 +86,7 @@ remain baseline facts until their assigned foundation/component phases.
 | `StatusBadge` | shared workspace domain status mapping | KEEP AS CANONICAL COMPOSITION | Retain limited semantic-to-Badge mapping |
 | `LockedField` | three product consumers, unavailable-capability contract | KEEP AS CANONICAL COMPOSITION | Refactored to registry Field anatomy; retain real lock reasons |
 | `components/hashpix/field.tsx` | no active imports | DEFER / REMOVE IN PHASE 7 | Do not use; registry `Field` is the only future field composition |
-| `ChoiceSegmented` | one wizard consumer; wraps ToggleGroup with legacy classes | DEFER | Replace with direct ToggleGroup during wizard migration |
+| `ChoiceSegmented` | former one wizard consumer; wraps ToggleGroup with legacy classes | REMOVED — Phase 7.2 | Wizard now uses direct registry ToggleGroup; no active code consumer remains |
 | `HashpixDrawer` | workspace drawer; wraps Sheet with `dash-drawer-dialog` | DEFER | Replace with direct Sheet in workspace migration |
 | `OptionCard` | wizard/editor choices with feature state and local classes | DEFER | Replace with ToggleGroup/Card semantics per feature migration |
 | `InfoPanel` | one wizard consumer, legacy tone/icons/classes | DEFER | Re-evaluate against primitive/alert content during wizard migration |
@@ -113,3 +113,13 @@ renderer/HVE consumers are intentionally retained.
 only local classes are structural layout and the registry Input's necessary
 password-toggle clearance. Better Auth transport and OTP/reset behaviour are
 unchanged. See `shadcn-phase-7-1-auth-audit.md`.
+
+## Phase 7.2 dashboard-wave state
+
+`/dashboard` and `/dashboard/projects` now consume canonical Vega primitives
+without changing their approved shell, wizard or projects-list architecture.
+`Sidebar` remains an installed-but-unused primitive because adopting it would
+replace the product sidebar composition. `OptionCard` remains only for deferred
+clip-editor work; `ChoiceSegmented` is removed after the wizard moved to direct
+`ToggleGroup`. The detailed current classification is
+`shadcn-phase-7-2-dashboard-audit.md`; final browser state coverage is pending.

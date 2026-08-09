@@ -1,29 +1,19 @@
 "use client";
 
-import { ActionButton } from "@/components/hashpix/action-button";
-import { ChoiceSegmented, ChoiceSelect, ChoiceSwitch } from "@/components/hashpix/choice-controls";
+import { ArrowDown01Icon, ArrowRight01Icon, CheckmarkCircle01Icon, FileUploadIcon, FlashIcon, FrameIcon, HistoryIcon, Link01Icon, MagicWand01Icon, PaintBoardIcon, RocketIcon, ScissorIcon, SlidersHorizontalIcon, SparklesIcon, SubtitleIcon, Upload01Icon } from "@hugeicons/core-free-icons";
+import type { ReactNode } from "react";
+import { AppIcon } from "@/components/hashpix/app-icon";
+import { AsyncButton } from "@/components/hashpix/async-button";
+import { StatusBadge } from "@/components/hashpix/status-badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  ArrowRight,
-  Check,
-  ChevronDown,
-  FileUp,
-  Frame,
-  Zap,
-  History,
-  Link2,
-  Palette,
-  Rocket,
-  Scissors,
-  SlidersHorizontal,
-  Sparkles,
-  Subtitles,
-  UploadCloud,
-  WandSparkles,
-} from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -45,12 +35,12 @@ import type { ClipLayout } from "../types";
 import { InfoPanel } from "@/components/hashpix/info-panel";
 import { LockedField } from "@/components/hashpix/locked-field";
 import { MediaThumb } from "@/components/hashpix/media-thumb";
-import { OptionCard } from "@/components/hashpix/option-card";
 import { PlatformLogo } from "@/components/hashpix/platform-logo";
 import { ProcessingCard } from "@/components/hashpix/processing-card";
 import { RangeTimeline } from "@/components/hashpix/range-timeline";
 import { Stepper } from "@/components/hashpix/stepper";
 import { ValueBadge } from "@/components/hashpix/value-badge";
+import { PageDescription, PageTitle, SectionDescription, SectionTitle, typographyVariants } from "@/components/hashpix/typography";
 
 /**
  * Every host the worker will actually import from — mirrors
@@ -90,12 +80,53 @@ const aiIntents = [
 
 /** Top-level cutting-mode choice: smart AI (with the sub-flavors above), or two simpler modes. */
 const cuttingModes = [
-  { id: "smart" as const, title: "Умная нарезка", description: "ИИ сам находит законченные мысли", icon: Sparkles },
-  { id: "uniform" as const, title: "Простая", description: "Ровные отрезки по всему диапазону", icon: Scissors },
-  { id: "manual" as const, title: "Один фрагмент", description: "Точно заданная часть исходника", icon: Frame },
+  { id: "smart" as const, title: "Умная нарезка", description: "ИИ сам находит законченные мысли", icon: SparklesIcon },
+  { id: "uniform" as const, title: "Простая", description: "Ровные отрезки по всему диапазону", icon: ScissorIcon },
+  { id: "manual" as const, title: "Один фрагмент", description: "Точно заданная часть исходника", icon: FrameIcon },
 ];
 
 const durations = ["до 30 секунд", "30–60 секунд", "60–90 секунд"];
+
+/**
+ * A real button for each wizard decision. This is intentionally local to the
+ * source flow: it keeps that product geometry while leaving the editor's
+ * deferred option-card migration out of this wave.
+ */
+function WizardOption({
+  icon,
+  title,
+  description,
+  selected,
+  disabled,
+  badge,
+  onSelect,
+}: {
+  icon?: ReactNode;
+  title: string;
+  description?: string;
+  selected?: boolean;
+  disabled?: boolean;
+  badge?: ReactNode;
+  onSelect?: () => void;
+}) {
+  return (
+    <Button
+      variant={selected ? "secondary" : "outline"}
+      className="relative h-auto min-h-20 w-full justify-start whitespace-normal px-4 py-3 text-left"
+      type="button"
+      disabled={disabled}
+      aria-pressed={selected}
+      onClick={onSelect}
+    >
+      {icon ? <span className="text-muted-foreground" aria-hidden="true">{icon}</span> : null}
+      <span className="flex min-w-0 flex-1 flex-col gap-1">
+        <span className="flex flex-wrap items-center gap-2 text-sm font-medium text-foreground">{title}{badge}</span>
+        {description ? <span className="text-xs text-muted-foreground">{description}</span> : null}
+      </span>
+      {selected ? <AppIcon icon={CheckmarkCircle01Icon} size="sm" className="text-primary" aria-hidden="true" /> : null}
+    </Button>
+  );
+}
 
 function formatDuration(totalSeconds: number) {
   const hours = Math.floor(totalSeconds / 3600);
@@ -182,10 +213,10 @@ function createLocalVideoPoster(file: File): Promise<string | null> {
  * wizard actually ends on.
  */
 const wizardSteps = [
-  { label: "Источник", icon: Link2 },
-  { label: "Фрагменты", icon: Scissors },
-  { label: "Стиль", icon: Palette },
-  { label: "Готово", icon: Rocket },
+  { label: "Источник", icon: Link01Icon },
+  { label: "Фрагменты", icon: ScissorIcon },
+  { label: "Стиль", icon: PaintBoardIcon },
+  { label: "Готово", icon: RocketIcon },
 ];
 
 export function NewProjectWizard({
@@ -485,10 +516,10 @@ export function NewProjectWizard({
 
   if (processing) {
     return (
-      <main className="wizard-processing">
-        <Link className="wizard-close-link" href="/dashboard/projects">Проекты</Link>
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 sm:px-6 sm:py-8">
+        <Button nativeButton={false} render={<Link href="/dashboard/projects" />} className="w-fit" variant="ghost">Проекты</Button>
         {/* The roadmap stays visible here so step 4 is a real destination, not a label. */}
-        <Stepper steps={wizardSteps} current={4} />
+        <Stepper className="mx-auto max-w-2xl" steps={wizardSteps} current={4} />
         <ProcessingCard
           sourceName={sourceName}
           sourceThumbnail={sourceThumbnail}
@@ -518,10 +549,10 @@ export function NewProjectWizard({
         <header className="wizard-header">
           <div className="wizard-header__top">
             <div className="wizard-header__intro">
-              <h1>Создать нарезку</h1>
-              <p>Добавьте видео и настройте будущие клипы.</p>
+              <PageTitle>Создать нарезку</PageTitle>
+              <PageDescription>Добавьте видео и настройте будущие клипы.</PageDescription>
             </div>
-            <span className="wizard-step-badge">Шаг {step} из 4</span>
+            <StatusBadge tone="neutral">Шаг {step} из 4</StatusBadge>
           </div>
           <Stepper steps={wizardSteps} current={step} />
         </header>
@@ -530,29 +561,29 @@ export function NewProjectWizard({
           {step === 1 ? (
           <section className="wizard-panel wizard-panel--source" aria-labelledby="wizard-source-title">
             <div className="wizard-panel__heading">
-              <h1 id="wizard-source-title">Добавьте видео</h1>
-              <p>Выберите источник видео.</p>
+              <SectionTitle id="wizard-source-title">Добавьте видео</SectionTitle>
+              <SectionDescription>Выберите источник видео.</SectionDescription>
             </div>
 
             {!sourceReady ? (
               <div className="wizard-source-compact">
-                <div className="option-card-grid wizard-source-cards">
-                  <OptionCard
-                    icon={<UploadCloud size={19} />}
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <WizardOption
+                    icon={<AppIcon icon={Upload01Icon} size="md" />}
                     title="Загрузить"
                     description="До 10 ГБ"
                     selected={sourceMode === "file"}
                     onSelect={() => { setSourceMode("file"); setError(""); }}
                   />
-                  <OptionCard
-                    icon={<Link2 size={19} />}
+                  <WizardOption
+                    icon={<AppIcon icon={Link01Icon} size="md" />}
                     title="Ссылка"
                     description="YouTube, VK Видео, RuTube, Twitch"
                     selected={sourceMode === "url"}
                     onSelect={() => { setSourceMode("url"); setError(""); }}
                   />
-                  <OptionCard
-                    icon={<History size={19} />}
+                  <WizardOption
+                    icon={<AppIcon icon={HistoryIcon} size="md" />}
                     title="Мои видео"
                     description="Загруженные ранее"
                     onSelect={() => setSourceLibraryOpen(true)}
@@ -560,33 +591,26 @@ export function NewProjectWizard({
                 </div>
 
                 {sourceMode === "url" ? (
-                  <div className="wizard-source-pane">
-                    <div className="wizard-url-input">
-                      <span className="wizard-url-input__icon" aria-hidden="true"><Link2 size={17} /></span>
-                      <Input
-                        aria-label="Ссылка на видео"
-                        className="dash-input"
-                        placeholder="Вставьте ссылку на видео…"
-                        type="url"
-                        value={url}
-                        onChange={(event) => { setUrl(event.target.value); setError(""); }}
-                        onKeyDown={(event) => { if (event.key === "Enter") void verifyUrl(); }}
-                      />
-                      <ActionButton loading={verifying} onClick={() => void verifyUrl()}>
-                        {verifying ? "Проверяем…" : "Проверить"}
-                      </ActionButton>
-                    </div>
-                    <p className="wizard-platform-label">Поддерживаемые площадки</p>
-                    <ul className="wizard-platform-row" aria-label="Поддерживаемые площадки">
-                      {SUPPORTED_PLATFORMS.map((platform) => (
-                        <li key={platform.host}><PlatformLogo name={platform.logo} />{platform.label}</li>
-                      ))}
-                    </ul>
-                  </div>
+                  <Card>
+                    <CardContent className="space-y-4 pt-6">
+                      <Field>
+                        <FieldLabel htmlFor="source-url">Ссылка на видео</FieldLabel>
+                        <div className="flex gap-2">
+                          <div className="relative min-w-0 flex-1"><AppIcon icon={Link01Icon} size="sm" className="pointer-events-none absolute left-2.5 top-2.5 text-muted-foreground" aria-hidden="true" /><Input id="source-url" className="pl-9" placeholder="Вставьте ссылку на видео…" type="url" value={url} aria-invalid={Boolean(error)} onChange={(event) => { setUrl(event.target.value); setError(""); }} onKeyDown={(event) => { if (event.key === "Enter") void verifyUrl(); }} /></div>
+                          <AsyncButton loading={verifying} onClick={() => void verifyUrl()}>Проверить</AsyncButton>
+                        </div>
+                        {error ? <FieldError role="alert">{error}</FieldError> : null}
+                      </Field>
+                      <FieldDescription>Поддерживаемые площадки</FieldDescription>
+                      <ul className="flex flex-wrap gap-x-3 gap-y-2 text-xs text-muted-foreground" aria-label="Поддерживаемые площадки">
+                        {SUPPORTED_PLATFORMS.map((platform) => <li className="flex items-center gap-1.5" key={platform.host}><PlatformLogo name={platform.logo} />{platform.label}</li>)}
+                      </ul>
+                    </CardContent>
+                  </Card>
                 ) : (
                   <Button
                     variant="outline"
-                    className="wizard-source-dropzone"
+                    className="h-auto w-full justify-start px-4 py-5 text-left"
                     type="button"
                     disabled={Boolean(storage?.blocked)}
                     onClick={() => fileRef.current?.click()}
@@ -597,9 +621,9 @@ export function NewProjectWizard({
                       if (file) void uploadFile(file);
                     }}
                   >
-                    <UploadCloud size={24} />
-                    <span><strong>{uploading ? "Загружаем видео…" : "Перетащите видео или выберите файл"}</strong><small>MP4, MOV, WebM · до 10 ГБ</small></span>
-                    <span className="wizard-file-cta"><FileUp size={17} /> Выбрать видео</span>
+                    <AppIcon icon={Upload01Icon} size="lg" aria-hidden="true" />
+                    <span className="flex min-w-0 flex-1 flex-col gap-1"><span className="text-sm font-medium">{uploading ? "Загружаем видео…" : "Перетащите видео или выберите файл"}</span><span className="text-xs text-muted-foreground">MP4, MOV, WebM · до 10 ГБ</span></span>
+                    <span className={typographyVariants({ role: "label" })}><AppIcon icon={FileUploadIcon} size="sm" aria-hidden="true" /> Выбрать видео</span>
                   </Button>
                 )}
 
@@ -609,7 +633,7 @@ export function NewProjectWizard({
                   </p>
                 ) : null}
 
-                {error ? <span className="dash-field-error" role="alert">{error}</span> : null}
+                {sourceMode === "file" && error ? <FieldError role="alert">{error}</FieldError> : null}
 
                 <input
                   ref={fileRef}
@@ -629,10 +653,10 @@ export function NewProjectWizard({
                   {isControlApiConfigured() ? (
                     realSourceLibrary === null ? (
                       sourceLibraryError
-                        ? <span className="dash-field-error" role="alert">{sourceLibraryError}</span>
-                        : <p className="dash-empty-note">Загружаем исходники…</p>
+                        ? <FieldError role="alert">{sourceLibraryError}</FieldError>
+                        : <p className={typographyVariants({ role: "muted" })}>Загружаем исходники…</p>
                     ) : realSourceLibrary.length ? (
-                      <div className="wizard-source-library">
+                      <div className="grid max-h-[46dvh] gap-2 overflow-y-auto">
                         {realSourceLibrary.map((source) => {
                           const title = typeof source.metadata.originalFileName === "string"
                             ? source.metadata.originalFileName
@@ -641,7 +665,7 @@ export function NewProjectWizard({
                           return (
                             <Button
                               variant="outline"
-                              className="wizard-source-library__item"
+                              className="h-auto w-full justify-start px-3 py-2 text-left"
                               type="button"
                               key={source.id}
                               onClick={() => {
@@ -659,19 +683,19 @@ export function NewProjectWizard({
                               <MediaThumb
                                 src={typeof source.metadata.thumbnailUrl === "string" ? source.metadata.thumbnailUrl : undefined}
                                 alt=""
-                                className="wizard-source-library__media"
+                                className="w-18 shrink-0"
                               />
-                              <span><strong>{title}</strong><small>{source.kind === "youtube" ? "YouTube" : "Файл"} · {durationLabel}</small></span>
-                              <ArrowRight size={16} />
+                              <span className="flex min-w-0 flex-1 flex-col gap-1"><span className="truncate text-sm font-medium">{title}</span><span className="text-xs text-muted-foreground">{source.kind === "youtube" ? "YouTube" : "Файл"} · {durationLabel}</span></span>
+                              <AppIcon icon={ArrowRight01Icon} size="sm" aria-hidden="true" />
                             </Button>
                           );
                         })}
                       </div>
                     ) : (
-                      <p className="dash-empty-note">Прошлых исходников пока нет — они появятся здесь после первой обработки.</p>
+                      <p className={typographyVariants({ role: "muted" })}>Прошлых исходников пока нет — они появятся здесь после первой обработки.</p>
                     )
                   ) : (
-                    <p className="dash-empty-note">
+                    <p className={typographyVariants({ role: "muted" })}>
                       Медиатека появится после подключения рабочего API. Мы не показываем демонстрационные исходники вместо ваших видео.
                     </p>
                   )}
@@ -679,7 +703,7 @@ export function NewProjectWizard({
                 </Dialog>
               </div>
             ) : (
-              <div className="wizard-source-ready">
+              <Card className="wizard-source-ready px-(--card-spacing)">
                 <MediaThumb
                   className="wizard-source-ready__media"
                   src={sourceThumbnail ?? undefined}
@@ -687,13 +711,13 @@ export function NewProjectWizard({
                 >
                   <span className="wizard-source-ready__kind">
                     {sourceType === "url"
-                      ? (sourcePlatform ? <PlatformLogo name={sourcePlatform.logo} /> : <Link2 size={17} />)
-                      : sourceType === "existing" ? <History size={17} /> : <FileUp size={17} />}
+                      ? (sourcePlatform ? <PlatformLogo name={sourcePlatform.logo} /> : <AppIcon icon={Link01Icon} size="sm" />)
+                      : sourceType === "existing" ? <AppIcon icon={HistoryIcon} size="sm" /> : <AppIcon icon={FileUploadIcon} size="sm" />}
                   </span>
                 </MediaThumb>
                 <div className="wizard-source-ready__info">
-                  <span className="dash-status tone-success"><Check size={14} /> Источник готов</span>
-                  <h2>{sourceName}</h2>
+                  <StatusBadge tone="success"><AppIcon icon={CheckmarkCircle01Icon} size="sm" aria-hidden="true" />Источник готов</StatusBadge>
+                  <SectionTitle>{sourceName}</SectionTitle>
                   {sourceAuthor ? <p className="wizard-source-ready__author">{sourceAuthor}</p> : null}
                   <dl className="wizard-source-ready__facts">
                     <div>
@@ -731,21 +755,21 @@ export function NewProjectWizard({
                   </dl>
                   <Button variant="ghost" type="button" onClick={resetSource}>Выбрать другое видео</Button>
                 </div>
-              </div>
+              </Card>
             )}
 
             <div className="wizard-footer wizard-footer--source">
               <div className="wizard-footer__source-state" role="status">
-                {sourceReady ? <Check size={20} aria-hidden="true" /> : <span className="wizard-footer__source-mark" aria-hidden="true" />}
+                {sourceReady ? <AppIcon icon={CheckmarkCircle01Icon} size="md" aria-hidden="true" /> : <span className="wizard-footer__source-mark" aria-hidden="true" />}
                 <span>
                   <strong>{sourceReady ? "Видео добавлено" : "Видео не добавлено"}</strong>
                   <small>{sourceReady ? "Проверьте исходник перед продолжением." : "Добавьте видео, чтобы продолжить."}</small>
                 </span>
               </div>
-              <ActionButton size="lg" disabled={!sourceReady || !sourceCostKnown} onClick={() => setStep(2)}>
+              <AsyncButton size="lg" disabled={!sourceReady || !sourceCostKnown} onClick={() => setStep(2)}>
                 Продолжить
-                <ArrowRight size={18} />
-              </ActionButton>
+                <AppIcon icon={ArrowRight01Icon} size="sm" aria-hidden="true" />
+              </AsyncButton>
             </div>
           </section>
         ) : null}
@@ -754,14 +778,14 @@ export function NewProjectWizard({
           <section className="wizard-panel" aria-labelledby="wizard-intent-title">
             <div className="wizard-panel__heading">
               <span className="dash-eyebrow">Шаг 2 из 4</span>
-              <h1 id="wizard-intent-title">Что нужно найти</h1>
-              <p>Выберите задачу — детали можно уточнить позже.</p>
+              <SectionTitle id="wizard-intent-title">Что нужно найти</SectionTitle>
+              <SectionDescription>Выберите задачу — детали можно уточнить позже.</SectionDescription>
             </div>
 
             <div className="wizard-section">
-              <h2 className="wizard-section__title">Режим нарезки</h2>
-              <OptionCard
-                icon={<Sparkles size={19} />}
+              <SectionTitle>Режим нарезки</SectionTitle>
+              <WizardOption
+                icon={<AppIcon icon={SparklesIcon} size="md" />}
                 title="Умная нарезка"
                 description="ИИ сам находит законченные мысли и держит спикеров в кадре"
                 badge={<ValueBadge>Рекомендуем</ValueBadge>}
@@ -776,10 +800,10 @@ export function NewProjectWizard({
                 onClick={() => setOtherModesOpen((value) => !value)}
               >
                 Нужен другой тип нарезки?
-                <ChevronDown className={otherModesOpen ? "is-open" : ""} size={17} />
+                <AppIcon icon={ArrowDown01Icon} size="sm" className={otherModesOpen ? "is-open" : ""} aria-hidden="true" />
               </Button>
               {otherModesOpen ? (
-                <div className="option-card-grid">
+                <div className="grid gap-2 sm:grid-cols-2">
                   {/* "uniform" and "manual" aren't real modes yet: find_moments always
                       runs the same AI search+rerank regardless of mode (confirmed —
                       neither string appears in the worker's pipeline logic), so picking
@@ -789,7 +813,7 @@ export function NewProjectWizard({
                   {cuttingModes.filter((mode) => mode.id !== "smart").map((mode) => (
                     <LockedField
                       key={mode.id}
-                      icon={<mode.icon size={16} />}
+                      icon={<AppIcon icon={mode.icon} size="sm" />}
                       label={mode.title}
                       reason="Скоро — пока используется умная нарезка"
                     />
@@ -800,9 +824,9 @@ export function NewProjectWizard({
               {cuttingMode === "smart" ? (
                 <div className="wizard-ai-intents">
                   <span className="wizard-subsection-label">Что именно искать</span>
-                  <div className="option-card-grid">
+                  <div className="grid gap-2 sm:grid-cols-2">
                     {aiIntents.map((item) => (
-                      <OptionCard
+                      <WizardOption
                         key={item.id}
                         title={item.title}
                         description={item.text}
@@ -831,38 +855,28 @@ export function NewProjectWizard({
             <div className="wizard-result-settings">
               <fieldset>
                 <legend>Количество</legend>
-                <ChoiceSegmented
-                  aria-label="Количество клипов"
-                  fullWidth
-                  value={count}
-                  onValueChange={setCount}
-                  options={[
-                    { id: "recommended", label: "Рекомендуемое" },
-                    { id: "8", label: "Ровно 8" },
-                  ]}
-                />
+                <ToggleGroup aria-label="Количество клипов" className="w-full" value={[count]} onValueChange={(next) => { if (next[0]) setCount(next[0] as typeof count); }} variant="outline" spacing={0}>
+                  <ToggleGroupItem className="flex-1" value="recommended">Рекомендуемое</ToggleGroupItem>
+                  <ToggleGroupItem className="flex-1" value="8">Ровно 8</ToggleGroupItem>
+                </ToggleGroup>
               </fieldset>
               <fieldset>
                 <legend>Длительность</legend>
-                <ChoiceSegmented
-                  aria-label="Длительность клипов"
-                  fullWidth
-                  value={duration}
-                  onValueChange={setDuration}
-                  options={durations.map((value) => ({ id: value, label: value }))}
-                />
+                <ToggleGroup aria-label="Длительность клипов" className="w-full" value={[duration]} onValueChange={(next) => { if (next[0]) setDuration(next[0] as typeof duration); }} variant="outline" spacing={0}>
+                  {durations.map((value) => <ToggleGroupItem className="flex-1" key={value} value={value}>{value}</ToggleGroupItem>)}
+                </ToggleGroup>
               </fieldset>
             </div>
 
             <div className="wizard-section">
-              <h2 className="wizard-section__title">Формат видео</h2>
-              <p className="wizard-section__hint">
+              <SectionTitle>Формат видео</SectionTitle>
+              <SectionDescription className="mb-3">
                 Подскажите, как выглядит видео — от этого зависит кадрирование под вертикаль.
-              </p>
-              <div className="option-card-grid">
+              </SectionDescription>
+              <div className="grid gap-2 sm:grid-cols-2">
                 {layoutOptions.map(({ id, label, hint, icon: Icon, rendersToday }) => (
                   rendersToday ? (
-                    <OptionCard
+                    <WizardOption
                       key={id}
                       icon={<Icon size={19} />}
                       title={label}
@@ -881,7 +895,7 @@ export function NewProjectWizard({
               <div className="wizard-cost__row">
                 <span>Спишем за обработку</span>
                 <strong>
-                  <Zap size={16} fill="currentColor" />
+                  <AppIcon icon={FlashIcon} size="sm" aria-hidden="true" />
                   {estimatedCost === null ? "определяем длительность" : `${estimatedCost} мин.`}
                 </strong>
               </div>
@@ -930,60 +944,31 @@ export function NewProjectWizard({
               onClick={() => setAdvancedOpen((value) => !value)}
             >
               Дополнительные настройки
-              <ChevronDown className={advancedOpen ? "is-open" : ""} size={18} />
+              <AppIcon icon={ArrowDown01Icon} size="sm" className={advancedOpen ? "is-open" : ""} aria-hidden="true" />
             </Button>
             {advancedOpen ? (
               <div className="wizard-advanced-grid">
-                <label>
-                  <span>Разнообразие тем</span>
-                  <ChoiceSelect
-                    aria-label="Разнообразие тем"
-                    fullWidth
-                    value={diversity}
-                    onValueChange={(value) => setDiversity(value as typeof diversity)}
-                    options={[
-                      { id: "high", label: "Высокое" },
-                      { id: "medium", label: "Среднее" },
-                      { id: "low", label: "Строго по теме" },
-                    ]}
-                  />
-                </label>
-                <label>
-                  <span>Строгость отбора</span>
-                  <ChoiceSelect
-                    aria-label="Строгость отбора"
-                    fullWidth
-                    value={strictness}
-                    onValueChange={(value) => setStrictness(value as typeof strictness)}
-                    options={[
-                      { id: "wide", label: "Больше вариантов" },
-                      { id: "balanced", label: "Сбалансированно" },
-                      { id: "strict", label: "Только лучшие" },
-                    ]}
-                  />
-                </label>
-                <label>
-                  <span>Завершение мысли</span>
-                  <ChoiceSelect
-                    aria-label="Завершение мысли"
-                    fullWidth
-                    value={allowThoughtCompletion ? "yes" : "no"}
-                    onValueChange={(value) => setAllowThoughtCompletion(value === "yes")}
-                    options={[
-                      { id: "yes", label: "Можно немного превысить лимит" },
-                      { id: "no", label: "Не превышать лимит" },
-                    ]}
-                  />
-                </label>
+                <Field>
+                  <FieldLabel>Разнообразие тем</FieldLabel>
+                  <Select value={diversity} onValueChange={(value) => { if (value) setDiversity(value as typeof diversity); }}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="high">Высокое</SelectItem><SelectItem value="medium">Среднее</SelectItem><SelectItem value="low">Строго по теме</SelectItem></SelectContent></Select>
+                </Field>
+                <Field>
+                  <FieldLabel>Строгость отбора</FieldLabel>
+                  <Select value={strictness} onValueChange={(value) => { if (value) setStrictness(value as typeof strictness); }}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="wide">Больше вариантов</SelectItem><SelectItem value="balanced">Сбалансированно</SelectItem><SelectItem value="strict">Только лучшие</SelectItem></SelectContent></Select>
+                </Field>
+                <Field>
+                  <FieldLabel>Завершение мысли</FieldLabel>
+                  <Select value={allowThoughtCompletion ? "yes" : "no"} onValueChange={(value) => setAllowThoughtCompletion(value === "yes")}><SelectTrigger className="w-full"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="yes">Можно немного превысить лимит</SelectItem><SelectItem value="no">Не превышать лимит</SelectItem></SelectContent></Select>
+                </Field>
               </div>
             ) : null}
 
             <div className="wizard-footer">
               <Button className="wizard-back" variant="ghost" type="button" onClick={() => setStep(1)}>Назад</Button>
-              <ActionButton size="lg" disabled={notEnoughCredits || !sourceCostKnown} onClick={() => setStep(3)}>
+              <AsyncButton size="lg" disabled={notEnoughCredits || !sourceCostKnown} onClick={() => setStep(3)}>
                 Выбрать оформление
-                <ArrowRight size={18} />
-              </ActionButton>
+                <AppIcon icon={ArrowRight01Icon} size="sm" aria-hidden="true" />
+              </AsyncButton>
               {notEnoughCredits ? <span className="wizard-footer__notice" role="status">Сократите диапазон или пополните баланс.</span> : null}
             </div>
           </section>
@@ -993,22 +978,15 @@ export function NewProjectWizard({
           <section className="wizard-panel wizard-panel--style" aria-labelledby="wizard-style-title">
             <div className="wizard-panel__heading">
               <span className="dash-eyebrow">Шаг 3 из 4</span>
-              <h1 id="wizard-style-title">Как должны выглядеть клипы</h1>
-              <p>Возьмите сохранённый стиль и при необходимости измените детали.</p>
+              <SectionTitle id="wizard-style-title">Как должны выглядеть клипы</SectionTitle>
+              <SectionDescription>Возьмите сохранённый стиль и при необходимости измените детали.</SectionDescription>
             </div>
 
-            <ChoiceSegmented
-              aria-label="Режим оформления"
-              className="wizard-style-mode"
-              fullWidth
-              value={styleMode}
-              onValueChange={(value) => setStyleMode(value as "auto" | "custom" | "preset")}
-              options={[
-                { id: "auto", label: <><Sparkles size={17} /> Быстро</> },
-                { id: "custom", label: <><SlidersHorizontal size={17} /> Тонкая настройка</> },
-                { id: "preset", label: <><Palette size={17} /> Из пресетов</> },
-              ]}
-            />
+            <ToggleGroup aria-label="Режим оформления" className="w-full" value={[styleMode]} onValueChange={(next) => { if (next[0]) setStyleMode(next[0] as "auto" | "custom" | "preset"); }} variant="outline" spacing={0}>
+              <ToggleGroupItem className="flex-1" value="auto"><AppIcon icon={SparklesIcon} size="sm" /> Быстро</ToggleGroupItem>
+              <ToggleGroupItem className="flex-1" value="custom"><AppIcon icon={SlidersHorizontalIcon} size="sm" /> Тонкая настройка</ToggleGroupItem>
+              <ToggleGroupItem className="flex-1" value="preset"><AppIcon icon={PaintBoardIcon} size="sm" /> Из пресетов</ToggleGroupItem>
+            </ToggleGroup>
 
             <div className="wizard-style-layout">
               <div className="wizard-style-controls">
@@ -1035,10 +1013,10 @@ export function NewProjectWizard({
                         key={style.id}
                         onClick={() => chooseStyle(style.id)}
                       >
-                        <span className="wizard-style-options__mark" aria-hidden="true"><Subtitles size={16} /></span>
+                        <span className="wizard-style-options__mark" aria-hidden="true"><AppIcon icon={SubtitleIcon} size="sm" /></span>
                         <b>{style.name}</b>
                         <small>{style.captions === "Выключены" ? "Без субтитров" : `${style.captions} · ${style.framing}`}</small>
-                        {styleId === style.id ? <Check size={17} /> : null}
+                        {styleId === style.id ? <AppIcon icon={CheckmarkCircle01Icon} size="sm" aria-hidden="true" /> : null}
                       </Button>
                     ))}
                   </div>
@@ -1048,7 +1026,7 @@ export function NewProjectWizard({
                   <>
                     <div className="wizard-control-card">
                       <div>
-                        <span className="wizard-control-card__icon"><Frame size={19} /></span>
+                        <span className="wizard-control-card__icon"><AppIcon icon={FrameIcon} size="md" /></span>
                         <span>
                           <strong>Кадр</strong>
                           <small>{layoutOptions.find((item) => item.id === layout)?.label} — меняется на шаге «Что нужно найти»</small>
@@ -1057,24 +1035,24 @@ export function NewProjectWizard({
                     </div>
                     <div className="wizard-control-card">
                       <div>
-                        <span className="wizard-control-card__icon"><Subtitles size={19} /></span>
+                        <span className="wizard-control-card__icon"><AppIcon icon={SubtitleIcon} size="md" /></span>
                         <span><strong>Субтитры</strong><small>Стиль можно изменить в готовом клипе</small></span>
                       </div>
-                      <ChoiceSwitch checked={captions} label="Добавлять субтитры" onCheckedChange={setCaptions} />
+                      <Switch checked={captions} aria-label="Добавлять субтитры" onCheckedChange={setCaptions} />
                     </div>
                     <div className="wizard-control-card">
                       <div>
-                        <span className="wizard-control-card__icon"><WandSparkles size={19} /></span>
+                        <span className="wizard-control-card__icon"><AppIcon icon={MagicWand01Icon} size="md" /></span>
                         <span><strong>Убрать длинные паузы</strong><small>Мы не обрежем окончания фраз</small></span>
                       </div>
-                      <ChoiceSwitch checked={silence} label="Удалять длинные паузы" onCheckedChange={setSilence} />
+                      <Switch checked={silence} aria-label="Удалять длинные паузы" onCheckedChange={setSilence} />
                     </div>
                     <div className="wizard-control-card">
                       <div>
-                        <span className="wizard-control-card__icon"><UploadCloud size={19} /></span>
+                        <span className="wizard-control-card__icon"><AppIcon icon={Upload01Icon} size="md" /></span>
                         <span><strong>Место под баннер</strong><small>Оставим область снизу — файл добавите в редакторе клипа</small></span>
                       </div>
-                      <ChoiceSwitch checked={banner} label="Оставить место под баннер" onCheckedChange={setBanner} />
+                      <Switch checked={banner} aria-label="Оставить место под баннер" onCheckedChange={setBanner} />
                     </div>
                   </>
                 ) : null}
@@ -1082,7 +1060,7 @@ export function NewProjectWizard({
 
               <aside className="wizard-summary">
                 <span className="dash-eyebrow">Проверка</span>
-                <h2>Всё готово к запуску</h2>
+                <SectionTitle>Всё готово к запуску</SectionTitle>
                 <dl>
                   <div><dt>Источник</dt><dd>{sourceType === "url" ? (sourcePlatform?.label ?? "Ссылка") : sourceType === "existing" ? "Сохранённый исходник" : "Загруженный файл"}</dd></div>
                   <div>
@@ -1104,7 +1082,7 @@ export function NewProjectWizard({
                 <div className="wizard-summary__charge">
                   <span>Списание</span>
                   <strong>
-                    <Zap size={16} fill="currentColor" />
+                    <AppIcon icon={FlashIcon} size="sm" aria-hidden="true" />
                     {sourceType === "existing"
                       ? "0 — исходник уже оплачен"
                       : estimatedCost === null
@@ -1113,16 +1091,16 @@ export function NewProjectWizard({
                   </strong>
                   <small>Один исходник оплачивается один раз. Поиск, правки и ререндер — без нового списания.</small>
                 </div>
-                <ActionButton
+                <AsyncButton
                   className="w-full"
                   size="lg"
                   disabled={notEnoughCredits || !sourceCostKnown}
                   onClick={() => void launchProject()}
                 >
                   Найти моменты
-                  <ArrowRight size={18} />
-                </ActionButton>
-                {launchError ? <span className="dash-field-error" role="alert">{launchError}</span> : null}
+                  <AppIcon icon={ArrowRight01Icon} size="sm" aria-hidden="true" />
+                </AsyncButton>
+                {launchError ? <FieldError role="alert">{launchError}</FieldError> : null}
               </aside>
             </div>
 

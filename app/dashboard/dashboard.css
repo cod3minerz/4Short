@@ -90,107 +90,6 @@
   gap: 8px;
 }
 
-.dash-topbar__balance {
-  min-height: 32px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 3px 10px 3px 4px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--secondary);
-  color: color-mix(in oklch, var(--foreground), transparent 28%);
-  font-size: 12px;
-  font-weight: 680;
-}
-
-.dash-topbar__balance-value {
-  color: var(--foreground);
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.dash-topbar__balance-icon {
-  width: 24px;
-  height: 24px;
-  display: grid;
-  place-items: center;
-  border-radius: var(--radius-sm);
-  background: var(--foreground);
-  color: var(--background);
-}
-
-.dash-topbar__balance-icon svg { color: var(--background); }
-
-.dash-profile-menu {
-  min-height: 36px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 3px 8px 3px 4px;
-  border: 0;
-  border-radius: var(--radius);
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.dash-profile-menu summary {
-  min-height: 36px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 3px 8px 3px 4px;
-  border-radius: var(--radius);
-  cursor: pointer;
-  list-style: none;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.dash-profile-menu summary::-webkit-details-marker { display: none; }
-.dash-profile-menu summary:hover { background: var(--accent); }
-
-.dash-profile-menu__avatar {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  place-items: center;
-  border-radius: var(--radius-sm);
-  background: var(--muted);
-  color: var(--foreground);
-  font-size: 12px;
-  font-weight: 850;
-}
-
-.dash-profile-menu__popover {
-  width: 190px;
-  padding: 6px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--popover);
-  box-shadow: none;
-}
-
-.dash-profile-menu__popover [data-slot="dropdown-menu-item"] {
-  width: 100%;
-  min-height: 36px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding-inline: 10px;
-  justify-content: flex-start;
-  border-radius: var(--radius-sm);
-  color: var(--popover-foreground);
-  font-size: 13px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.dash-profile-menu__popover [data-slot="dropdown-menu-item"]:focus { background: var(--secondary); }
-
 .dash-frame {
   width: min(calc(100% - 32px), 1320px);
   min-height: calc(100dvh - 70px);
@@ -308,8 +207,7 @@
   text-transform: none;
 }
 
-.dash-page-heading p,
-.wizard-panel__heading p {
+.dash-page-heading p {
   max-width: 640px;
   margin-top: 6px;
   color: var(--muted-foreground);
@@ -346,15 +244,6 @@
 }
 
 .wizard-header__intro { display: grid; gap: 6px; }
-.wizard-header__intro p { color: var(--muted-foreground); font-size: 13px; }
-
-.wizard-header h1 {
-  font-size: 26px;
-  font-weight: 760;
-  letter-spacing: -.025em;
-}
-
-
 .wizard-body {
   margin-inline: auto;
   padding-block: clamp(48px, 7vw, 90px);
@@ -369,7 +258,6 @@
   text-align: center;
 }
 
-.wizard-panel__heading .dash-eyebrow { display: none; }
 
 /* Generic section wrapper for step 2 (cutting mode, format) — a plain
    heading + hint above whatever the section contains, usually an
@@ -608,14 +496,10 @@
 .wizard-source-ready {
   gap: 24px;
   margin-top: 30px;
-  padding: 16px;
-  border: 1px solid var(--border);
-  background: var(--secondary);
   display: grid;
   grid-template-columns: minmax(250px, .9fr) minmax(0, 1.1fr);
   min-height: 0;
   overflow: hidden;
-  border-radius: var(--radius-xl);
 }
 
 .wizard-source-ready__info {
@@ -1112,88 +996,18 @@
   border-bottom: 1px solid var(--border);
 }
 
-.dash-filter-row {
-  padding: 5px;
-  border-radius: var(--radius);
-  background: var(--muted);
-  display: flex; gap: 2px; }
-.dash-filter-row button {
-  font-weight: 750;
-  min-height: 32px;
-  padding-inline: 11px;
-  border: 0;
-  border-radius: calc(var(--radius) - 2px);
-  background: transparent;
-  color: var(--muted-foreground);
-  font-size: 12px;
-}
-.dash-filter-row button.is-active {
-  box-shadow: 0 1px 4px rgba(20,42,50,.08); background: var(--card); color: var(--foreground); }
-
 .project-storage {
   display: grid;
   grid-template-columns: auto minmax(180px, 1fr) auto;
   align-items: center;
   gap: 12px;
   margin-bottom: 14px;
-  padding: 11px 13px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--secondary);
-}
-
-.project-storage__icon {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius);
-  background: var(--card);
-  color: var(--primary-foreground);
 }
 
 .project-storage__body { display: grid; gap: 6px; min-width: 0; }
 .project-storage__body > span:first-child { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; }
 .project-storage small { color: var(--muted-foreground); font-size: 12px; }
-.project-storage__track { height: 4px; overflow: hidden; border-radius: var(--radius); background: var(--muted); }
-.project-storage__track i { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
-.project-storage.is-blocked { border-color: color-mix(in oklch, var(--destructive), transparent 66%); background: color-mix(in oklch, var(--destructive), transparent 88%); }
-.project-storage.is-blocked .project-storage__track i { background: var(--destructive); }
-
-.project-row__delete {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius);
-  background: transparent;
-  color: var(--muted-foreground);
-}
-.project-row__delete:hover { background: color-mix(in oklch, var(--destructive), transparent 88%); color: var(--destructive); }
 .project-delete-copy { max-width: 48ch; color: color-mix(in oklch, var(--foreground), transparent 28%); font-size: 13px; line-height: 1.55; }
-
-.dash-search {
-  gap: 9px;
-  color: var(--muted-foreground);
-  display: flex;
-  align-items: center;
-  width: 220px;
-  min-height: 40px;
-  padding-inline: 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--secondary);
-}
-.dash-search svg { flex-shrink: 0; }
-.dash-search input {
-  width: 100%;
-  min-width: 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--foreground); font-size: 12px; }
 
 .project-list {
   border: 1px solid var(--border);
@@ -1279,10 +1093,7 @@
 .project-row__status.tone-danger i { background: var(--danger); }
 
 .project-row__result { display: flex; flex-direction: column; }
-.project-row__result strong { font-size: 12px; }
-.project-row__result small, .project-row time { color: var(--muted-foreground); font-size: 10px; }
-.project-row > button { width: 30px; height: 30px; display: grid; place-items: center; border: 0; border-radius: var(--radius-sm); background: transparent; cursor: pointer; }
-.project-row > button:hover { background: var(--secondary); }
+.project-row time { color: var(--muted-foreground); }
 
 /* Existing project workspace, made denser */
 .project-workspace {
@@ -2408,24 +2219,6 @@
 .dash-status.tone-success { background: color-mix(in oklch, var(--primary), transparent 87%); color: var(--primary); }
 
 .dash-status.tone-danger { background: color-mix(in oklch, var(--destructive), transparent 88%); color: var(--destructive); }
-
-.dash-empty-state {
-  min-height: 360px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border: 1px dashed var(--ring);
-  border-radius: var(--radius-2xl);
-  background: var(--card);
-  text-align: center;
-}
-
-.dash-empty-state h2 { margin-top: 14px; font-size: 20px; }
-
-.dash-empty-state p { margin-top: 6px; color: var(--muted-foreground); font-size: 14px; }
-
-.dash-empty-state button { margin-top: 18px; border: 0; background: transparent; color: var(--primary-foreground); font-weight: 800; }
 
 /* MediaThumb instance in the wizard's confirmed-source card. Its width comes
    from the 180px grid column (.wizard-source-ready); a min-height here used
@@ -3638,9 +3431,6 @@
   .wizard-summary dl { grid-template-columns: 1fr 1fr; }
 
   .dash-project-toolbar { align-items: stretch; flex-direction: column; padding-bottom: 10px; }
-  .dash-filter-row { overflow-x: auto; }
-  .dash-filter-row button { white-space: nowrap; }
-  .dash-search { width: 100%; }
   .project-list { border: 0; overflow: visible; }
   .project-list__head { display: none; }
   .project-row {
@@ -3760,10 +3550,6 @@
   .dash-page-heading h1 { font-size: 26px; }
   .dash-project-toolbar { align-items: stretch; flex-direction: column; }
   .project-storage { grid-template-columns: auto minmax(0, 1fr); }
-  .project-storage > small { grid-column: 2; }
-  .dash-filter-row { overflow-x: auto; }
-  .dash-filter-row button { white-space: nowrap; }
-  .dash-search input { width: 100%; }
   /* Below this, the sidebar is gone and .dash-main reclaims its width, but
      the 1020px tier's narrowed-but-still-tabular grid (250px+130px+96px+30px)
      doesn't leave enough room for its own cell content to avoid clipping —
@@ -3873,22 +3659,11 @@
   .dash-section-head h2 { font-size: 22px; }
   .dash-section-head > a { font-size: 0; }
   .dash-section-head > a svg { width: 20px; height: 20px; }
-  .dash-filter-row {
-    margin-inline: -2px;
-    padding-right: 18px;
-    scroll-padding-inline: 2px 18px;
-    scrollbar-width: none;
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
-    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
-  }
-  .dash-filter-row::-webkit-scrollbar { display: none; }
-  .project-storage { padding: 10px; }
-  .dash-filter-row button { min-height: 36px; padding-inline: 13px; }
   .wizard-header { min-height: 0; padding-inline: 0; }
   .wizard-header > a span { display: none; }
   .wizard-body { width: min(calc(100% - 24px), 600px); padding-block: 32px 120px; }
   .wizard-panel__heading h1 { font-size: 22px; line-height: 1.18; }
-  .wizard-source-ready { grid-template-columns: 1fr; gap: 8px; padding: 10px; }
+  .wizard-source-ready { grid-template-columns: 1fr; gap: 8px; }
   .wizard-source-ready__media { min-height: 0; }
   .wizard-source-ready__info { padding: 18px 12px; }
   .wizard-source-ready__info dl { grid-template-columns: 1fr; }
@@ -3916,7 +3691,6 @@
   .project-header__title > a { width: 36px; }
   .project-header__actions { display: grid; grid-template-columns: 1fr; }
   .project-header__actions > [data-slot="button"] { width: 100%; }
-  .project-row > button { width: 36px; height: 36px; }
   .project-tabs { gap: 18px; padding-inline: 14px; overflow-x: auto; }
   .project-tabs button { white-space: nowrap; }
   .project-render-banner { margin-inline: 12px; }
@@ -4681,28 +4455,7 @@
 
 /* --- Stepper --------------------------------------------------------------- */
 
-.stepper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  width: 100%;
-  max-width: 820px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.stepper__step {
-  position: relative;
-  flex: 1 1 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 7px;
-}
-
-.stepper__step:not(:last-child)::after {
+.stepper-step:not(:last-child)::after {
   content: "";
   position: absolute;
   z-index: 0;
@@ -4714,41 +4467,7 @@
   background: var(--border);
 }
 
-.stepper__step.is-done:not(:last-child)::after { background: var(--foreground); }
-
-.stepper__icon {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--muted-foreground);
-  background: var(--card);
-}
-
-.stepper__step.is-done .stepper__icon {
-  border-color: var(--foreground);
-  background: var(--foreground);
-  color: var(--card);
-}
-
-.stepper__step.is-current .stepper__icon {
-  border-color: var(--foreground);
-  color: var(--foreground);
-}
-
-.stepper__label {
-  color: var(--muted-foreground);
-  font-size: 13px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.stepper__step.is-current .stepper__label,
-.stepper__step.is-done .stepper__label { color: var(--foreground); }
+.stepper-step[data-state="done"]:not(:last-child)::after { background: var(--primary); }
 
 /* Source flow: one bounded work surface, mirroring the product's sequential
    decision order. The controls themselves remain stock registry primitives. */
@@ -4764,8 +4483,6 @@
 .wizard-header { align-items: stretch; gap: clamp(28px, 4vw, 42px); text-align: left; }
 .wizard-header__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
 .wizard-header__intro { gap: 8px; }
-.wizard-header h1 { font-size: clamp(28px, 2.3vw, 34px); line-height: 1.1; }
-.wizard-header__intro p { font-size: 15px; }
 .wizard-step-badge {
   flex: 0 0 auto;
   padding: 6px 10px;
@@ -5076,7 +4793,6 @@
   .moment-row,
   .billing-history__table,
   .dash-secondary-link,
-  .dash-empty-state,
   .moment-list__head > button,
   .moment-check,
   .project-drawer-styles button,
@@ -5206,10 +4922,10 @@
 
 /* Source confirmation is a media-first fact sheet. It has no invented "HP"
    art or decorative score: thumbnail, title, duration and exact charge only. */
-.wizard-source-ready { grid-template-columns: minmax(220px, .72fr) minmax(0, 1.28fr); gap: 20px; padding: 12px; background: var(--card); }
+.wizard-source-ready { grid-template-columns: minmax(220px, .72fr) minmax(0, 1.28fr); gap: 20px; }
 .wizard-source-ready__media { min-height: 190px; background: var(--background); }
 .wizard-source-ready__info { padding: 10px 8px 10px 2px; }
-.wizard-source-ready__info h2 { margin-top: 12px; font-size: 19px; line-height: 1.25; }
+.wizard-source-ready__info h2 { margin-top: 12px; }
 
 .style-editor__switch > span { min-width: 0; }
 .style-editor__switch strong,
@@ -5306,11 +5022,6 @@
   .styles-library { position: static; flex-direction: row; overflow-x: auto; padding-bottom: 2px; scroll-snap-type: x proximity; }
   .style-preview, .styles-editor-column { grid-column: auto; }
   .style-preview__stage { min-height: 360px; }
-}
-.project-storage {
-  padding: 1rem;
-  border-radius: var(--radius-lg);
-  background: var(--card);
 }
 .wizard-source-ready__info .wizard-source-ready__facts {
   display: grid;

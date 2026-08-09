@@ -1,7 +1,8 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Tick02Icon } from "@hugeicons/core-free-icons";
 import type { ReactNode } from "react";
+import { AppIcon } from "./app-icon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -55,7 +56,7 @@ export function OptionCard({
         </span>
         {description ? <span className="option-card__description">{description}</span> : null}
       </span>
-      {selected ? <Check className="option-card__check" size={16} aria-hidden="true" /> : null}
+      {selected ? <AppIcon icon={Tick02Icon} size="sm" className="option-card__check" aria-hidden="true" /> : null}
     </Button>
   );
 }

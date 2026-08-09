@@ -23,9 +23,9 @@ count as browser completion evidence.
 | `/sign-in` | Auth | migrated Phase 7.1 | 360/1440 browser: default, focus, error, password reveal, keyboard and no overflow | Complete — Better Auth behaviour retained |
 | `/sign-up` | Auth | migrated Phase 7.1 | 768 browser: validation and real local signup to OTP | Complete — Better Auth behaviour retained |
 | `/forgot-password` | Auth | migrated Phase 7.1 | 1024 browser: validation and reset-password transition | Complete — Better Auth behaviour retained |
-| `/dashboard` | Source wizard | dashboard shell + wizard/stepper | 1280×720: 6 buttons, 2 inputs, vertical scroll only, no console error | Pending; do not restore recovery diff automatically |
-| `/dashboard/new` | Redirect/entry flow | dashboard entry | static audit | Pending |
-| `/dashboard/projects` | Projects | listing, filters, search | 1280×720: 7 buttons, 1 input, no horizontal overflow or console error | Pending |
+| `/dashboard` | Source wizard | migrated canonical controls; original shell/frame/stepper/footer retained | 1280×720 authenticated: empty and URL-error states, profile Escape/focus return, no horizontal/nested scroll | Browser matrix blocked: confirmed/processing and 360/768/1024/1440 still required |
+| `/dashboard/new` | Redirect/entry flow | entry remains routed to the retained source wizard | implementation/static audit | Pending browser redirect check with `/dashboard` matrix |
+| `/dashboard/projects` | Projects | migrated canonical controls; original project-list/table retained | 1280×720 authenticated: loading then empty/storage, ToggleGroup/search and no horizontal/nested scroll | Browser matrix blocked: populated/failed/delete dialog and 360/768/1024/1440 still required |
 | `/dashboard/projects/[id]` | Workspace | project workspace | static audit; dynamic evidence pending | Pending |
 | `/dashboard/projects/[id]/clips/[clipId]` | Clip editor | HVE/editor surface | static audit; HVE evidence pending | Pending |
 | `/dashboard/styles` | Styles management | removed in Phase 6 | direct route returns Not Found; no navigation or internal product links remain | Removed — domain remains consumed by wizard/workspace |

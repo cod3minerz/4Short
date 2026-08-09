@@ -1,5 +1,6 @@
-import { Clapperboard } from "lucide-react";
+import { Video01Icon } from "@hugeicons/core-free-icons";
 import type { ReactNode } from "react";
+import { AppIcon } from "./app-icon";
 import { cn } from "@/lib/utils";
 
 export type MediaThumbTone = "accent" | "ink" | "soft";
@@ -44,7 +45,7 @@ export function MediaThumb({ src, alt, tone = "accent", aspect = "16:9", classNa
         <img src={src} alt={alt ?? ""} className="media-thumb__image" />
       ) : (
         <span className="media-thumb__empty" role="img" aria-label="Превью недоступно">
-          <Clapperboard size={18} aria-hidden="true" />
+          <AppIcon icon={Video01Icon} size="md" aria-hidden="true" />
           <small>Превью недоступно</small>
         </span>
       )}

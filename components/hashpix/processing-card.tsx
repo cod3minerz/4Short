@@ -1,8 +1,12 @@
-import { ArrowRight, Check, LoaderCircle } from "lucide-react";
+import { ArrowRight01Icon, CheckmarkCircle01Icon, Refresh01Icon } from "@hugeicons/core-free-icons";
 import Link from "next/link";
 import { processingStages } from "@/app/dashboard/lib/processing-stages";
+import { AppIcon } from "./app-icon";
 import { MediaThumb } from "./media-thumb";
 import { ProgressStage } from "./progress-stage";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { SectionDescription, SectionTitle, typographyVariants } from "./typography";
 
 interface ProcessingCardAction {
   completedHref: string;
@@ -53,25 +57,26 @@ export function ProcessingCard({
     : undefined;
 
   return (
-    <div className="wizard-processing__card">
-      <div className={`wizard-processing__mark ${completed ? "is-complete" : failed ? "is-failed" : ""}`}>
-        {completed ? <Check size={32} /> : failed ? <span aria-hidden="true">!</span> : <LoaderCircle size={32} />}
-      </div>
-      <span className="dash-eyebrow">{completed ? "Анализ завершён" : failed ? "Нужна помощь" : "Можно закрыть страницу"}</span>
-      <h1>{completed ? "Моменты готовы к проверке" : failed ? "Обработка остановлена" : inProgressHeading}</h1>
-      <p>
+    <Card className="mx-auto w-full max-w-2xl">
+      <CardContent className="items-center text-center">
+        <div className="grid size-12 place-items-center rounded-md bg-muted text-muted-foreground">
+          {completed ? <AppIcon icon={CheckmarkCircle01Icon} size="lg" className="text-primary" aria-hidden="true" /> : failed ? <span className="text-lg font-medium text-destructive" aria-hidden="true">!</span> : <AppIcon icon={Refresh01Icon} size="lg" className="animate-spin" aria-hidden="true" />}
+        </div>
+        <span className={typographyVariants({ role: "caption" })}>{completed ? "Анализ завершён" : failed ? "Нужна помощь" : "Можно закрыть страницу"}</span>
+        <SectionTitle>{completed ? "Моменты готовы к проверке" : failed ? "Обработка остановлена" : inProgressHeading}</SectionTitle>
+        <SectionDescription>
         {completed
           ? "Мы нашли самостоятельные фрагменты. Выберите те, из которых нужно создать клипы."
           : failed
             ? "Откройте проект: там указан этап ошибки и доступное действие."
             : `${stage?.description ?? "Hashpix продолжает работу в фоне."} Страницу можно закрыть — состояние сохранится.`}
-      </p>
+        </SectionDescription>
 
-      <div className="wizard-processing__source">
+      <div className="flex w-full items-center gap-3 rounded-md bg-muted p-3 text-left">
         <MediaThumb src={sourceThumbnail ?? undefined} alt={sourceName} />
-        <div>
-          <strong>{sourceName}</strong>
-          <small>{completed ? "Обработка завершена" : failed ? "Обработка остановлена" : "Можно закрыть вкладку — работа продолжится"}</small>
+        <div className="flex min-w-0 flex-col gap-1">
+          <span className={typographyVariants({ role: "label" })}>{sourceName}</span>
+          <span className={typographyVariants({ role: "caption" })}>{completed ? "Обработка завершена" : failed ? "Обработка остановлена" : "Можно закрыть вкладку — работа продолжится"}</span>
         </div>
       </div>
 
@@ -86,27 +91,26 @@ export function ProcessingCard({
             metric={metric}
             percent={percent}
           />
-          <p className="wizard-processing__truth">
+          <p className={typographyVariants({ role: "caption" })}>
             Варианты клипов появятся только после завершения анализа — мы не
             показываем фиктивные карточки до того, как их реально нашли.
           </p>
         </>
       ) : null}
 
-      {errorMessage ? <span className="dash-field-error" role="alert">{errorMessage}</span> : null}
+      {errorMessage ? <p className="text-sm text-destructive" role="alert">{errorMessage}</p> : null}
 
       {action ? (
         completed ? (
-          <Link className="dash-primary-link wizard-processing__action" href={action.completedHref}>
+          <Button nativeButton={false} render={<Link href={action.completedHref} />} className="w-full">
             {action.completedLabel}
-            <ArrowRight size={18} />
-          </Link>
+            <AppIcon icon={ArrowRight01Icon} size="sm" aria-hidden="true" />
+          </Button>
         ) : (
-          <Link className="dash-secondary-link wizard-processing__action" href={action.fallbackHref}>
-            {action.fallbackLabel}
-          </Link>
+          <Button nativeButton={false} render={<Link href={action.fallbackHref} />} className="w-full" variant="outline">{action.fallbackLabel}</Button>
         )
       ) : null}
-    </div>
+      </CardContent>
+    </Card>
   );
 }
