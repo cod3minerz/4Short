@@ -8,7 +8,7 @@ Target UI foundation: `b37sSWfzM`
 
 - [x] Phase 0 — safe preflight and current-state audit
 - [x] Phase 1 — decommission active legacy instructions
-- [ ] Phase 2 — target preset/theme foundation
+- [ ] Phase 2 — target preset/theme foundation (**blocked: shadcn registry/npm network**)
 - [ ] Phase 3 — canonical primitives, typography and shared compositions
 - [ ] Phase 4 — product route migration
 - [ ] Phase 5 — rich content, legacy cleanup and final verification
@@ -62,4 +62,12 @@ Target UI foundation: `b37sSWfzM`
 - No production UI, theme, `components/ui` or preset file is changed in this
   phase.
 
-Phase 2 has not started.
+Phase 3 has not started.
+
+## Phase 2 blocker record
+
+The exact canonical preset command was attempted three times from a clean
+branch. Each attempt failed in external shadcn/npm network transport before a
+foundation diff could persist. No fallback CLI version, manual preset copy or
+feature workaround was used. Full evidence and follow-on impacts are in
+`shadcn-phase-2-preset-audit.md`.
