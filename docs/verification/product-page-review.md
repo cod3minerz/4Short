@@ -70,9 +70,10 @@ Do not change `blocked` to `verified` based on static code inspection alone.
 
 ## Historical evidence (pre-Phase 1; not target-preset acceptance)
 
-### 2026-08-08 — source flow and style studio
+### 2026-08-08 — source flow and style studio (historical; route removed in Phase 6)
 
-- Routes: `/dashboard`, `/dashboard/styles`.
+- Routes at the time: `/dashboard`, `/dashboard/styles`. The latter was
+  decommissioned in Phase 6; this record is not current route guidance.
 - User/data state: real Better Auth admin session; no retained source exists in
   this local workspace.
 - Change: source-mode hierarchy, local official platform marks, confirmed-source

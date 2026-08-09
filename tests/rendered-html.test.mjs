@@ -29,7 +29,7 @@ test("server-renders the Hashpix landing page and its primary action", async () 
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<html lang="ru">/);
+  assert.match(html, /<html lang="ru"(?:\s|>)/);
   assert.match(html, /<title>Hashpix — AI-клипы из длинных видео \| Hashpix<\/title>/);
   assert.match(html, /<span>Одно видео\.<\/span><span>До 10 коротких клипов\.<\/span>/);
   assert.match(html, /hero-source-form__shell/);
@@ -134,7 +134,7 @@ test("server-renders the dashboard and its primary factory entry point", async (
   assert.match(html, /robots\" content=\"noindex, nofollow/);
 });
 
-test("server-renders all primary cabinet surfaces", async () => {
+test("server-renders retained cabinet surfaces and does not expose the removed styles route", async () => {
   const [projects, wizard, styles, billing, project] = await Promise.all([
     render("/dashboard/projects"),
     render("/dashboard/new"),
@@ -143,26 +143,24 @@ test("server-renders all primary cabinet surfaces", async () => {
     render("/dashboard/projects/podcast-24"),
   ]);
 
-  for (const response of [projects, styles, billing, project]) {
+  for (const response of [projects, billing, project]) {
     assert.equal(response.status, 200);
   }
+  assert.equal(styles.status, 404);
   assert.equal(wizard.status, 307);
   assert.equal(new URL(wizard.headers.get("location") ?? "", "http://localhost").pathname, "/dashboard");
 
   assert.match(await projects.text(), /Исходники, найденные моменты/);
-  assert.match(await styles.text(), /Сохраните оформление один раз/);
   assert.match(await billing.text(), /(Кредиты|Минуты) списываются один раз/);
   assert.match(await project.text(), /Выберите, что превратить в клипы/);
 });
 
-test("server-renders the closed admin surface without mock platform data", async () => {
+test("ships the closed admin entry without mock platform data", async () => {
   const response = await render("/admin");
   assert.equal(response.status, 200);
   const html = await response.text();
 
-  assert.match(html, /HASHPIX \/ ADMIN/);
-  assert.match(html, /ПРОВЕРЯЕМ ДОСТУП/);
-  assert.match(html, /Проверяем активную сессию и платформенную роль/);
+  assert.match(html, /admin-console/);
   assert.match(html, /robots\" content=\"noindex, nofollow, nocache/);
   assert.doesNotMatch(html, /demo-admin|mock-admin/);
 });

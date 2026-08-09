@@ -28,7 +28,7 @@ count as browser completion evidence.
 | `/dashboard/projects` | Projects | listing, filters, search | 1280×720: 7 buttons, 1 input, no horizontal overflow or console error | Pending |
 | `/dashboard/projects/[id]` | Workspace | project workspace | static audit; dynamic evidence pending | Pending |
 | `/dashboard/projects/[id]/clips/[clipId]` | Clip editor | HVE/editor surface | static audit; HVE evidence pending | Pending |
-| `/dashboard/styles` | Styles | current style studio | retained as a baseline route; approved plan determines later disposition | Pending |
+| `/dashboard/styles` | Styles management | removed in Phase 6 | direct route returns Not Found; no navigation or internal product links remain | Removed — domain remains consumed by wizard/workspace |
 | `/dashboard/billing` | Billing | account/billing surface | static audit | Pending |
 | `/dashboard/account` | Account | sessions/security surface | 1280×720: 3 buttons, no inputs, no console error | Pending |
 | `/dashboard/help` | Help | documentation/help surface | static audit | Pending |

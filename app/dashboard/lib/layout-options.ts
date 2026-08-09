@@ -50,8 +50,7 @@ export function layoutToApi(layout: ClipLayout) {
  * `rendersToday` in `layoutOptions` is still `LockedField`d in this editor's
  * own UI, so a real clip can only ever have been saved with `auto`,
  * `static_crop`, or `blur_background` in practice. Falls back to `auto` for
- * anything else, same graceful-degradation convention as `store.ts`'s
- * `configFromStyle`.
+ * anything else, matching the safe fallback used by persisted style configs.
  */
 export function layoutFromApi(mode: string): ClipLayout {
   if (mode === "active_speaker") return "active_speaker";

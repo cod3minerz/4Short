@@ -1,14 +1,12 @@
 "use client";
 
-import type { StyleConfig } from "@/packages/contracts/src/media";
-import { defaultStyleConfig, productPlans } from "@/packages/product-config/src";
+import { productPlans } from "@/packages/product-config/src";
 import { useSyncExternalStore } from "react";
 import { previewBalanceSeconds, previewPlanCode, projects as previewProjects, styles as previewStyles } from "./data";
 import type { Project, ProjectStatus, StylePreset } from "./types";
-import { layoutLabelFromConfig, simpleLayoutFromLabel } from "./lib/style-layout";
+import { layoutLabelFromConfig } from "./lib/style-layout";
 import {
   ControlApiError,
-  createStyle as createApiStyle,
   ensureWorkspace,
   getBillingSummary,
   getStorageSummary,
@@ -18,7 +16,6 @@ import {
   listProjects,
   listStyles,
   setWorkspaceId,
-  updateStyle as updateApiStyle,
   deleteProject as deleteApiProject,
   type ApiStyle,
   type StorageSummary,
@@ -29,7 +26,6 @@ type DashboardStore = {
   defaultStyleId: string;
   connection: "loading" | "connected" | "preview" | "error";
   error: string | null;
-  savingStyleId: string | null;
   balanceSeconds: number | null;
   planCode: string | null;
   storage: StorageSummary | null;
@@ -44,7 +40,6 @@ const serverState: DashboardStore = {
   defaultStyleId: previewStyles.find((style) => style.isDefault)?.id ?? previewStyles[0].id,
   connection: "loading",
   error: null,
-  savingStyleId: null,
   balanceSeconds: null,
   planCode: null,
   storage: null,
@@ -73,75 +68,6 @@ function persistPreview(next: DashboardStore) {
       defaultStyleId: next.defaultStyleId,
     }));
   }
-}
-
-export function configFromStyle(style: StylePreset): StyleConfig {
-  const preset = style.subtitlePreset === "active_word" || style.subtitlePreset === "word_pop"
-    ? "bold"
-    : style.subtitlePreset;
-  return {
-    ...defaultStyleConfig,
-    // A preset stores the whole config.  Reducing it to a label here used to
-    // silently replace `video_image`, PiP and screen/gameplay styles with
-    // `auto` whenever any unrelated control was saved.
-    layout: style.layoutConfig ?? simpleLayoutFromLabel(style.framing) ?? defaultStyleConfig.layout,
-    subtitles: {
-      ...defaultStyleConfig.subtitles,
-      enabled: style.captions !== "Выключены",
-      mode: style.subtitlePreset === "karaoke"
-        ? "karaoke"
-        : style.subtitlePreset === "word_pop"
-          ? "word_by_word"
-          : style.subtitlePreset === "active_word" ? "active_word" : "line",
-      preset,
-      fontFamily: style.fontFamily,
-      position: style.subtitlePosition,
-      color: style.colors[0],
-      activeColor: style.colors[1],
-    },
-    silence: { ...defaultStyleConfig.silence, enabled: style.silenceRemoval },
-    safeZones: style.safeZones,
-    title: style.title
-      ? {
-          text: "Заголовок клипа",
-          startMs: 0,
-          endMs: 5_000,
-          anchor: "top_center",
-          widthPercent: 84,
-          marginPx: 48,
-          opacity: 1,
-          radiusPx: 16,
-          shadow: true,
-          loop: false,
-        }
-      : undefined,
-    logo: style.logo
-      ? {
-          startMs: 0,
-          endMs: 5_000,
-          anchor: "top_right",
-          widthPercent: 18,
-          marginPx: 48,
-          opacity: 1,
-          radiusPx: 12,
-          shadow: false,
-          loop: false,
-        }
-      : undefined,
-    banner: style.banner
-      ? {
-          startMs: 0,
-          endMs: 5_000,
-          anchor: "bottom_center",
-          widthPercent: 70,
-          marginPx: 48,
-          opacity: 1,
-          radiusPx: 20,
-          shadow: false,
-          loop: false,
-        }
-      : undefined,
-  } as StyleConfig;
 }
 
 export function styleFromApi(style: ApiStyle): StylePreset {
@@ -290,7 +216,6 @@ async function hydrate() {
       defaultStyleId: styles.find((style) => style.isDefault)?.id ?? styles[0]?.id ?? "",
       connection: "connected",
       error: null,
-      savingStyleId: null,
       balanceSeconds: billing.balance.availableSeconds,
       planCode: billing.planCode,
       storage,
@@ -304,8 +229,8 @@ async function hydrate() {
     // show a real, connected, momentarily-erroring user (expired session, a
     // 500, a network blip) 5 fake demo projects and a fake style library as
     // if they were real. Empty arrays + the error banner are the honest
-    // state; `styles-view.tsx`/`projects-view.tsx` both render a real empty
-    // state for zero items rather than crashing.
+    // state. The remaining project and wizard surfaces handle an empty style
+    // list explicitly rather than crashing.
     replace({
       ...serverState,
       styles: [],
@@ -357,127 +282,4 @@ export async function removeProject(projectId: string) {
   await deleteApiProject(projectId);
   replace({ ...state, projects: state.projects.filter((project) => project.id !== projectId) });
   void refreshStorage();
-}
-
-export function updateStyle(id: string, patch: Partial<StylePreset>) {
-  persistPreview({
-    ...state,
-    styles: state.styles.map((style) => {
-      if (style.id !== id) return style;
-      const updatedLayout = patch.framing === undefined ? undefined : simpleLayoutFromLabel(patch.framing);
-      return {
-        ...style,
-        ...patch,
-        // The compact style picker can only create fully-described simple
-        // layouts. A label change therefore replaces the stored layout only
-        // when it has an exact config; unrelated edits retain advanced data.
-        ...(updatedLayout ? { layoutConfig: updatedLayout } : {}),
-        dirty: true,
-      };
-    }),
-  });
-}
-
-export async function saveStyle(id: string) {
-  const style = state.styles.find((item) => item.id === id);
-  if (!style) throw new Error("Стиль не найден");
-  if (state.connection === "preview") {
-    persistPreview({
-      ...state,
-      styles: state.styles.map((item) => item.id === id ? { ...item, dirty: false } : item),
-    });
-    return style;
-  }
-  if (state.connection !== "connected") throw new Error(state.error ?? "API недоступен");
-
-  replace({ ...state, savingStyleId: id, error: null });
-  try {
-    const response = style.persisted
-      ? await updateApiStyle(style.id, {
-          name: style.name,
-          description: style.description,
-          config: configFromStyle(style),
-          makeDefault: style.isDefault,
-          expectedVersion: style.version ?? 1,
-        })
-      : await createApiStyle({
-          name: style.name,
-          description: style.description,
-          config: configFromStyle(style),
-          makeDefault: Boolean(style.isDefault),
-        });
-    const saved = styleFromApi(response);
-    replace({
-      ...state,
-      savingStyleId: null,
-      styles: state.styles.map((item) => item.id === id ? saved : item),
-      defaultStyleId: saved.isDefault ? saved.id : state.defaultStyleId,
-    });
-    return saved;
-  } catch (error) {
-    replace({
-      ...state,
-      savingStyleId: null,
-      error: error instanceof ControlApiError ? error.message : "Не удалось сохранить стиль. Проверьте соединение и попробуйте ещё раз.",
-    });
-    throw error;
-  }
-}
-
-export async function setDefaultStyle(id: string) {
-  const previous = state.defaultStyleId;
-  const previousStyles = state.styles;
-  replace({
-    ...state,
-    defaultStyleId: id,
-    styles: state.styles.map((style) => ({ ...style, isDefault: style.id === id, dirty: style.id === id || style.id === previous ? true : style.dirty })),
-  });
-  try {
-    return await saveStyle(id);
-  } catch (error) {
-    replace({ ...state, defaultStyleId: previous, styles: previousStyles });
-    throw error;
-  }
-}
-
-export function duplicateStyle(id: string) {
-  const source = state.styles.find((style) => style.id === id);
-  if (!source) return null;
-  const nextId = crypto.randomUUID();
-  const copy: StylePreset = {
-    ...source,
-    id: nextId,
-    name: `${source.name} — копия`,
-    isDefault: false,
-    version: undefined,
-    versionId: undefined,
-    persisted: false,
-    dirty: true,
-  };
-  persistPreview({ ...state, styles: [...state.styles, copy] });
-  return nextId;
-}
-
-export function createStyle() {
-  const id = crypto.randomUUID();
-  const style: StylePreset = {
-    id,
-    name: "Новый стиль",
-    description: "Настройте оформление под новый формат или рубрику.",
-    captions: "Активное слово",
-    subtitlePreset: "active_word",
-    fontFamily: "HVE Sans",
-    subtitlePosition: "bottom",
-    framing: "Автоматически",
-    silenceRemoval: true,
-    title: true,
-    logo: false,
-    banner: false,
-    safeZones: ["shorts", "reels", "tiktok", "vk"],
-    colors: ["#ffffff", "#f5f5f2"],
-    persisted: false,
-    dirty: true,
-  };
-  persistPreview({ ...state, styles: [...state.styles, style] });
-  return id;
 }

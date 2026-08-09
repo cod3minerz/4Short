@@ -36,7 +36,7 @@ but have no new feature consumers yet.
 
 | Check | Result |
 | --- | ---: |
-| Internal product routes | 17 |
+| Internal product routes | 16 (after Phase 6 decommissioned `/dashboard/styles`) |
 | Public control routes | `/`, `/blog`, `/blog/[slug]` |
 | Internal HeroUI imports | 0 |
 | Files importing Lucide internally | 25 |
@@ -94,3 +94,12 @@ remain baseline facts until their assigned foundation/component phases.
 The target preset and complete canonical primitive set remain registry-verified.
 Feature routes have not adopted these Phase 5 compositions; route migration
 and visual QA remain open under the master-spec.
+
+## Phase 6 style-management boundary
+
+The style domain remains runtime infrastructure: hydration calls `listStyles`,
+the wizard selects a hydrated preset and submits its `styleVersionId`, and the
+workspace persists its selected `styleId` for later renders. The standalone
+management route, its view and only its dead client-side mutation helpers are
+removed. Backend `/v1/styles` routes, schema, contracts, versioning and
+renderer/HVE consumers are intentionally retained.

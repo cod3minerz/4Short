@@ -226,33 +226,6 @@ export async function listStyles() {
   return request<{ items: ApiStyle[] }>("/v1/styles");
 }
 
-export async function createStyle(input: {
-  name: string;
-  description: string;
-  config: StyleConfig;
-  makeDefault: boolean;
-}) {
-  return request<ApiStyle>("/v1/styles", {
-    method: "POST",
-    headers: { "Idempotency-Key": idempotencyKey("style-create") },
-    body: JSON.stringify(input),
-  });
-}
-
-export async function updateStyle(styleId: string, input: {
-  name: string;
-  description: string;
-  config: StyleConfig;
-  makeDefault?: boolean;
-  expectedVersion: number;
-}) {
-  return request<ApiStyle>(`/v1/styles/${styleId}`, {
-    method: "PUT",
-    headers: { "Idempotency-Key": idempotencyKey("style-update") },
-    body: JSON.stringify(input),
-  });
-}
-
 export async function createMultipartUpload(file: File) {
   const session = await request<{
     uploadId: string;

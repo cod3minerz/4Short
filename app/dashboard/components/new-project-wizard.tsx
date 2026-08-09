@@ -1041,10 +1041,6 @@ export function NewProjectWizard({
                         {styleId === style.id ? <Check size={17} /> : null}
                       </Button>
                     ))}
-                    <Link className="wizard-style-options__manage" href="/dashboard/styles">
-                      Управление пресетами в разделе «Стили»
-                      <ArrowRight size={15} />
-                    </Link>
                   </div>
                 ) : null}
 

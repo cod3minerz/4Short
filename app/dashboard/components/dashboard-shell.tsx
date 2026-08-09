@@ -6,7 +6,6 @@ import {
   FolderOpen,
   Scissors,
   LogOut,
-  Palette,
   ReceiptText,
   UserRound,
   Zap,
@@ -28,13 +27,12 @@ import { useDashboardStore } from "../store";
  */
 const primaryItems = [
   { href: "/dashboard", label: "Нарезка", icon: Scissors, exact: true },
-  { href: "/dashboard/projects", label: "Мои проекты", icon: FolderOpen },
-  { href: "/dashboard/styles", label: "Стили", icon: Palette },
+  { href: "/dashboard/projects", label: "Мои проекты", icon: FolderOpen, exact: false },
 ];
 
 const utilityItems = [
-  { href: "/dashboard/billing", label: "Минуты и тариф", icon: ReceiptText },
-  { href: "/dashboard/help", label: "Помощь", icon: CircleHelp },
+  { href: "/dashboard/billing", label: "Минуты и тариф", icon: ReceiptText, exact: false },
+  { href: "/dashboard/help", label: "Помощь", icon: CircleHelp, exact: false },
 ];
 
 /**
@@ -46,8 +44,8 @@ const utilityItems = [
 const mobileItems = [
   primaryItems[1],
   primaryItems[0],
-  primaryItems[2],
-  { href: "/dashboard/account", label: "Профиль", icon: UserRound },
+  utilityItems[0],
+  { href: "/dashboard/account", label: "Профиль", icon: UserRound, exact: false },
 ];
 
 function isActive(pathname: string, href: string, exact?: boolean) {

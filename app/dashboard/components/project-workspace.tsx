@@ -904,7 +904,6 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                 <span><WandSparkles size={19} /><span><strong>Удаление пауз</strong><small>Не обрезать окончания фраз</small></span></span>
                 <ChoiceSwitch checked={silence} label="Удаление пауз" onCheckedChange={setSilence} />
               </div>
-              <Link href="/dashboard/styles">Управление сохранёнными стилями <ChevronRight size={16} /></Link>
             </section>
 
             <div className="project-warning">

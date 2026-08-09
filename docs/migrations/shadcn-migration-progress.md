@@ -12,7 +12,7 @@ Target UI foundation: `b37sSWfzM`
 - [x] Phase 3 — theme, fonts and public boundary
 - [x] Phase 4 — canonical primitive set
 - [x] Phase 5 — typography and shared compositions
-- [ ] Phase 6 — product route migration
+- [x] Phase 6 — remove `/dashboard/styles` management route
 - [ ] Phase 7 — rich content, legacy cleanup and final verification
 
 ## Phase 0 record
@@ -174,3 +174,39 @@ Target UI foundation: `b37sSWfzM`
 - Full Codebase Memory reindex/impact audit — pass (6,847 nodes, 15,852 edges).
 - No route-level visual completion is claimed because Phase 5 deliberately
   leaves feature routes untouched.
+
+## Phase 6 record
+
+- Removed only the standalone `/dashboard/styles` management route and
+  `StylesView`; the styles domain remains hydrated and selectable in the
+  project wizard and workspace.
+- Removed the sidebar/mobile navigation item and product help/wizard/workspace
+  links that led to the deleted route. Mobile navigation now uses the already
+  existing billing item in that slot.
+- Removed demonstrably dead client-only style-management mutations and their
+  API helpers: create, update, save, duplicate and default-style assignment;
+  `configFromStyle`, the inverse simple-layout helper and `savingStyleId` were
+  dead only with that UI and are removed too.
+- `/v1/styles`, `/v1/styles/:styleId`, database/models/versioning, `listStyles`,
+  hydration, `styleId`/`styleVersionId`, wizard/workspace selection and all
+  renderer/HVE contracts are retained unchanged.
+- The former route-specific `.wizard-style-options__manage` selector is removed.
+  The larger orphaned style-studio CSS region is explicitly deferred to Phase 7
+  legacy cleanup; it has no active route or JSX consumer.
+- See `shadcn-phase-6-styles-decommission-audit.md` for the dependency map and
+  verification evidence. No Phase 7 work is included.
+
+## Phase 6 verification
+
+- Targeted route/link and deleted-management-symbol scans — pass; active
+  product code has neither a `/dashboard/styles` link nor a styles management
+  route.
+- `git diff --check`, `npm run typecheck`, `npm run lint` and
+  `npx shadcn@latest diff` — pass.
+- `npm run test` — pass: 195 unit tests and 10 rendered-HTML checks, including
+  a direct normal-404 assertion for `/dashboard/styles`; retained wizard
+  redirect, projects, billing and workspace SSR checks remain green.
+- `npm run build:vercel` — pass; its 27-route table omits `/dashboard/styles`.
+- Full Codebase Memory reindex/impact audit — pass (933 nodes, 1,700 edges):
+  no `StylesPage`/`StylesView`; `listStyles → hydrate`, wizard project creation
+  and workspace style updates remain connected to their runtime APIs.

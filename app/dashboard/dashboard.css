@@ -1010,16 +1010,6 @@
   margin-bottom: 6px;
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
 
-.wizard-style-options__manage {
-  grid-column: 1 / -1;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 4px;
-  color: var(--primary-foreground);
-  font-size: 12px;
-  font-weight: 700;
-}
 .wizard-style-options button {
   border: 1px solid var(--border);
   background: var(--card);
@@ -4383,8 +4373,8 @@
   margin-top: 4px; color: var(--muted-foreground); font-size: 12px;
 }
 
-/* Old raw <label><input type="color"> swatch markup is gone (styles-view now
-   renders ColorField/.dash-color-field here) — these tag-based selectors used
+/* The removed management view once used raw <label><input type="color"> swatches;
+   its tag-based selectors used
    to also catch .dash-color-field__input/__label as descendants and force
    them into a 46px swatch / clipped 30px label, corrupting the primitive.
    Do not re-add bare `label` / `input[type="color"]` selectors under

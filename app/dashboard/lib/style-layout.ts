@@ -17,20 +17,3 @@ const labels: Record<StyleLayoutConfig["mode"], string> = {
 export function layoutLabelFromConfig(layout: StyleLayoutConfig): string {
   return labels[layout.mode];
 }
-
-/**
- * Only layout choices that have a complete, valid configuration in the
- * compact styles screen can be created from a label. Layouts with an asset or
- * participant assignment stay preserved from their full config until the
- * dedicated editor owns their controls.
- */
-export function simpleLayoutFromLabel(label: string): StyleLayoutConfig | undefined {
-  switch (label) {
-    case "Автоматически": return { mode: "auto", safeFallback: "static_crop" };
-    case "Активный спикер": return { mode: "active_speaker", smoothing: 0.82 };
-    case "Два спикера": return { mode: "two_speakers", split: "horizontal" };
-    case "Фон с размытием": return { mode: "blur_background", blur: 32 };
-    case "Статичный кадр": return { mode: "static_crop", x: 0.5, y: 0.5, zoom: 1 };
-    default: return undefined;
-  }
-}
