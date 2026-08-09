@@ -11,7 +11,7 @@ Target UI foundation: `b37sSWfzM`
 - [x] Phase 2 — target preset/theme foundation
 - [x] Phase 3 — theme, fonts and public boundary
 - [x] Phase 4 — canonical primitive set
-- [ ] Phase 5 — typography and shared compositions
+- [x] Phase 5 — typography and shared compositions
 - [ ] Phase 6 — product route migration
 - [ ] Phase 7 — rich content, legacy cleanup and final verification
 
@@ -145,3 +145,32 @@ Target UI foundation: `b37sSWfzM`
 - `npm run build:vercel` — pass; 28 static routes
 - Full Codebase Memory reindex/impact audit — pass (6,806 nodes, 15,723 edges)
 - No product route is claimed as migrated or visually complete in this phase.
+
+## Phase 5 record
+
+- Targeted usage audit established one canonical semantic typography source:
+  named Page/Section heading components plus a four-role text recipe. Registry
+  `CardTitle`, `Label` and `Field` retain their own canonical roles.
+- Added route-neutral `PageHeader` / `SectionHeader`, behavioural `AsyncButton`
+  / `IconButton`, the minimal `AppIcon` Hugeicons contract, and structural
+  `EmptyState`. They are shared foundation only; no page was migrated.
+- `ActionButton` remains a documented temporary bridge for its existing seven
+  consumers. Its legacy `tone` API is not available on new `AsyncButton` code
+  and will be removed in the route/legacy-cleanup phases.
+- `LockedField` now composes registry Field anatomy and `StatusBadge` remains a
+  limited domain mapping over registry Badge. No separate `LoadingState` was
+  added because registry Skeleton is sufficient.
+- `ChoiceSegmented`, `HashpixDrawer`, `OptionCard`, `InfoPanel` and the unused
+  legacy Hashpix `Field` are explicitly deferred; removing them requires their
+  owning route migration. See the inventory and Phase 5 audit record.
+
+## Phase 5 verification
+
+- `npx shadcn@latest diff` — pass (`No updates found.`); `components/ui` has
+  no Phase 5 diff.
+- `git diff --check`, typecheck and full lint — pass.
+- `npm run test:unit` — 196 pass; `npm run build:vercel` — pass, 28 generated
+  routes.
+- Full Codebase Memory reindex/impact audit — pass (6,847 nodes, 15,852 edges).
+- No route-level visual completion is claimed because Phase 5 deliberately
+  leaves feature routes untouched.

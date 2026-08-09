@@ -13,6 +13,11 @@ interaction verification in its assigned migration phase; this foundation-only
 change does not close any product route ledger entry. Public `/` and `/blog/**`
 are preserved regression controls behind their own HeroUI/marketing boundary.
 
+Phase 5 note: semantic typography, header/action, empty/locked/status and
+Hugeicons composition foundations now exist in `components/hashpix`. No route
+has been rewritten to consume them, so this does not alter any route status or
+count as browser completion evidence.
+
 | Route | Surface | Baseline state | Phase 0 evidence | Future migration status |
 | --- | --- | --- | --- | --- |
 | `/sign-in` | Auth | custom auth composition | desktop browser capture; 2 inputs, 3 buttons, no console error | Pending |

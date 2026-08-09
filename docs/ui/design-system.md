@@ -73,6 +73,43 @@ One semantic role must use one scale across product routes. Arbitrary text
 sizes, local font families and route-specific typography recipes require an
 explicit semantic exception recorded in review evidence.
 
+### Phase 5 semantic implementation
+
+`components/hashpix/typography.tsx` is the one application-UI typography
+source. It exposes named heading components for semantic levels:
+
+- `PageTitle` (`h1`) and `PageDescription`;
+- `SectionTitle` (`h2`) and optional `SectionDescription`.
+
+For ordinary non-heading text it exposes the small `typographyVariants`
+recipe: `body`, `label`, `muted` and `caption`. This deliberately avoids a
+parallel collection of generic text components. Form labels use registry
+`Label` / `FieldLabel`; card headings use registry `CardTitle` and are never
+reimplemented by the Hashpix layer.
+
+`PageHeader` and `SectionHeader` in `components/hashpix` compose those roles
+with optional description/actions and responsive arrangement. They own neither
+surface nor feature layout. Existing dashboard/admin headings migrate to these
+compositions in Phase 6; their legacy CSS is not a competing source of truth.
+
+### Shared composition contract
+
+- `AsyncButton` is the canonical behavioural loading composition over registry
+  `Button`. It accepts standard `variant`, `size` and `disabled`; it owns only
+  spinner, `aria-busy` and disabled-while-loading behaviour.
+- `IconButton` is a tooltip/accessibility composition over `AsyncButton` with
+  the canonical `Button size="icon"` geometry.
+- `AppIcon` is the minimal Hugeicons adapter: `sm`/`md`/`lg` sizes and a
+  two-pixel default stroke. It has no colour, radius or alternative icon
+  visual system. Existing feature Lucide imports remain route-migration debt.
+- `EmptyState`, `StatusBadge` and `LockedField` are semantic compositions of
+  registry primitives. `LoadingState` is not a project component: use
+  registry `Skeleton` (or a loading indicator where one is semantically
+  required) rather than adding a second loading surface.
+- `LockedField` uses registry `Field`, `FieldTitle` and `FieldDescription` and
+  must state the real unavailable-capability reason. It cannot turn an
+  unavailable server/renderer capability into an active control.
+
 ## Component and interaction rules
 
 - Use `Button`, `Input`, `Card`, `Dialog`, `DropdownMenu`, `Select`, `Tabs`,

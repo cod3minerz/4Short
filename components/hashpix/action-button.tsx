@@ -1,19 +1,19 @@
-"use client"
-
-import { LoaderCircle } from "lucide-react"
 import type { ComponentProps, ReactNode } from "react"
 
-import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+
+import { AsyncButton } from "./async-button"
 
 export type ActionTone = "brand" | "light" | "secondary" | "danger" | "quiet"
 
-type ActionButtonProps = ComponentProps<typeof Button> & {
+type ActionButtonProps = ComponentProps<typeof AsyncButton> & {
   tone?: ActionTone
-  loading?: boolean
 }
 
-const variants: Record<ActionTone, NonNullable<ComponentProps<typeof Button>["variant"]>> = {
+const legacyToneVariants: Record<
+  ActionTone,
+  NonNullable<ComponentProps<typeof AsyncButton>["variant"]>
+> = {
   brand: "default",
   light: "default",
   secondary: "secondary",
@@ -21,32 +21,52 @@ const variants: Record<ActionTone, NonNullable<ComponentProps<typeof Button>["va
   quiet: "ghost",
 }
 
-export function ActionButton({ tone = "brand", loading = false, className, children, disabled, ...props }: ActionButtonProps) {
+/**
+ * @deprecated Use AsyncButton with canonical `variant` and `size` in migrated
+ * routes. The `tone` mapping remains only until route migration removes it.
+ */
+export function ActionButton({ tone = "brand", children, ...props }: ActionButtonProps) {
   return (
-    <Button
+    <AsyncButton
       {...props}
-      variant={variants[tone]}
-      disabled={disabled || loading}
-      aria-busy={loading || undefined}
-      className={className}
+      variant={legacyToneVariants[tone]}
     >
-      {loading ? <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" /> : null}
       {children}
-    </Button>
+    </AsyncButton>
   )
 }
 
-type IconButtonProps = Omit<ActionButtonProps, "children"> & {
+type IconButtonProps = Omit<ActionButtonProps, "children" | "size"> & {
   children: ReactNode
   label: string
   tooltip?: string
 }
 
-export function IconButton({ label, tooltip = label, className, children, ...props }: IconButtonProps) {
+/**
+ * Icon controls always inherit the canonical Button icon geometry. `tone` is
+ * temporary compatibility for existing feature callers and is not part of the
+ * new AsyncButton API.
+ */
+export function IconButton({
+  label,
+  tooltip = label,
+  children,
+  tone = "brand",
+  ...props
+}: IconButtonProps) {
   return (
     <Tooltip>
       <TooltipTrigger
-        render={<ActionButton {...props} aria-label={label} className={className}>{children}</ActionButton>}
+        render={
+          <AsyncButton
+            {...props}
+            variant={legacyToneVariants[tone]}
+            size="icon"
+            aria-label={label}
+          >
+            {children}
+          </AsyncButton>
+        }
       />
       <TooltipContent>{tooltip}</TooltipContent>
     </Tooltip>

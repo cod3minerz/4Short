@@ -1,4 +1,4 @@
-# Shadcn migration inventory — Phase 2 foundation state
+# Shadcn migration inventory — Phase 5 shared-foundation state
 
 Date: 2026-08-09
 Migration branch baseline: `b110fe5`
@@ -72,6 +72,25 @@ remain baseline facts until their assigned foundation/component phases.
 
 ## Foundation state and route-migration criterion
 
-The target preset and the complete canonical primitive set are registry-verified.
-This inventory remains open until the next typography/composition work, route
-migration, and route-level visual QA are verified under the master-spec.
+## Phase 5 shared composition audit
+
+| Candidate | Evidence | Decision | Migration path |
+| --- | --- | --- | --- |
+| `PageHeader` | dashboard `PageHeading` has 5 callers; admin local header has 5 | KEEP AS CANONICAL COMPOSITION | Adopt in Phase 6 without carrying route CSS/layout assumptions |
+| `SectionHeader` | repeated settings/admin section title+description+actions role | KEEP AS CANONICAL COMPOSITION | Adopt in Phase 6; admin search remains feature content |
+| `AsyncButton` | `ActionButton` has 7 consumers and shared loading semantics | KEEP AS CANONICAL COMPOSITION | New code uses `AsyncButton`; legacy `tone` bridge is retired after route migration |
+| `IconButton` | 4 existing consumers, icon-only actions need label+tooltip | KEEP AS CANONICAL COMPOSITION | Now always uses canonical `size="icon"`; later routes replace legacy tone |
+| `AppIcon` | Vega registry uses Hugeicons; 25 product files still import Lucide | KEEP AS CANONICAL COMPOSITION | New shared code uses adapter; feature icon migration is Phase 6 work |
+| `EmptyState` | admin local helper has 5 consumers; dashboard has separate empty markup | KEEP AS CANONICAL COMPOSITION | Generic structural state added; route adoption deferred |
+| `LoadingState` | only local admin helper (5 calls) | REPLACE WITH PRIMITIVE | Use `Skeleton` during admin migration; no project loading surface added |
+| `StatusBadge` | shared workspace domain status mapping | KEEP AS CANONICAL COMPOSITION | Retain limited semantic-to-Badge mapping |
+| `LockedField` | three product consumers, unavailable-capability contract | KEEP AS CANONICAL COMPOSITION | Refactored to registry Field anatomy; retain real lock reasons |
+| `components/hashpix/field.tsx` | no active imports | DEFER / REMOVE IN PHASE 7 | Do not use; registry `Field` is the only future field composition |
+| `ChoiceSegmented` | one wizard consumer; wraps ToggleGroup with legacy classes | DEFER | Replace with direct ToggleGroup during wizard migration |
+| `HashpixDrawer` | workspace drawer; wraps Sheet with `dash-drawer-dialog` | DEFER | Replace with direct Sheet in workspace migration |
+| `OptionCard` | wizard/editor choices with feature state and local classes | DEFER | Replace with ToggleGroup/Card semantics per feature migration |
+| `InfoPanel` | one wizard consumer, legacy tone/icons/classes | DEFER | Re-evaluate against primitive/alert content during wizard migration |
+
+The target preset and complete canonical primitive set remain registry-verified.
+Feature routes have not adopted these Phase 5 compositions; route migration
+and visual QA remain open under the master-spec.
