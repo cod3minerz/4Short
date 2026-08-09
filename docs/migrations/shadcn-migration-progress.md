@@ -1,150 +1,43 @@
-# Shadcn UI migration progress
+# Shadcn migration progress
 
-Branch: `codex/shadcn-ui-migration`  
-Base: `06edb53`  
-Preset: `b38miVLH6` (`base-mira`, Geist, Lucide, neutral/indigo, Base UI)
+Branch: `codex/shadcn-ui-migration`
+Clean source baseline: `b110fe5`
+Target UI foundation: `b37sSWfzM`
 
-## Stages
+## Phase status
 
-- [x] Baseline Git and build verification
-- [x] Specification stored in repository
-- [x] Initial graph-first inventory and 17-route ledger
-- [x] Fresh Codebase Memory full index with exclusions (6,511 nodes / 15,047 edges)
-- [x] Shadcn foundation and MCP configuration
-- [ ] Shadcn skill installation (network retry pending)
-- [x] Canonical preset reapplied with `npx shadcn@latest apply --preset b38miVLH6`
-- [x] Official base primitives (20 registry components)
-- [x] Hashpix reusable component layer (ActionButton, IconButton, Field, LockedField, StatusBadge)
-- [x] Auth routes (shared AuthScreen uses shadcn Button, Input and Label)
-- [x] Dashboard shell, wizard and projects
-- [x] Project workspace (HVE-G4 scaffold reports INSUFFICIENT; no HVE contract or preview geometry changed)
-- [x] Clip editor (HVE-G4 scaffold reports INSUFFICIENT; preview geometry and HVE contracts unchanged)
-- [x] Styles, billing, account and help
-- [x] Admin routes
-- [ ] Global notifications (Sonner registry package is blocked by repeated npm `ECONNRESET`; existing inline field and autosave feedback remain intentionally inline)
-- [x] Legacy visual-token retirement (`--hp-*`, `--dash-*`, `--ink` and `--white` product bridges removed)
-- [ ] Full automated and browser acceptance
+- [x] Phase 0 — safe preflight and current-state audit
+- [ ] Phase 1 — instruction cleanup and target preset/theme foundation
+- [ ] Phase 2 — canonical primitives, typography and shared compositions
+- [ ] Phase 3 — product route migration
+- [ ] Phase 4 — rich content, legacy cleanup and final verification
 
-## Active finalisation queue
+## Phase 0 record
 
-1. Add the global Sonner registry primitive when the package registry is
-   reachable; the final canonical retry on 2026-08-08 again failed before
-   writing files (`npm install sonner next-themes` → `ECONNRESET`). Retain
-   inline field and autosave feedback by design.
-2. Complete the remaining authenticated dynamic workspace/editor and overlay
-   records. A real 12-second local MP4 fixture was selected through the
-   product upload control on 2026-08-09, but its pre-signed storage PUT was
-   stopped by the browser-automation transport as `UnknownError` before the
-   object could be retained. This known PUT restriction cannot prove the
-   workspace/editor path; it is not recorded as a product PASS. The
-   360/768/1024/1440 layout matrix now passes for `/dashboard`,
-   `/dashboard/styles`, `/dashboard/account` and `/admin`.
-3. Close only the evidence tasks that the repository can actually prove:
-   HVE-G4 is still a scaffold and must remain `INSUFFICIENT`, never PASS.
+- Recovery commit: `f46add3` on `codex/shadcn-ui-preflight-backup`; it preserves
+  the original wizard/stepper experiment and Codebase Memory binaries.
+- Migration branch was restored to clean `b110fe5` before audit. The recovery
+  diff was not replayed.
+- Full Codebase Memory index completed: 6,669 nodes and 15,347 edges.
+- The persisted artifact metadata records a smaller extracted subset (443/822);
+  the binary is preserved and the live MCP graph is the index-completeness
+  authority for this phase.
+- Baseline source inventory, 17-route ledger and representative browser evidence
+  were rebuilt. See `shadcn-phase-0-baseline.md`.
+- Existing b38/base-mira instructions and documentation conflict with the
+  approved b37 target. They are recorded as legacy guidance to be handled in
+  Phase 1; Phase 0 did not edit them.
 
-## Baseline evidence
+## Phase 0 verification
 
-- `npm run typecheck`: pass
-- `npm run lint`: pass
-- `npm run test:unit`: 196 pass
-- `npm run build:vercel`: pass, 28 generated pages
-- `npm run audit:product-ui`: previous contract is superseded; it is not
-  acceptance evidence for the canonical-preset pass.
-- Browser QA: `/sign-in` has one stock Input ring and no wrapper ring;
-  `/dashboard/projects` resolves the exact dark background, primary, border,
-  input, ring and `.625rem` radius values; profile menu aligns both actions
-  left and Escape returns focus to its trigger. No horizontal overflow in
-  these authenticated checks.
-- Canonical-pass audit: styles now uses 12px / 36px stock-control geometry and
-  stacked title/help copy; admin is full-viewport with a shadcn sidebar, badge,
-  select and input primitives. Client navigation `/admin` → `/admin/users`
-  keeps the shell mounted and does not render the access gate.
-- Overlay audit: dialog, dropdown and sheet portal roots consume the canonical
-  dark preset surface/border/radius values. Product CSS dark-surface audit
-  passes; the public landing stylesheet is deliberately excluded.
-- Admin cold-load audit: access verification now keeps a full shadcn shell
-  skeleton in place, rather than rendering the disruptive access-gate screen.
-- Finalisation pass: wizard source cards, source-library rows and style
-  choices now use the registry Button; workspace rows, transcript actions and
-  drawer style choices now use registry Button/ToggleGroup/Input. The obsolete
-  `app/admin/admin.css` cascade is deleted; admin is rendered exclusively by
-  the full-viewport canonical token stylesheet.
-- Token-retirement pass: `rg -- '--(hp|dash|ink|white)-' app/dashboard app/admin app/sign-in components`
-  returns no matches. Dashboard/editor CSS now resolves directly to the canonical preset roles;
-  the editor sends the contract-valid `#0a0a0b` subtitle outline rather than
-  leaking a CSS variable into the render EDL. HVE-G4 remains `INSUFFICIENT`
-  because the repository only provides a scaffold gate, never a false PASS.
-- Component-boundary pass: all former `app/dashboard/components/ui/*`
-  compositions are now imported from `components/hashpix`; the obsolete folder
-  is empty and removed. Registry primitives remain exclusively in
-  `components/ui`.
-- Control audit: internal route JSX no longer contains raw `<button>` controls;
-  profile, admin mobile controls, billing package choices, transcript words and
-  editor mobile modes use registry Button/ToggleGroup. HVE-G4 remains
-  `INSUFFICIENT` because no evidence corpus exists; preview geometry was not
-  changed.
-- Direct-token pass: the dashboard shell uses Geist and the preset roles
-  directly, without a second Hashpix alias palette or radius scale. Browser QA
-  confirms `/dashboard/styles` at 1280px and 360px has no horizontal overflow;
-  a real `test@hashpix.local` Better Auth sign-in reaches `/dashboard/projects`.
-- Registry-anatomy pass: generic dashboard Button/ToggleGroup/Select overrides
-  are removed, the projects forward action is a stock primary `Button`, and
-  the final Hashpix list compositions use registry `Button` with `onClick`.
-  HVE-G4 returns `INSUFFICIENT` as required; no preview geometry changed.
-- Internal/marketing boundary pass: product CSS no longer reads the landing
-  `--ds-*` palette; those legacy variables remain landing-only so public pages
-  stay visually unchanged.
-- Contrast pass: billing credit value and help article headings now use the
-  dark-product `foreground` role. Both mobile screens were inspected at 360px;
-  a programmatic visible-text audit found no internal text resolved to the
-  light-root foreground token.
-- Source-flow and styles refinement: `/dashboard` now separates the real
-  source modes, an exact platform support row and the verified-source facts
-  from the later configuration steps. The four platform marks are local,
-  official brand assets; no Lucide substitute is used for them. `/dashboard/styles`
-  now has a responsive saved-style library, an honest subtitle-only preview
-  (never invented video media) and the actual persisted inspector. Browser
-  QA at 1440px and 360px reports no overflow or console errors. The confirmed
-  source card still requires a real retained source, so it remains an evidence
-  task rather than a fabricated success state.
-- Auth focus refinement: the product auth Input suppresses the public-site
-  fallback outline only for its registry input slot, leaving the stock shadcn
-  ring as the single focus signal. The auth title uses Geist; 360px browser QA
-  found no overflow or console error.
-- Acceptance-gate refinement: `npm run audit:product-ui` now validates the
-  actual dark `b38miVLH6` roles, the `.625rem` preset radius and absence of
-  product legacy token bridges. It no longer asks for removed `--hp-*` tokens;
-  the current gate passes with 18 preset roles and 19 Hashpix compositions.
-- Final product-chrome literal pass: saved/default, processing, refund,
-  positive balance and worker state use the preset primary role; warnings use
-  destructive and the billing divider uses border. Browser QA at 1440px
-  confirms the styles/default state and admin shell have no overflow or
-  console errors. Profile and source-library overlays close with Escape and
-  restore their trigger focus.
-- Static route sweep: sign-up, password recovery and every admin section
-  (`users`, `workspaces`, `jobs`, `audit`) were checked at 360px and 1440px.
-  Their documents remain within the viewport, the full admin shell persists,
-  and the console has no route-specific errors.
-- Style studio refinement: the saved-style library, true subtitle-only preview
-  and persisted inspector now have deliberate three-column widths at desktop,
-  while the 360px layout collapses to one column without horizontal overflow.
-- Registry-anatomy corrective pass: every remaining dashboard CSS `.button`
-  selector was either converted to the real shadcn `[data-slot="button"]`
-  layout hook or removed as a dead visual override. The source-step CTA now
-  uses the stock `lg` Button size, aligns right on desktop, and stacks below
-  its URL field at 360px without overflow.
-- Source-flow structural rebuild: `/dashboard` now uses one bounded work
-  surface with header, step badge, stepper, a unified three-way source choice,
-  source-specific card and honest action status. Browser comparison at 1280px
-  and 360px confirms the reference hierarchy without horizontal overflow;
-  every control continues to use its existing source API path.
+- `npm run typecheck` — pass
+- `npm run lint` — pass
+- `npm run test:unit` — 196 pass
+- `npm run build:vercel` — pass; 28 generated routes
+- `npm run audit:product-ui` — pass (18 roles, 19 compositions), recorded as
+  a legacy b38 contract check rather than target-preset acceptance evidence
+- Representative desktop browser audit — no observed console errors or
+  horizontal overflow on `/dashboard`, `/dashboard/projects`, `/dashboard/account`,
+  `/admin`, or `/sign-in`
 
-## Structural locks
-
-- Preserve dashboard navigation, main-container geometry and editor zones.
-- Preserve all API, database, HVE document and routing contracts.
-- Internal routes use the canonical `b38miVLH6` `base-mira` roles verbatim:
-  `--radius: .625rem`, neutral surfaces, indigo primary and stock Base UI
-  focus treatment; no product token bridge remains.
-- Public landing and blog remain visually unchanged.
-- Unsupported HVE capabilities remain `LockedField` controls with truthful reasons.
+No Phase 1 work has been started.

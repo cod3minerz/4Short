@@ -1,50 +1,63 @@
-# Shadcn UI migration inventory
+# Shadcn migration inventory — Phase 0 baseline
 
-Updated: 2026-08-08  
-Branch: `codex/shadcn-ui-migration`  
-Codebase Memory project: `Users-kirill-Documents-4Short`
+Date: 2026-08-09
+Migration branch baseline: `b110fe5`
+Target foundation (approved master-spec): `b37sSWfzM`
 
-| Legacy component or pattern | Current path | Known usage | Target | Risk | Status |
-| --- | --- | ---: | --- | --- | --- |
-| HeroUI internal imports | `app/dashboard`, `app/admin` | 11 files | shadcn/Radix primitives | High: interaction props and overlays | Audited |
-| Legacy dashboard UI folder | `app/dashboard/components/ui` | removed | `components/ui` registry primitives plus `components/hashpix` compositions | High: shared across editor/workspace | Retired |
-| Hashpix product compositions | `components/hashpix` | ActionButton, IconButton, Field, LockedField, StatusBadge | shadcn/Base UI primitives with Hashpix semantics | Medium | Established |
-| Raw action buttons | Internal route components | 44 matches / 19 files | `Button`, `ActionButton`, `IconButton` | Medium | Audited |
-| Raw text/form inputs | Internal route components | 24 matches / 15 files | `Input`, `Textarea`, `Field` | Medium | Audited |
-| Select and switch wrappers | Dashboard/admin | 7 select matches plus 5 shared wrapper consumers | shadcn `Select`, `Switch` | High: value API changes | Audited |
-| Dialog wrapper | Dashboard UI | 6 consumers | shadcn `Dialog`/`AlertDialog` | High: focus and destructive actions | Audited |
-| Drawer wrapper | Dashboard UI | 2 consumers | shadcn `Sheet` | High: responsive/focus | Audited |
-| Segmented choices | Wizard and workspace | repeated | shadcn `ToggleGroup`/`RadioGroup` | Medium | Audited |
-| Status, empty and processing states | Dashboard shared UI | repeated | Hashpix product compositions | Medium | Audited |
-| Admin light/local primitives | `app/admin` | 5 routes | shared dark tokens and shadcn controls | High | Audited |
-| Auth local form controls | `app/sign-in` shared by 3 routes | one multi-step flow | shadcn form primitives | High | Audited |
-| Notifications | Internal application | no toast provider found; registry install retries reset by npm | Sonner plus retained inline field errors | Medium | External network blocker |
-| Product CSS literals | dashboard/admin/auth CSS | media overlay/renderer values only; product chrome uses canonical roles | semantic shadcn roles | High | Audited |
-| Local radius declarations | dashboard/admin/auth CSS | media/editor micro-geometry and intentional list seams only | generated shadcn radius scale for shared controls/surfaces | High | Audited |
-| Public HeroUI consumers | landing and blog | 4 files | deliberately retained outside scope | Landing regression | Excluded |
+This is an evidence inventory, not a migration completion record. No UI source
+was changed in Phase 0.
 
-The inventory is closed only when graph and source audits find no internal HeroUI import, primitive duplicate, legacy provider, or unjustified literal.
+## UI systems currently present
 
-## Finalisation audit note (2026-08-08)
+| Source | Evidence | Relevance after migration | Phase 0 result |
+| --- | --- | --- | --- |
+| Current shadcn foundation | `components.json`: `base-mira`, neutral, Lucide, CSS variables | Transitional only: it conflicts with target `b37sSWfzM` | Captured; do not extend |
+| Product CSS layer | `app/globals.css` (4,052 lines), `app/dashboard/dashboard.css` (5,416), `app/admin/admin-minimal.css` (104), auth CSS | Legacy/custom visual implementation to migrate | Captured; no edits |
+| Registry primitives | `components/ui` has 21 primitives | Canonical primitive location after preset reconciliation | Captured; target gaps listed below |
+| Hashpix compositions | `components/hashpix` has 19 files | Retain only behaviour-backed compositions after primitive audit | Captured; visual ownership must be reviewed |
+| Historic b38 migration docs and skills | migration ledgers, product UI skills, audit script | Conflicts with target preset and cannot remain active UI guidance | Conflict recorded for Phase 1 |
+| Public UI | `/` and `/blog/**` | Out of product migration scope; visual regression controls | Preserved as control surface |
 
-The residual legacy risk is concentrated in duplicate dashboard layout blocks
-and `--dash-*` geometry aliases. The temporary `--hp-*` bridge has been
-removed. Route components with raw controls are explicitly queued in the
-migration progress document; media range inputs are excluded because they are
-editor-native controls, not generic form primitives.
+## Current primitive baseline
 
-The old `app/admin/admin.css` cascade is removed. `app/admin/admin-minimal.css`
-is now the single product-specific layout layer and resolves every visual role
-through the canonical preset variables. The old dashboard-local `ui` directory
-is also removed: product compositions live in `components/hashpix`, while
-`components/ui` remains registry-only.
+Present: `AlertDialog`, `Badge`, `Button`, `Dialog`, `DropdownMenu`, `Field`,
+`Input`, `Label`, `Popover`, `Progress`, `ScrollArea`, `Select`, `Separator`,
+`Sheet`, `Skeleton`, `Switch`, `Table`, `Textarea`, `ToggleGroup`, `Toggle`,
+`Tooltip`.
 
-The final literal pass replaced custom success/warning/refund/worker colours
-with the preset `primary` and `destructive` roles, and the only worker-state
-dot now uses `--radius`. Video/subtitle-overlay values remain data/rendering
-concerns rather than product control tokens.
+Not present but required by the approved target audit: `Card`, `Checkbox`,
+`Tabs`, `Slider`, `InputOTP`, `Sidebar`. Their installation and integration are
+Phase 1+ work, not evidence of completion.
 
-The final registry-anatomy sweep removed obsolete `.button` selectors from
-the product stylesheet. Layout hooks target actual registry output through
-`[data-slot="button"]`; visual sizing, radius and focus remain owned by the
-canonical shadcn primitive.
+## Static baseline metrics
+
+| Check | Result |
+| --- | ---: |
+| Internal product routes | 17 |
+| Public control routes | `/`, `/blog`, `/blog/[slug]` |
+| Internal HeroUI imports | 0 |
+| Files importing Lucide internally | 25 |
+| Raw `<button>` in internal routes/shared UI | 0 |
+| Raw `<input>` in internal routes/shared UI | 12 |
+| `text-[…]` / `rounded-[…]` occurrences | 7 |
+| Product CSS lines | 9,644 |
+
+The absence of raw buttons or HeroUI imports is not a visual-system pass: local
+CSS and custom compositions still own much of the product geometry.
+
+## Instruction inventory and precedence finding
+
+`AGENTS.md` activates product UI and page-verification skills. Those skills and
+the existing migration documentation still name b38/base-mira as canonical.
+The approved master-spec names b37sSWfzM as canonical. This is an active
+instruction conflict. Phase 1 must deprecate/replace the b38 visual guidance
+without removing product/HVE safety rules.
+
+Until that change, the master-spec has precedence for migration decisions;
+legacy code and b38 material are behavioural/migration references only.
+
+## Phase 0 exit criterion
+
+This inventory is intentionally open. It is closed only after the target preset,
+canonical primitive set, active instruction hierarchy, component consistency,
+and visual QA are all verified under the master-spec.

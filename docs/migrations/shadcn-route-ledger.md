@@ -1,23 +1,30 @@
-# Shadcn route ledger
+# Shadcn route ledger — Phase 0 baseline
 
-| Route | Area | Legacy dependencies | Target components | Status | Checks |
-| --- | --- | --- | --- | --- | --- |
-| `/sign-in` | Auth | custom focus/card styling | Button, Input, Field | Canonical preset pass | 360px browser focus QA: stock Input has one 2px ring, global outline is suppressed only on registry Input, wrapper has no shadow; Geist heading, no overflow or console errors |
-| `/sign-up` | Auth | shared AuthScreen | Button, Input, Label, Field | Canonical preset pass | 360/1440 browser QA: no horizontal overflow; no route-specific console error |
-| `/forgot-password` | Auth | shared AuthScreen | Button, Input, Label, Field | Canonical preset pass | 360/1440 browser QA: no horizontal overflow; no route-specific console error |
-| `/dashboard` | Dashboard | dashboard shell and wizard | Button, Input, Dialog, ActionButton, real platform assets | Canonical source-flow pass | 1280/360 browser QA: bounded frame, source selector/card/footer hierarchy and no overflow; source-mode controls work; source dialog closes by Escape and returns focus; 2026-08-09 real MP4 upload selection reached the product control but browser-automation transport blocked its pre-signed PUT as `UnknownError`, so confirmed-source evidence remains open until a retained source is available |
-| `/dashboard/new` | Dashboard | redirect only | dashboard route flow | Migrated | typecheck, unit: 196 pass |
-| `/dashboard/projects` | Dashboard | none | Button, Input, ToggleGroup, Dialog | Direct canonical-preset pass | registry primary forward action and ToggleGroup; it navigates to `/dashboard` without a Base UI console warning; 360/1440 overflow check passes; no legacy modal/action selectors remain |
-| `/dashboard/projects/[id]` | Workspace | raw tablist and search inputs | ToggleGroup, Input, Sheet drawer, actions | Canonical preset pass in progress | registry tabs/search; typecheck pass; HVE-G4 scaffold: INSUFFICIENT |
-| `/dashboard/projects/[id]/clips/[clipId]` | Editor | dynamic HVE evidence missing | registry Button, ToggleGroup, choices and shadcn Dialog | Canonical preset source pass | no raw internal or Hashpix-composition buttons; preview geometry unchanged; HVE-G4 scaffold: INSUFFICIENT |
-| `/dashboard/styles` | Dashboard | none | Button, Input, Select, Switch, SubtitlePreviewOverlay | Canonical preset + preview pass | 1440/360 browser QA: saved-style library, non-fictional text preview and persisted inspector; default/saved semantic state resolves to preset primary; no overflow or local token bridge |
-| `/dashboard/billing` | Dashboard | none | Hashpix actions and states | Canonical preset pass | mobile balance value uses preset `foreground`; 360px contrast QA passes |
-| `/dashboard/account` | Dashboard | none | Field, LockedField, Button, status | Canonical preset pass | real Better Auth QA: menu items left-aligned; portal radius 14px; 2FA remains honestly locked |
-| `/dashboard/help` | Dashboard | none | Input and reusable states | Canonical preset pass | 360px contrast QA: article headings inherit the dark-product `foreground` token |
-| `/admin` | Admin | floating double CSS layout and access-gate flash | Badge, Button, Input, Select, Skeleton layout | Canonical preset pass | full viewport, zero main radius; cold-load keeps shell instead of access gate; worker-state colour/radius use preset primary/radius |
-| `/admin/users` | Admin | native selects/status wrapper | Badge, Button, Input, Select | Canonical preset pass | client navigation does not show access gate; 360/1440 browser QA has no horizontal overflow or route-specific console error |
-| `/admin/workspaces` | Admin | native selects/status wrapper | Badge, Button, Input, Select | Canonical preset pass | client navigation does not show access gate; 360/1440 browser QA has no horizontal overflow or route-specific console error |
-| `/admin/jobs` | Admin | status wrapper | Badge, Button | Canonical preset pass | client navigation does not show access gate; 360/1440 browser QA has no horizontal overflow or route-specific console error |
-| `/admin/audit` | Admin | status wrapper | Badge, Input | Canonical preset pass | client navigation does not show access gate; 360/1440 browser QA has no horizontal overflow or route-specific console error |
+Date: 2026-08-09
+Baseline: `b110fe5`
+Target: `b37sSWfzM`; no routes migrated in Phase 0.
 
-Public `/` and `/blog/**` are excluded from migration and remain mandatory regression checks.
+| Route | Surface | Baseline state | Phase 0 evidence | Future migration status |
+| --- | --- | --- | --- | --- |
+| `/sign-in` | Auth | custom auth composition | desktop browser capture; 2 inputs, 3 buttons, no console error | Pending |
+| `/sign-up` | Auth | shared auth flow | static audit | Pending |
+| `/forgot-password` | Auth | shared auth flow | static audit | Pending |
+| `/dashboard` | Source wizard | dashboard shell + wizard/stepper | 1280×720: 6 buttons, 2 inputs, vertical scroll only, no console error | Pending; do not restore recovery diff automatically |
+| `/dashboard/new` | Redirect/entry flow | dashboard entry | static audit | Pending |
+| `/dashboard/projects` | Projects | listing, filters, search | 1280×720: 7 buttons, 1 input, no horizontal overflow or console error | Pending |
+| `/dashboard/projects/[id]` | Workspace | project workspace | static audit; dynamic evidence pending | Pending |
+| `/dashboard/projects/[id]/clips/[clipId]` | Clip editor | HVE/editor surface | static audit; HVE evidence pending | Pending |
+| `/dashboard/styles` | Styles | current style studio | retained as a baseline route; approved plan determines later disposition | Pending |
+| `/dashboard/billing` | Billing | account/billing surface | static audit | Pending |
+| `/dashboard/account` | Account | sessions/security surface | 1280×720: 3 buttons, no inputs, no console error | Pending |
+| `/dashboard/help` | Help | documentation/help surface | static audit | Pending |
+| `/admin` | Admin shell | admin dashboard | 1280×720: 3 buttons, no horizontal overflow or console error | Pending |
+| `/admin/users` | Admin | user management | static audit | Pending |
+| `/admin/workspaces` | Admin | workspace management | static audit | Pending |
+| `/admin/jobs` | Admin | job management | static audit | Pending |
+| `/admin/audit` | Admin | audit log | static audit | Pending |
+
+Public controls (`/`, `/blog`, `/blog/[slug]`) remain out of scope and are
+mandatory regression surfaces. Phase 0 browser evidence is desktop-only and
+representative; responsive, keyboard, overlay, error, empty and dynamic-media
+matrices are explicitly deferred to their assigned migration phases.
