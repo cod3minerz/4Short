@@ -1,3 +1,10 @@
+# DEPRECATED — LEGACY B38/MIRA MIGRATION RECORD
+
+This historical plan must not direct new UI work. It is preserved solely to
+trace prior behaviour and migration decisions. Current product UI source of
+truth is [`docs/ui/design-system.md`](../../ui/design-system.md) with
+[`docs/ui/verification-protocol.md`](../../ui/verification-protocol.md).
+
 # HASHPIX — MASTER-СПЕЦИФИКАЦИЯ МИГРАЦИИ ВНУТРЕННЕГО ИНТЕРФЕЙСА НА SHADCN/UI
 
 **Статус:** обязательная рабочая спецификация для Codex/агента  

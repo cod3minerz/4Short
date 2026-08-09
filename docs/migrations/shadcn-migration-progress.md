@@ -7,10 +7,11 @@ Target UI foundation: `b37sSWfzM`
 ## Phase status
 
 - [x] Phase 0 — safe preflight and current-state audit
-- [ ] Phase 1 — instruction cleanup and target preset/theme foundation
-- [ ] Phase 2 — canonical primitives, typography and shared compositions
-- [ ] Phase 3 — product route migration
-- [ ] Phase 4 — rich content, legacy cleanup and final verification
+- [x] Phase 1 — decommission active legacy instructions
+- [ ] Phase 2 — target preset/theme foundation
+- [ ] Phase 3 — canonical primitives, typography and shared compositions
+- [ ] Phase 4 — product route migration
+- [ ] Phase 5 — rich content, legacy cleanup and final verification
 
 ## Phase 0 record
 
@@ -24,9 +25,6 @@ Target UI foundation: `b37sSWfzM`
   authority for this phase.
 - Baseline source inventory, 17-route ledger and representative browser evidence
   were rebuilt. See `shadcn-phase-0-baseline.md`.
-- Existing b38/base-mira instructions and documentation conflict with the
-  approved b37 target. They are recorded as legacy guidance to be handled in
-  Phase 1; Phase 0 did not edit them.
 
 ## Phase 0 verification
 
@@ -40,4 +38,28 @@ Target UI foundation: `b37sSWfzM`
   horizontal overflow on `/dashboard`, `/dashboard/projects`, `/dashboard/account`,
   `/admin`, or `/sign-in`
 
-No Phase 1 work has been started.
+## Phase 1 record
+
+- `AGENTS.md` now routes product UI work only through the b37/Vega/Hugeicons/
+  Geist design-system and verification documents.
+- The b38 migration master and dashboard design skill are moved to explicit
+  archive locations with deprecation headers; no active instruction links to
+  either file.
+- Product UI, page-verification, workflow, CSS, subtitle and no-dead-ui skills
+  preserve functional rules while deferring visual decisions to the current
+  source of truth.
+- Full Codebase Memory reindex after the instruction migration completed:
+  6,698 nodes and 15,376 edges.
+- See `docs/ui/instruction-inventory.md` for the full KEEP/MIGRATE/ARCHIVE
+  classification and hierarchy.
+
+## Phase 1 verification
+
+- Active-source keyword sweep: target-standard and legacy-reference matches are
+  classified in `docs/ui/instruction-inventory.md`.
+- HVE production/verification, renderer, clip-format, subtitle and no-dead-ui
+  rules remain active; only obsolete visual-library anatomy and paths changed.
+- No production UI, theme, `components/ui` or preset file is changed in this
+  phase.
+
+Phase 2 has not started.

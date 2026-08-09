@@ -47,14 +47,10 @@ CSS and custom compositions still own much of the product geometry.
 
 ## Instruction inventory and precedence finding
 
-`AGENTS.md` activates product UI and page-verification skills. Those skills and
-the existing migration documentation still name b38/base-mira as canonical.
-The approved master-spec names b37sSWfzM as canonical. This is an active
-instruction conflict. Phase 1 must deprecate/replace the b38 visual guidance
-without removing product/HVE safety rules.
-
-Until that change, the master-spec has precedence for migration decisions;
-legacy code and b38 material are behavioural/migration references only.
+Phase 1 decommissioned the conflicting legacy visual instruction paths without
+removing product/HVE safety rules. The classification and current hierarchy are
+recorded in `docs/ui/instruction-inventory.md`. Existing implementation values
+remain baseline facts until their assigned foundation/component phases.
 
 ## Phase 0 exit criterion
 

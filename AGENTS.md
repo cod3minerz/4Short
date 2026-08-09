@@ -6,6 +6,15 @@ When beginning a new HVE implementation sequence, start with `docs/architecture/
 
 Preserve unrelated worktree changes. Product UI must not expose controls that the control API and renderer cannot execute; use the project `no-dead-ui` conventions for unavailable capabilities.
 
-For any product UI work in the dashboard, editor, admin, or authentication views, read and follow `.claude/skills/hashpix-product-ui/SKILL.md`. Before adopting an interaction pattern from another product, read `.claude/skills/hashpix-ux-research/SKILL.md`; before reporting a page as ready, run the evidence-based process in `.claude/skills/hashpix-page-verification/SKILL.md`.
+For any product UI work in the dashboard, editor, admin, or authentication views,
+read and follow `docs/ui/design-system.md`,
+`.claude/skills/hashpix-product-ui/SKILL.md`, and
+`docs/ui/verification-protocol.md`. Before adopting an interaction pattern from
+another product, read `.claude/skills/hashpix-ux-research/SKILL.md`; before
+reporting a page as ready, run the evidence-based process in
+`.claude/skills/hashpix-page-verification/SKILL.md`.
 
-For internal UI migration work, also follow `docs/migrations/shadcn-ui-migration.md`; the public landing remains outside that migration.
+The product UI source of truth is the target shadcn preset `b37sSWfzM` (Vega,
+Hugeicons, Geist) and the documents above. Archived b38/Mira material is
+historical migration evidence only. The public landing remains outside the
+product UI migration.

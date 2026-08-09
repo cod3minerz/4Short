@@ -19,7 +19,7 @@ Read only the documents relevant to the change, but always read the first two:
 6. Tests or release work: `docs/architecture/hve-verification.md`
 7. Iteration scope: `docs/architecture/hve-implementation-roadmap.md`
 
-Also inspect `.claude/skills/backend-capability-map/SKILL.md`. It is a published-state snapshot, not an oracle: when current code and executable tests disagree with it, verify the code path and update the map in the same change. For UI work, use the dashboard design, UX, no-dead-UI, CSS regression, subtitle, and clip-format skills when applicable.
+Also inspect `.claude/skills/backend-capability-map/SKILL.md`. It is a published-state snapshot, not an oracle: when current code and executable tests disagree with it, verify the code path and update the map in the same change. For UI work, use the current product UI, UX, no-dead-UI, CSS regression, subtitle, and clip-format skills when applicable.
 
 ## Workflow
 

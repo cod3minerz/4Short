@@ -22,6 +22,12 @@ Subtitles now genuinely burn into rendered video. Local Faster-Whisper Large V3 
 
 **Every preset must render a real, distinguishing visual sample — never a plain label.** This was the actual complaint that started the redesign: presets looked identical because only a tiny swatch changed, not the preview itself.
 
-Use `SubtitlePreviewOverlay` (`app/dashboard/components/ui/SubtitlePreviewOverlay.tsx`) for any place that shows what a preset looks like — wizard step 3, the styles page, the editor's subtitle section. It already implements genuinely different CSS treatment per preset (karaoke underline, active-word scale, word-pop spring animation, minimal-box inverted plates, speaker-colors alternating tint) and respects `prefers-reduced-motion`. **Never build a fifth one-off caption preview** — that's exactly how the previous three drifted out of sync with each other.
+Use `SubtitlePreviewOverlay` (`components/hashpix/subtitle-preview-overlay.tsx`)
+for any place that shows what a preset looks like — wizard step 3, the styles
+page, the editor's subtitle section. It already implements genuinely different
+CSS treatment per preset (karaoke underline, active-word scale, word-pop spring
+animation, minimal-box inverted plates, speaker-colors alternating tint) and
+respects `prefers-reduced-motion`. **Never build a fifth one-off caption
+preview** — that is how presets drift out of sync.
 
 For a scrollable style-sample list (per the mechanics doc's "СТИЛЬ СУБТИТРОВ (29)" pattern with grouped categories like GLOW/CLEAN), each row should render `SubtitlePreviewOverlay` (or a compact variant of it) with real sample text in that row's preset — not a static "Abc Xyz" label in a generic font.

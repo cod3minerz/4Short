@@ -1,3 +1,12 @@
+# DEPRECATED — LEGACY DESIGN SYSTEM
+
+This document describes the former b38/Mira/HeroUI-oriented dashboard system.
+It is historical migration reference only: do not use it to make new UI
+decisions, create components, select tokens, typography, icons, spacing,
+radii, colors, or primitives. Current product UI source of truth is
+[`docs/ui/design-system.md`](../../ui/design-system.md) and
+[`docs/ui/verification-protocol.md`](../../ui/verification-protocol.md).
+
 ---
 name: dashboard-design-system
 description: Design-system rules for app/dashboard/** (the 4Short platform, not the marketing site). Use whenever building, editing, or reviewing any dashboard/editor UI — tokens, spacing/radius scale, which primitives to use instead of raw HTML, and the anti-hardcoding checklist. Keywords: dashboard, design system, tokens, hardcode, HeroUI, primitives, dash-shell.

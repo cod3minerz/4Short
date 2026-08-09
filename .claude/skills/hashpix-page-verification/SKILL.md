@@ -28,9 +28,10 @@ and use a safe test account before release. Do not mark the route verified.
 
 1. Structural: intended shell, no overflow, sensible container width, correct
    panel collapse at 360/768/1024/1440 px.
-2. System: only canonical shadcn `b38miVLH6` roles and registry primitives;
-   compact controls use the preset radius scale (`--radius: .625rem`), focus
-   ring and variants; no product-specific visual overrides. A media card contains a real retained
+2. System: only canonical shadcn `b37sSWfzM` (Vega/Hugeicons/Geist) roles and
+   registry primitives; controls use the target preset's radius, focus ring and
+   variants; no `--hp-*`, `--dash-*`, Mira, Manrope, Lucide-as-standard or
+   HeroUI product-control override. A media card contains a real retained
    thumbnail or the explicit unavailable state—never brand art or fake output.
 3. Interaction: click every visible actionable control; confirm an actual state
    change, API request or intentionally locked reason.
@@ -44,7 +45,10 @@ and use a safe test account before release. Do not mark the route verified.
 
 ## Evidence
 
-Start with [`docs/verification/product-page-review.md`](../../../docs/verification/product-page-review.md) for every changed route, then retain its completed evidence with the implementation or review record.
+Start with [`docs/verification/product-page-review.md`](../../../docs/verification/product-page-review.md)
+and [`docs/ui/verification-protocol.md`](../../../docs/ui/verification-protocol.md)
+for every changed route, then retain its completed evidence with the
+implementation or review record.
 
 For each reviewed route record URL, viewport, authenticated state, screenshot,
 computed overflow (`scrollWidth === innerWidth`), console errors, and controls

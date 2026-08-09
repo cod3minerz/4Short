@@ -1,57 +1,10 @@
-# Hashpix Dark System — marketing context
+# Hashpix marketing visual context
 
-> Product UI (dashboard, editor, admin and authentication) is governed by [`hashpix-product-system.md`](./hashpix-product-system.md). This document preserves the separate marketing/landing guidance and must not be used to create a competing product token set.
+This document applies only to the public landing and blog. It is deliberately
+outside the product UI migration and must not be used to choose dashboard,
+editor, admin, authentication or overlay visual values.
 
-## Назначение
+For product UI use [`docs/ui/design-system.md`](../ui/design-system.md).
 
-Одна визуальная система обслуживает два режима продукта:
-
-- **Persuade — landing:** концентрирует внимание на запуске первого проекта.
-- **Operate — dashboard:** сохраняет привычную схему «навигация слева, рабочая область справа» и делает плотные рабочие состояния спокойными для сканирования.
-
-## Принципы UX
-
-1. **Один шаг за раз.** Hero предлагает URL или файл; вторичные действия не конкурируют с ним.
-2. **Сначала результат, затем механизм.** На landing пользователь видит будущий клип и маршрут от исходника к публикации до чтения списка функций.
-3. **Хром тише контента.** Рамки, радиусы и glass отделяют контекст, но не заменяют доказательство.
-4. **Действия называют результат.** «Создать клипы», «Загрузить видео», «Открыть проект» — вместо абстрактных CTA.
-5. **Dashboard остаётся операционным.** Выразительность живёт в типографике, материале поверхностей, фокусе и состоянии; не в перемещении рабочих инструментов.
-
-## Токены
-
-| Роль | Значение | Использование |
-| --- | --- | --- |
-| Canvas | `#000000` | landing, глубокий фон |
-| Surface | `#171718` | крупные медиа-панели |
-| Surface raised | `#27272A` | controls, внутренние поверхности |
-| Text | `#FFFFFF` | заголовки, primary action на тёмном |
-| Text muted | `rgba(255,255,255,.58)` | пояснения, метаданные |
-| Line | `#27272A` | границы панелей |
-| Line subtle | `rgba(255,255,255,.12)` | обводка стекла, secondary control |
-| Radius panel | `16px` | карточки, большие контейнеры |
-| Radius inner | `12px` | вложенные блоки, thumbnails |
-| Radius control | `14px` | кнопки, chips, field action |
-| Container | `1200px` | desktop landing grid |
-
-## Типографика
-
-Geist Variable во всех ролях. Заголовки используют weight 600 и отрицательный tracking до `-0.03em`; body — weight 400–500; служебные подписи — 500–600. Display не отделяется другим шрифтом: характер создаётся масштабом, интервалом и чистым белым полем.
-
-## Материалы и глубина
-
-- Обычная панель: тёмная заливка **или** тонкая обводка, но не тяжёлая комбинация с тенью.
-- Glass: `rgba(68,68,68,.5)` + `backdrop-filter: blur(40px)` только над реальным визуальным слоем.
-- Ambient light: размытая `radial-gradient`-подложка позади showcase, а не glow вокруг всех элементов.
-- Основная кнопка: белая поверхность, чёрный текст; secondary: прозрачная, тонкая светлая граница.
-
-## Компонентные правила
-
-- Компактное действие или выбор — один радиус `14px`, никогда не большая секция.
-- Поля используют те же `14px`; карточки — `12–18px` по роли поверхности, без 100% скругления.
-- Кнопка в поле остаётся самостоятельным control внутри field shell, без отдельной случайной формы.
-- Секция landing начинается с собственного заголовка, без повторяющегося eyebrow.
-- В dashboard semantic tokens маппятся на `--dash-*`; существующая геометрия остаётся неизменной: пункты навигации живут на голом фоне слева, а весь рабочий контент — в отдельном правом контейнере.
-
-## Motion
-
-Один авторский момент: media cards в hero расходятся из исходного видео в готовые клипы. Остальные движения — короткие hover/focus переходы. При `prefers-reduced-motion` карточки и все transitions остаются статичными.
+Marketing may preserve its own public typography, media treatment and layout
+without becoming a second source of truth for authenticated product surfaces.

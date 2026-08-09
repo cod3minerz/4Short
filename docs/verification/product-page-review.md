@@ -1,6 +1,9 @@
 # Hashpix: review sheet for a product page
 
-Use this sheet for every changed authenticated product route before it is described as ready. The companion procedure is in [`.claude/skills/hashpix-page-verification/SKILL.md`](../../.claude/skills/hashpix-page-verification/SKILL.md).
+Use this sheet for every changed authenticated product route before it is
+described as ready. The companion procedures are
+[`docs/ui/verification-protocol.md`](../ui/verification-protocol.md) and
+[`.claude/skills/hashpix-page-verification/SKILL.md`](../../.claude/skills/hashpix-page-verification/SKILL.md).
 
 ## Scope
 
@@ -37,10 +40,11 @@ Use this sheet for every changed authenticated product route before it is descri
   `ActionButton` composition.
 - [ ] All icon-only actions use a named shadcn button and `aria-label`.
 - [ ] Choice rows use a semantic selector; they are not decorative cards.
-- [ ] New controls use only canonical `b38miVLH6` CSS roles and
-  `--radius: .625rem`; no `--hp-*` bridge is introduced.
-- [ ] Primary actions use the preset indigo variant; neutral actions remain
-  neutral on hover and pressed.
+- [ ] New controls use only canonical `b37sSWfzM` (Vega/Hugeicons/Geist)
+  semantic roles; no `--hp-*`, `--dash-*`, legacy library or local primitive
+  bridge is introduced.
+- [ ] Primary and neutral actions use their target preset variants without
+  route-level geometry, colour, typography or focus redefinition.
 - [ ] No unsupported HVE capability looks executable.
 - [ ] Overlay surfaces use glass only above media or an ambient canvas.
 
@@ -64,7 +68,9 @@ Do not change `blocked` to `verified` based on static code inspection alone.
 
 ---
 
-## 2026-08-08 — source flow and style studio
+## Historical evidence (pre-Phase 1; not target-preset acceptance)
+
+### 2026-08-08 — source flow and style studio
 
 - Routes: `/dashboard`, `/dashboard/styles`.
 - User/data state: real Better Auth admin session; no retained source exists in
