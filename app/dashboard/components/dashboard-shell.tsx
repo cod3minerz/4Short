@@ -123,7 +123,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 <ChevronDown size={14} />
                 </Button>}
               />
-              <DropdownMenuContent align="end" className="dash-profile-menu__popover hp-overlay-scope">
+              <DropdownMenuContent align="end" className="dash-profile-menu__popover">
                 <DropdownMenuGroup>
                   {user ? <DropdownMenuLabel className="dash-profile-menu__email">{user.email}</DropdownMenuLabel> : null}
                   <DropdownMenuItem onClick={() => router.push("/dashboard/account")}>

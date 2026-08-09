@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import "./public-boundary.css";
 import { DarkLanding } from "./components/dark-landing";
 import { faqItems } from "./data/content";
 
@@ -30,7 +31,7 @@ export default function Home() {
   };
 
   return (
-    <>
+    <div className="public-boundary">
       <DarkLanding />
       <script
         type="application/ld+json"
@@ -40,6 +41,6 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
-    </>
+    </div>
   );
 }

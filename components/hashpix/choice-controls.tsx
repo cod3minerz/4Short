@@ -14,7 +14,7 @@ export function ChoiceSelect({ options, value, onValueChange, label, "aria-label
 }) {
   return <Select value={value} onValueChange={(next) => { if (next !== null) onValueChange(next) }}>
     <SelectTrigger aria-label={label ?? ariaLabel} className={cn("hp-choice-select", fullWidth && "w-full", className)}><SelectValue /></SelectTrigger>
-    <SelectContent className="hp-overlay-scope">{options.map((option) => <SelectItem key={option.id} value={option.id}>{option.label}</SelectItem>)}</SelectContent>
+    <SelectContent>{options.map((option) => <SelectItem key={option.id} value={option.id}>{option.label}</SelectItem>)}</SelectContent>
   </Select>
 }
 

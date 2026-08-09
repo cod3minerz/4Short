@@ -2,10 +2,11 @@ import type { Metadata, Viewport } from "next";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 import "./landing.css";
-import { Geist } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import { cn } from "@/lib/utils";
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ["latin", "cyrillic"], variable: "--font-geist" });
+const geistMono = Geist_Mono({ subsets: ["latin", "cyrillic"], variable: "--font-geist-mono" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://hashpix.ru"),
@@ -29,5 +30,5 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="ru" className={cn("font-sans", geist.variable)}><body><TooltipProvider>{children}</TooltipProvider></body></html>;
+  return <html lang="ru" className={cn("dark font-sans", geist.variable, geistMono.variable)}><body><TooltipProvider>{children}</TooltipProvider></body></html>;
 }

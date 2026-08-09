@@ -1452,7 +1452,7 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
       </div>
 
       <Dialog open={scopeOpen} onOpenChange={setScopeOpen}>
-        <DialogContent className="hp-overlay-scope">
+        <DialogContent>
           <DialogHeader><DialogTitle>Куда применить?</DialogTitle><DialogDescription>Явная область изменений</DialogDescription></DialogHeader>
           <div className="clip-scope-options">
           {([

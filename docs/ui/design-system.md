@@ -15,7 +15,8 @@ Precedence for product UI decisions:
 5. archived migration material, strictly as historical reference.
 
 `components.json` and the existing registry primitives are the applied target
-foundation from Phase 2. Current feature CSS, feature components and archived
+foundation from Phase 2. Phase 3 establishes the exact semantic maps, root
+dark default and font variables. Current feature CSS, feature components and archived
 b38/Mira records are not permission to recreate or extend the legacy visual
 system; they remain migration debt until their assigned phases.
 
@@ -34,13 +35,20 @@ system; they remain migration debt until their assigned phases.
   shadow recipes, radius scales, `--hp-*` or `--dash-*` aliases.
 - Vega governs the target component geometry. Do not add component-specific
   height, padding, radius or focus overrides merely to approximate old UI.
+- The exact target `:root` and `.dark` semantic maps live in `app/globals.css`.
+  `--radius` is exactly `0.625rem`; the document root keeps `.dark` for the
+  current product default. Do not introduce aliases such as `--hp-*` or
+  `--dash-*` into the product foundation.
+- Dialog, Popover and other Base UI portals inherit the root theme. Do not add
+  a portal theme bridge, scope wrapper or local overlay geometry override.
 - Hugeicons is the product icon standard. New product code must not add Lucide
   as a second icon language; existing imports are migrated in the component
   phase.
 
 ## Typography
 
-Application UI uses Geist; monospace content uses Geist Mono. Rich content is
+Application UI uses `--font-geist`; monospace content uses `--font-geist-mono`.
+Both are loaded by `next/font/google` with Latin and Cyrillic subsets. Rich content is
 an opt-in `typeset` surface for Markdown/MDX/documentation only, never for
 ordinary dashboard controls or dense editor UI.
 
@@ -74,6 +82,9 @@ explicit semantic exception recorded in review evidence.
 ## Boundaries
 
 Public landing and blog are regression control surfaces and do not inherit the
-product UI migration. `docs/archive/legacy-ui-instructions/` and
+product UI migration. Their HeroUI styles, preserved marketing typography and
+local public font faces enter only through `app/public-boundary.css`, mounted
+by `/` and `/blog/**`; never import those styles from `app/globals.css` or a
+product route. `docs/archive/legacy-ui-instructions/` and
 `docs/migrations/archive/` are not active instruction sources and must never
 be needed to implement new UI.

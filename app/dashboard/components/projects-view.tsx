@@ -163,7 +163,7 @@ export function ProjectsView() {
       )}
 
       <Dialog open={Boolean(projectToDelete)} onOpenChange={(open) => { if (!open && !deleting) setProjectToDelete(null); }}>
-        <DialogContent className="hp-overlay-scope">
+        <DialogContent>
           <DialogHeader><DialogTitle>Удалить проект?</DialogTitle><DialogDescription>Действие нельзя отменить.</DialogDescription></DialogHeader>
           <p className="project-delete-copy">
             «{projectToDelete?.title}» исчезнет из списка, активная обработка остановится, а его файлы перестанут занимать место. Общий исходник сохранится, если используется в другом проекте.

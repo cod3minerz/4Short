@@ -9,7 +9,7 @@ Target UI foundation: `b37sSWfzM`
 - [x] Phase 0 — safe preflight and current-state audit
 - [x] Phase 1 — decommission active legacy instructions
 - [x] Phase 2 — target preset/theme foundation
-- [ ] Phase 3 — typography and shared compositions
+- [x] Phase 3 — theme, fonts and public boundary
 - [ ] Phase 4 — canonical primitives and product route migration
 - [ ] Phase 5 — rich content, legacy cleanup and final verification
 
@@ -87,4 +87,35 @@ Target UI foundation: `b37sSWfzM`
 - `npm run test:unit` — 196 pass
 - `npm run build:vercel` — pass; 28 generated routes
 
-Phase 3 has not started.
+## Phase 3 record
+
+- Product root now uses the exact `b37sSWfzM` light/dark semantic maps with
+  `--radius: 0.625rem`; product dark mode remains the default at the document
+  root.
+- `Geist` and `Geist Mono` are configured through `next/font/google` with
+  Latin and Cyrillic subsets (`--font-geist` and `--font-geist-mono`).
+- HeroUI styles and the preserved marketing typography now enter only through
+  the public `/` and `/blog/**` boundary. Product CSS no longer imports
+  HeroUI styles or exposes the former global marketing palette.
+- The former `.hp-overlay-scope` portal bridge and its duplicated token and
+  geometry overrides are removed. Base UI portals inherit the document theme
+  through the root `.dark` class and canonical `popover` variables.
+- No primitive was installed, no feature component was migrated, and no
+  business, API, HVE or renderer behaviour changed.
+
+## Phase 3 verification
+
+- Exact light/dark map comparison — pass
+- `git diff --check` — pass
+- `npm run typecheck` — pass
+- `npm run lint` — pass
+- `npm run test:unit` — pass (196 tests)
+- `npm run build:vercel` — pass; public static metadata/params remain generated
+- Codebase Memory full reindex — pass (6,727 nodes, 15,432 edges)
+- Public browser regression evidence — landing and blog retain their respective
+  dark/light visual surfaces with no observed horizontal overflow or console
+  errors. The in-app browser exposed reliable 1280 desktop and 360 mobile
+  evidence, but its requested 1440 viewport was capped by the host capability;
+  this is a tooling limitation, not a route completion claim.
+- Phase 4 gaps remain unchanged: `Card`, `Checkbox`, `Tabs`, `Slider`,
+  `InputOTP` and `Sidebar` are not installed.

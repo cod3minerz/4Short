@@ -16,7 +16,7 @@
   font-family: var(--ds-font-sans);
 }
 
-body:has(.dark-landing) { background: #000; color: var(--ds-text); }
+.public-boundary:has(.dark-landing) { background: #000; color: var(--ds-text); }
 
 .dark-landing *,
 .dark-landing *::before,

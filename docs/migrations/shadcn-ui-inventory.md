@@ -12,11 +12,12 @@ changed only the official preset foundation; product routes remain pending.
 | Source | Evidence | Relevance after migration | Phase 0 result |
 | --- | --- | --- | --- |
 | Current shadcn foundation | `components.json`: `base-vega`, neutral, Hugeicons, CSS variables | Canonical target foundation | Applied and registry-verified |
-| Product CSS layer | `app/globals.css` (4,052 lines), `app/dashboard/dashboard.css` (5,416), `app/admin/admin-minimal.css` (104), auth CSS | Legacy/custom visual implementation to migrate | Captured; no edits |
+| Product foundation CSS | `app/globals.css` | Exact Vega semantic map, root dark mode and Geist variables | Phase 3 complete; no product legacy palette or overlay bridge remains in this foundation file |
+| Route CSS layer | `app/dashboard/dashboard.css` (5,416), `app/admin/admin-minimal.css` (104), auth CSS | Legacy/custom feature visual implementation to migrate | Captured; route work is still pending |
 | Registry primitives | `components/ui` has 21 primitives | Canonical primitive location | Existing sources registry-verified after Vega apply; target gaps listed below |
 | Hashpix compositions | `components/hashpix` has 19 files | Retain only behaviour-backed compositions after primitive audit | Captured; visual ownership must be reviewed |
 | Historic b38 migration docs and skills | migration ledgers, product UI skills, audit script | Conflicts with target preset and cannot remain active UI guidance | Conflict recorded for Phase 1 |
-| Public UI | `/` and `/blog/**` | Out of product migration scope; visual regression controls | Preserved as control surface |
+| Public UI | `/` and `/blog/**` | Out of product migration scope; visual regression controls | Isolated behind `app/public-boundary.css`; HeroUI and preserved marketing typography are public-only |
 
 ## Current primitive baseline
 
@@ -52,6 +53,21 @@ Phase 1 decommissioned the conflicting legacy visual instruction paths without
 removing product/HVE safety rules. The classification and current hierarchy are
 recorded in `docs/ui/instruction-inventory.md`. Existing implementation values
 remain baseline facts until their assigned foundation/component phases.
+
+## Phase 3 theme and public-boundary state
+
+- The product root carries the canonical exact `b37sSWfzM` light and dark maps;
+  its default class is `.dark` and `--radius` is `0.625rem`.
+- `next/font/google` exposes `--font-geist` and `--font-geist-mono` with Latin
+  and Cyrillic glyph coverage. Product controls resolve through the target
+  semantic variables rather than `--hp-*`, `--dash-*`, Manrope or marketing
+  layout tokens.
+- `@heroui/styles`, the local public `Geist Variable` faces, marketing type
+  rules and `landing.css` are imported only by `app/public-boundary.css`, which
+  is mounted by `/` and `/blog/**`. They are not part of the product root.
+- `.hp-overlay-scope` and its portal-specific CSS are removed. Dialog and
+  Popover portals inherit root dark tokens and the canonical `popover` role;
+  feature-level overlay visual work remains pending its component phase.
 
 ## Foundation state and route-migration criterion
 

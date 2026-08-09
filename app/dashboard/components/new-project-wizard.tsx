@@ -624,7 +624,7 @@ export function NewProjectWizard({
                 />
 
                 <Dialog open={sourceLibraryOpen} onOpenChange={setSourceLibraryOpen}>
-                  <DialogContent className="hp-overlay-scope wizard-source-dialog">
+                  <DialogContent className="wizard-source-dialog">
                     <DialogHeader><DialogTitle>Прошлые исходники</DialogTitle><DialogDescription>Повторная загрузка и списание минут не нужны.</DialogDescription></DialogHeader>
                   {isControlApiConfigured() ? (
                     realSourceLibrary === null ? (

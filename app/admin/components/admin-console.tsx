@@ -306,7 +306,7 @@ function UsersView({
                         ); }}
                       >
                         <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                        <SelectContent className="hp-overlay-scope">
+                        <SelectContent>
                           {Object.entries(roleLabels).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
                         </SelectContent>
                       </Select>
@@ -442,7 +442,7 @@ function WorkspacesView({
                         ); }}
                       >
                         <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                        <SelectContent className="hp-overlay-scope">
+                        <SelectContent>
                           {Object.entries(planLabels).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
                         </SelectContent>
                       </Select>
