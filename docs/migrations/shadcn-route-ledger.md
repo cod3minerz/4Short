@@ -2,7 +2,12 @@
 
 Date: 2026-08-09
 Baseline: `b110fe5`
-Target: `b37sSWfzM`; no routes migrated in Phase 0.
+Target: `b37sSWfzM`; Vega foundation applied in Phase 2, but no routes migrated.
+
+Foundation note: canonical `h-9` Button/Input geometry and registry primitive
+anatomy are now installed. Every route remains pending responsive and
+interaction verification in its assigned migration phase; this foundation-only
+change does not close any route ledger entry.
 
 | Route | Surface | Baseline state | Phase 0 evidence | Future migration status |
 | --- | --- | --- | --- | --- |

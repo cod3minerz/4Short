@@ -27,7 +27,7 @@ new UI visuals.
 | `.claude/skills/backend-capability-map` | KEEP | Backend capability inventory is functional. |
 | `.claude/skills/hashpix-ux-research` | KEEP | Research process has no visual system authority. |
 | Global `hashpix-ui-quality-gate` | MIGRATE | Retains structural/browser gate and defers visuals to repository docs. |
-| `components.json` | KEEP (baseline) | Implementation configuration; deliberately unchanged until Phase 2. |
+| `components.json` | KEEP (target foundation) | Phase 2 applies `base-vega` / Hugeicons through the official preset. |
 
 ## Active source-of-truth hierarchy
 

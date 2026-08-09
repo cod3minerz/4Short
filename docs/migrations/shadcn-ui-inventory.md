@@ -1,19 +1,19 @@
-# Shadcn migration inventory — Phase 0 baseline
+# Shadcn migration inventory — Phase 2 foundation state
 
 Date: 2026-08-09
 Migration branch baseline: `b110fe5`
 Target foundation (approved master-spec): `b37sSWfzM`
 
-This is an evidence inventory, not a migration completion record. No UI source
-was changed in Phase 0.
+This is an evidence inventory, not a route-migration completion record. Phase 2
+changed only the official preset foundation; product routes remain pending.
 
 ## UI systems currently present
 
 | Source | Evidence | Relevance after migration | Phase 0 result |
 | --- | --- | --- | --- |
-| Current shadcn foundation | `components.json`: `base-mira`, neutral, Lucide, CSS variables | Transitional only: it conflicts with target `b37sSWfzM` | Captured; do not extend |
+| Current shadcn foundation | `components.json`: `base-vega`, neutral, Hugeicons, CSS variables | Canonical target foundation | Applied and registry-verified |
 | Product CSS layer | `app/globals.css` (4,052 lines), `app/dashboard/dashboard.css` (5,416), `app/admin/admin-minimal.css` (104), auth CSS | Legacy/custom visual implementation to migrate | Captured; no edits |
-| Registry primitives | `components/ui` has 21 primitives | Canonical primitive location after preset reconciliation | Captured; target gaps listed below |
+| Registry primitives | `components/ui` has 21 primitives | Canonical primitive location | Existing sources registry-verified after Vega apply; target gaps listed below |
 | Hashpix compositions | `components/hashpix` has 19 files | Retain only behaviour-backed compositions after primitive audit | Captured; visual ownership must be reviewed |
 | Historic b38 migration docs and skills | migration ledgers, product UI skills, audit script | Conflicts with target preset and cannot remain active UI guidance | Conflict recorded for Phase 1 |
 | Public UI | `/` and `/blog/**` | Out of product migration scope; visual regression controls | Preserved as control surface |
@@ -27,7 +27,8 @@ Present: `AlertDialog`, `Badge`, `Button`, `Dialog`, `DropdownMenu`, `Field`,
 
 Not present but required by the approved target audit: `Card`, `Checkbox`,
 `Tabs`, `Slider`, `InputOTP`, `Sidebar`. Their installation and integration are
-Phase 1+ work, not evidence of completion.
+pending **Phase 4 component work**. They are not a Phase 2 failure and are not
+evidence of Phase 2 completion.
 
 ## Static baseline metrics
 
@@ -52,8 +53,9 @@ removing product/HVE safety rules. The classification and current hierarchy are
 recorded in `docs/ui/instruction-inventory.md`. Existing implementation values
 remain baseline facts until their assigned foundation/component phases.
 
-## Phase 0 exit criterion
+## Foundation state and route-migration criterion
 
-This inventory is intentionally open. It is closed only after the target preset,
-canonical primitive set, active instruction hierarchy, component consistency,
-and visual QA are all verified under the master-spec.
+The target preset and existing primitive correspondence are verified in Phase 2.
+This inventory remains open until the pending canonical primitive set, route
+migration, component consistency, and visual QA are verified under the
+master-spec.

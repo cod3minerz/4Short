@@ -14,9 +14,10 @@ Precedence for product UI decisions:
 4. feature behaviour and safety rules (`no-dead-ui`, HVE/renderer/contract docs);
 5. archived migration material, strictly as historical reference.
 
-`components.json`, current CSS, existing components and archived b38/Mira
-records describe the pre-target baseline until Phase 2. They are not permission
-to recreate or extend the legacy visual system.
+`components.json` and the existing registry primitives are the applied target
+foundation from Phase 2. Current feature CSS, feature components and archived
+b38/Mira records are not permission to recreate or extend the legacy visual
+system; they remain migration debt until their assigned phases.
 
 ## Foundation contract
 

@@ -1,64 +1,86 @@
-# Phase 2 — isolated preset audit
+# Phase 2 — isolated Vega preset audit
 
-Status: **blocked before foundation write**
+Status: **PASS — foundation applied; no feature migration performed**
 
-## Pre-apply snapshot
+## Pre-apply and recovery evidence
 
-| Item | Snapshot |
-| --- | --- |
-| Git HEAD | `41e56fee23f746948c25332b01cf45b3fd967210` |
-| `components.json` SHA-256 | `019a8e5e76ff97898c9bab726db6a90d87defb1b1a08971ef480c7403ad4cddd` |
-| `app/globals.css` SHA-256 | `2437754071f8565a1e30604f2675b11eb7f7a5d0777c9516d5317a21cee99c21` |
-| `components/ui` tree | `c86b4bda7bb73443c5155a7b62752a89fe8fc0ac` (21 files, 1,972 LOC) |
-| `package.json` SHA-256 | `0a75c99473ccf111d0e034f7393d9c004437028f1123b3bb69fe2330d6f2b6b1` |
-| `package-lock.json` SHA-256 | `201a6ebd7e122faa47483014c5a52ceb2663b69f0fc6a471a262525ebdfb5c2a` |
-| Baseline `shadcn diff` | `No updates found.` |
-
-## Exact apply attempts
-
-The only permitted command was executed three times from a clean branch:
+The initial exact apply attempts from a clean branch were blocked by transient
+shadcn registry/npm network transport failures. They left no source diff; their
+Codebase Memory artifacts were preserved separately. After registry/npm became
+available again, the exact permitted command completed successfully:
 
 ```bash
 npx shadcn@latest apply --preset b37sSWfzM
 ```
 
-| Attempt | CLI point reached | Outcome |
+No alternative preset, `init`, `--force`, hand-copied primitive, feature-code
+workaround, or legacy-visual override was used.
+
+## Applied diff classification
+
+| Changed files | Classification | Verified result |
 | --- | --- | --- |
-| 1 | registry `base-vega/sheet.json` | HTTPS connect timeout |
-| 2 | `npm install shadcn@latest @hugeicons/react @hugeicons/core-free-icons` | npm `ECONNRESET` fetching `shadcn` |
-| 3 | registry `base-vega/field.json` | HTTPS connect timeout |
+| `components.json` | Expected preset change | `style: base-vega`, `baseColor: neutral`, CSS variables, `iconLibrary: hugeicons`. |
+| `app/globals.css` | Expected preset change | Canonical `background`, `foreground`, `muted`, and `accent` variables placed in the preset token block. Existing legacy CSS remains intentionally untouched for later phases. |
+| `package.json`, `package-lock.json` | Required dependency/config change | Official CLI installed `@hugeicons/react@^1.1.9` and `@hugeicons/core-free-icons@^4.2.3`. |
+| `components/ui/alert-dialog.tsx`, `badge.tsx`, `button.tsx`, `dialog.tsx`, `dropdown-menu.tsx`, `field.tsx`, `input.tsx`, `label.tsx`, `popover.tsx`, `progress.tsx`, `select.tsx`, `sheet.tsx`, `switch.tsx`, `table.tsx`, `textarea.tsx`, `toggle-group.tsx`, `toggle.tsx` | Expected registry rewrite | Official Vega anatomy, geometry, typography, focus treatment and Hugeicons primitive internals. No compatibility edits were added. |
+| `.codebase-memory/artifact.json`, `.codebase-memory/graph.db.zst` | Generated metadata | Separate index artifact, not UI foundation. Final full reindex completed with 6,709 nodes and 15,380 edges. |
+| Feature routes, shared product compositions, legacy CSS cleanup, typography migration | Not changed | Correctly outside Phase 2 scope. |
 
-The CLI reported a temporary `components.json` write, but every failed run
-rolled it back. The complete post-attempt diff contains no preset,
-dependency, theme, primitive or feature-source change. Only generated
-Codebase Memory artifacts changed and were preserved in named stashes.
+The CLI skipped `ScrollArea`, `Separator`, `Skeleton`, and `Tooltip` because
+they already matched the registry. `npx shadcn@latest diff` after apply returns
+`No updates found.` This establishes registry correspondence for every existing
+primitive that the preset changed or retained.
 
-## Diff classification
+## Canonical foundation confirmation
 
-| Changed category | Classification | Result |
-| --- | --- | --- |
-| Preset/theme/config | expected preset change | None written because apply failed |
-| Dependencies / lockfile | required dependency change | None written because install failed |
-| `components/ui` | expected registry rewrite | None written because registry retrieval failed |
-| Feature code / legacy CSS | unexpected overwrite / regression | None |
-| Codebase Memory artifacts | generated metadata | Preserved separately; excluded from the blocked foundation result |
+- `components.json` is the target `b37sSWfzM` configuration: `base-vega`,
+  neutral base colour, CSS variables and Hugeicons.
+- `Button` default geometry is `h-9`; `Input` geometry is `h-9`.
+- Dialog, Sheet, DropdownMenu and Select now use Hugeicons internally through
+  the registry source. No feature-level Lucide import was changed in this
+  phase.
+- `app/layout.tsx` already provides `TooltipProvider`; the registry requirement
+  needs no Phase 2 root-layout change.
+- `git diff --check` and `npx shadcn@latest diff` pass. The latter confirms no
+  local compatibility modification in the registry-managed primitives.
 
-## Current foundation evidence
+## Verification
 
-The unchanged baseline remains `base-mira` with Lucide in `components.json`.
-Current `Button` default size is `h-7`; current `Input` is `h-7`. Therefore
-the required Vega `h-9` Button/Input geometry is **not installed** and cannot
-be claimed as verified. `shadcn diff` after the failed attempts still returns
-`No updates found.`
+| Check | Result |
+| --- | --- |
+| Registry/npm availability | PASS: exact official `apply` completed after transient blocker cleared. |
+| `npx shadcn@latest diff` | PASS: `No updates found.` |
+| `git diff --check` | PASS |
+| `npm run typecheck` | PASS |
+| `npm run lint` | PASS |
+| `npm run test:unit` | PASS: 196 tests |
+| `npm run build:vercel` | PASS: 28 routes |
+| `npm run audit:product-ui` | PASS: 18 preset roles, 19 shared compositions |
+| Codebase Memory full reindex | PASS: 6,709 nodes / 15,380 edges, persisted artifact written |
 
-## Migration impacts for later phases
+Route browser QA is not applicable evidence for this phase: no route, feature
+composition or product interaction changed. Route/state visual verification is
+required in the later route-migration phase.
 
-1. The target registry rewrite will replace all 21 current primitives, so every
-   current consumer must be typechecked before Phase 3 feature work.
-2. Target `h-9` controls differ from current `h-7` geometry; dashboard/editor
-   layout effects must be measured, not compensated with legacy CSS overrides.
-3. Hugeicons dependencies are not installed. Existing Lucide imports remain
-   baseline migration debt until the permitted primitive/feature phases.
-4. Missing target primitives (Card, Checkbox, Tabs, Slider, InputOTP, Sidebar)
-   remain unavailable until a successful preset foundation and planned registry
-   installation; do not imitate them locally.
+## Explicit pending Phase 4 component work
+
+`Card`, `Checkbox`, `Tabs`, `Slider`, `InputOTP`, and `Sidebar` are not present
+in `components/ui`. They are **pending Phase 4 component work** only: they were
+not installed, are not a Phase 2 failure, and must not be represented as
+completed foundation work. They will be added through the official registry in
+their assigned phase, not imitated with local markup meanwhile.
+
+## Migration impacts for subsequent phases
+
+1. Vega changes default control geometry from the prior compact `h-7` baseline
+   to `h-9`, plus target text/focus/radius treatments. Each consuming route
+   requires visual regression and responsive QA; no legacy override may mask it.
+2. Existing feature-level Lucide imports remain explicit migration debt: the
+   reindexed product search finds 20 active feature/composition imports. New
+   product primitives use Hugeicons; feature icon migration is deferred.
+3. The existing root `TooltipProvider` satisfies the registry prerequisite. Any
+   subsequent icon-only product control still needs its own accessible label and
+   tooltip contract.
+4. Existing legacy CSS/token layers remain untouched and are not target-system
+   evidence. Their cleanup is deferred to later approved phases.
