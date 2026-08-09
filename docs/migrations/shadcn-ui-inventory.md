@@ -26,10 +26,11 @@ Present: `AlertDialog`, `Badge`, `Button`, `Dialog`, `DropdownMenu`, `Field`,
 `Sheet`, `Skeleton`, `Switch`, `Table`, `Textarea`, `ToggleGroup`, `Toggle`,
 `Tooltip`.
 
-Not present but required by the approved target audit: `Card`, `Checkbox`,
-`Tabs`, `Slider`, `InputOTP`, `Sidebar`. Their installation and integration are
-pending **Phase 4 component work**. They are not a Phase 2 failure and are not
-evidence of Phase 2 completion.
+The canonical minimal set is complete: `Card`, `Checkbox`, `Tabs`, `Slider`,
+`InputOTP`, and `Sidebar` were generated from the Vega registry in Phase 4.
+`hooks/use-mobile.ts` is the matching registry helper for Sidebar and
+`input-otp` is its only new runtime dependency. These primitives are installed
+but have no new feature consumers yet.
 
 ## Static baseline metrics
 
@@ -71,7 +72,6 @@ remain baseline facts until their assigned foundation/component phases.
 
 ## Foundation state and route-migration criterion
 
-The target preset and existing primitive correspondence are verified in Phase 2.
-This inventory remains open until the pending canonical primitive set, route
-migration, component consistency, and visual QA are verified under the
-master-spec.
+The target preset and the complete canonical primitive set are registry-verified.
+This inventory remains open until the next typography/composition work, route
+migration, and route-level visual QA are verified under the master-spec.

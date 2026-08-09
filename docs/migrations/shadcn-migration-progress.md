@@ -10,8 +10,10 @@ Target UI foundation: `b37sSWfzM`
 - [x] Phase 1 — decommission active legacy instructions
 - [x] Phase 2 — target preset/theme foundation
 - [x] Phase 3 — theme, fonts and public boundary
-- [ ] Phase 4 — canonical primitives and product route migration
-- [ ] Phase 5 — rich content, legacy cleanup and final verification
+- [x] Phase 4 — canonical primitive set
+- [ ] Phase 5 — typography and shared compositions
+- [ ] Phase 6 — product route migration
+- [ ] Phase 7 — rich content, legacy cleanup and final verification
 
 ## Phase 0 record
 
@@ -119,3 +121,27 @@ Target UI foundation: `b37sSWfzM`
   this is a tooling limitation, not a route completion claim.
 - Phase 4 gaps remain unchanged: `Card`, `Checkbox`, `Tabs`, `Slider`,
   `InputOTP` and `Sidebar` are not installed.
+
+## Phase 4 record
+
+- The official Vega registry added `Card`, `Checkbox`, `Tabs`, `Slider`,
+  `InputOTP` and `Sidebar`; the Sidebar registry dependency
+  `hooks/use-mobile.ts` was generated with it.
+- `input-otp` is the only new runtime dependency. No unrequested primitive,
+  feature variant, Hashpix wrapper, route consumer or feature CSS was added.
+- `TooltipProvider` was already correctly mounted in `app/layout.tsx` and was
+  not changed. `SidebarProvider` is intentionally not mounted: the Sidebar has
+  no Phase 4 consumer and installing a root provider without one would be
+  unnecessary infrastructure.
+- All 27 product primitives are registry-owned and `npx shadcn@latest diff`
+  reports no updates. See `shadcn-phase-4-primitive-matrix.md`.
+
+## Phase 4 verification
+
+- Registry parity and `git diff --check` — pass
+- `npm run typecheck` — pass
+- `npm run lint` — pass
+- `npm run test:unit` — pass (196 tests)
+- `npm run build:vercel` — pass; 28 static routes
+- Full Codebase Memory reindex/impact audit — pass (6,806 nodes, 15,723 edges)
+- No product route is claimed as migrated or visually complete in this phase.

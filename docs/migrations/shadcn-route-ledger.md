@@ -2,12 +2,13 @@
 
 Date: 2026-08-09
 Baseline: `b110fe5`
-Target: `b37sSWfzM`; Vega preset foundation and Phase 3 theme/public boundary
-are applied, but no product routes have been migrated.
+Target: `b37sSWfzM`; Vega preset foundation, Phase 3 theme/public boundary and
+Phase 4 canonical primitive set are applied, but no product routes have been
+migrated.
 
 Foundation note: canonical `h-9` Button/Input geometry and registry primitive
-anatomy, exact semantic maps and root Geist fonts are now installed. Every
-product route remains pending responsive and
+anatomy, exact semantic maps, root Geist fonts and the complete minimal
+primitive set are now installed. Every product route remains pending responsive and
 interaction verification in its assigned migration phase; this foundation-only
 change does not close any product route ledger entry. Public `/` and `/blog/**`
 are preserved regression controls behind their own HeroUI/marketing boundary.

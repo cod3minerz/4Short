@@ -14,9 +14,9 @@ Precedence for product UI decisions:
 4. feature behaviour and safety rules (`no-dead-ui`, HVE/renderer/contract docs);
 5. archived migration material, strictly as historical reference.
 
-`components.json` and the existing registry primitives are the applied target
-foundation from Phase 2. Phase 3 establishes the exact semantic maps, root
-dark default and font variables. Current feature CSS, feature components and archived
+`components.json` and the complete canonical primitive set are the applied
+target foundation from Phases 2 and 4. Phase 3 establishes the exact semantic
+maps, root dark default and font variables. Current feature CSS, feature components and archived
 b38/Mira records are not permission to recreate or extend the legacy visual
 system; they remain migration debt until their assigned phases.
 
@@ -44,6 +44,15 @@ system; they remain migration debt until their assigned phases.
 - Hugeicons is the product icon standard. New product code must not add Lucide
   as a second icon language; existing imports are migrated in the component
   phase.
+- The installed minimal primitive set is `AlertDialog`, `Badge`, `Button`,
+  `Card`, `Checkbox`, `Dialog`, `DropdownMenu`, `Field`, `Input`, `InputOTP`,
+  `Label`, `Popover`, `Progress`, `ScrollArea`, `Select`, `Separator`, `Sheet`,
+  `Sidebar`, `Skeleton`, `Slider`, `Switch`, `Table`, `Tabs`, `Textarea`,
+  `Toggle`, `ToggleGroup` and `Tooltip`. Their generated sources are
+  registry-owned; do not locally amend their visual anatomy.
+- `TooltipProvider` is mounted at the application root. `SidebarProvider` is
+  mounted only with the first real Sidebar consumer, rather than pre-wrapping
+  product routes in unused provider infrastructure.
 
 ## Typography
 
