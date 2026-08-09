@@ -26,7 +26,7 @@ count as browser completion evidence.
 | `/dashboard` | Source wizard | migrated canonical controls; original shell/frame/stepper/footer retained | 1280×720 authenticated: empty and URL-error states, profile Escape/focus return, no horizontal/nested scroll | Browser matrix blocked: confirmed/processing and 360/768/1024/1440 still required |
 | `/dashboard/new` | Redirect/entry flow | entry remains routed to the retained source wizard | implementation/static audit | Pending browser redirect check with `/dashboard` matrix |
 | `/dashboard/projects` | Projects | migrated canonical controls; original project-list/table retained | 1280×720 authenticated: loading then empty/storage, ToggleGroup/search and no horizontal/nested scroll | Browser matrix blocked: populated/failed/delete dialog and 360/768/1024/1440 still required |
-| `/dashboard/projects/[id]` | Workspace | project workspace | static audit; dynamic evidence pending | Pending |
+| `/dashboard/projects/[id]` | Workspace | migrated Phase 7.3 without IA redesign | preview `podcast-24`: tabs, Sheets, Select/Switch, transcript search, Escape/focus return and no overflow at 360/768/1024/1440 | Blocked: real loading/error/permission/processing/ready/failed, transcript persistence, render/download/polling and screenshot evidence require live fixtures |
 | `/dashboard/projects/[id]/clips/[clipId]` | Clip editor | HVE/editor surface | static audit; HVE evidence pending | Pending |
 | `/dashboard/styles` | Styles management | removed in Phase 6 | direct route returns Not Found; no navigation or internal product links remain | Removed — domain remains consumed by wizard/workspace |
 | `/dashboard/billing` | Billing | account/billing surface | static audit | Pending |

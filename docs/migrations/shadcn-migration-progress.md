@@ -16,6 +16,7 @@ Target UI foundation: `b37sSWfzM`
 - [ ] Phase 7 — remaining route waves, legacy cleanup and final verification
   - [x] Phase 7.1 — auth (`/sign-in`, `/sign-up`, `/forgot-password`)
   - [ ] Phase 7.2 — implementation committed; final browser evidence is blocked
+  - [ ] Phase 7.3 — Project Workspace implementation committed; real API/state evidence remains blocked
 
 ## Phase 0 record
 
@@ -274,3 +275,34 @@ Target UI foundation: `b37sSWfzM`
   suite (197 pass) and production build (27 routes) — pass. Live Codebase
   Memory reindex/impact tracing completed; its empty persistence placeholder
   was not committed over the existing binary artifact.
+
+## Phase 7.3 record — Project Workspace
+
+- Preserved the workspace header, moments/review split, transcript/settings
+  sheet model, ready clips grid and media-preview geometry while replacing
+  generic visual implementations with Vega `Tabs`, `Card`, `Field`, `Select`,
+  `Switch`, `Sheet`, Button compositions and Hugeicons/AppIcon.
+- Deleted the now-unused `HashpixDrawer`; no compatibility drawer remains.
+  Moment/transcript/render/download/search/polling/update contracts are not
+  changed. The unavailable per-moment layout remains an honest `LockedField`.
+- Route-local visual overrides for generic tabs/cards/buttons/input/focus and
+  the drawer wrapper were removed. Media geometry, responsive placement and
+  specialist preview structure remain intentionally product-specific.
+- See `shadcn-phase-7-3-workspace-audit.md` for full classification and debt.
+
+## Phase 7.3 verification
+
+- Preview browser evidence at 360/768/1024/1440 found no horizontal overflow;
+  tabs, settings Select/Switch, transcript search and Escape/focus return were
+  exercised. A fresh post-reload browser tab had no console errors.
+- `git diff --check`, `npm run typecheck`, `npm run lint`, `npm run test:unit`
+  (197 pass), `npm run test`, `npm run build:vercel`,
+  `npm run audit:product-ui`, `npm run audit:dark-surfaces` and
+  `npx shadcn@latest diff` — pass. The registry reports `No updates found.`
+- Full Codebase Memory reindex/impact audit — pass (6,895 nodes, 16,227
+  edges). Workspace-specific real-state coverage remains a test-scope debt;
+  no dedicated automated test exists.
+- Real API loading/error/permission/processing/ready/failed fixtures,
+  transcript persistence, render/download/polling and saved screenshot
+  evidence remain **blocked**; they are not claimed as checked.
+- Phase 7.2 responsive/state evidence debt is preserved without modification.

@@ -1099,7 +1099,6 @@
 .project-workspace {
   min-height: 100dvh;
   padding-bottom: 70px;
-  background: var(--card);
   width: 100%;
   padding: 24px 28px 40px;
 }
@@ -1111,42 +1110,19 @@
   display: flex;
   align-items: center;
   justify-content: space-between; margin-bottom: 18px; }
-.project-header__title h1 {
-  margin-top: 7px;
-  font-family: inherit;
-  font-size: 24px;
-  font-weight: 760;
-  letter-spacing: -.025em;
-}
-.project-header__title p {
-  color: var(--muted-foreground); margin-top: 4px; font-size: 12px; }
 .project-header__actions {
   display: flex;
   gap: 9px;
 }
 .project-tabs {
-  gap: 30px;
-  padding-inline: clamp(24px, 4vw, 54px);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: end; min-height: 40px; margin-bottom: 16px; }
-.project-tabs button {
-  gap: 7px;
-  padding: 7px 2px 0;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: transparent;
-  color: var(--muted-foreground);
-  font-weight: 750;
-  display: flex;
-  align-items: center; min-height: 36px; padding-inline: 12px; font-size: 12px; }
+  margin: 0 clamp(24px, 4vw, 54px) 16px;
+}
 .project-review-layout {
   padding: 24px clamp(24px, 4vw, 54px);
   display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 14px; }
 .moment-row {
   gap: 13px;
   border: 1px solid var(--border);
-  background: var(--card);
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center; min-height: 74px; padding: 12px; border-radius: 0; }
@@ -1154,12 +1130,9 @@
 .moment-row:last-of-type { border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
 .moment-inspector {
   align-self: start;
-  border: 1px solid var(--border);
-  background: var(--secondary);
   position: sticky;
   top: 20px;
-  overflow: hidden; border-radius: var(--radius-lg); box-shadow: none; }
-.moment-inspector__body { padding: 16px; }
+}
 
 /* Styles */
 .styles-layout {
@@ -2592,19 +2565,9 @@
   align-items: center;
   gap: 12px;
   margin: 18px clamp(24px, 4vw, 54px) 0;
-  padding: 15px 18px;
-  border-radius: var(--radius-xl);
-  background: var(--accent);
-  color: var(--primary-foreground);
 }
 
 .project-render-banner > div { display: flex; flex: 1; flex-direction: column; }
-
-.project-render-banner strong { font-size: 13px; }
-
-.project-render-banner span { margin-top: 2px; font-size: 12px; }
-
-.project-render-banner > span { font-weight: 850; }
 
 .moment-list__head,
 .project-results__head {
@@ -2615,52 +2578,12 @@
   margin-bottom: 16px;
 }
 
-.moment-list__head h2,
-.project-results__head h2 {
-  margin-top: 6px;
-  font-family: var(--font-sans), Arial, sans-serif;
-  font-size: 23px;
-  letter-spacing: -.035em;
-}
-
-.moment-list__head > button {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 9px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--card);
-  font-size: 13px;
-  font-weight: 750;
-}
-
 .moment-check {
-  width: 31px;
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--card);
-  color: var(--muted-foreground);
-  font-size: 13px;
-  font-weight: 850;
-}
-
-.moment-check.is-selected {
-  border-color: var(--foreground);
-  background: var(--foreground);
-  color: white;
+  flex: 0 0 auto;
 }
 
 .moment-row__content {
   min-width: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--foreground);
-  text-align: left;
 }
 
 .moment-row__top {
@@ -2680,8 +2603,6 @@
 .moment-row__content > strong { display: block; margin-top: 7px; font-size: 14px; }
 
 .moment-row__content > p { max-width: 700px; margin-top: 6px; overflow: hidden; color: var(--muted-foreground); font-size: 13px; line-height: 1.45; text-overflow: ellipsis; white-space: nowrap; }
-
-.moment-row__open { padding: 7px; border: 0; background: transparent; color: var(--muted-foreground); }
 
 .moment-preview {
   position: relative;
@@ -2726,21 +2647,13 @@
   font-size: 12px;
 }
 
-.moment-inspector__edit { width: 100%; display: flex; justify-content: space-between; margin-top: 12px; padding: 11px 0 0; border: 0; background: transparent; font-size: 13px; font-weight: 750; }
-
-.project-results__head p {
-  margin-top: 6px;
-  color: var(--muted-foreground);
-  font-size: 13px;
-}
+.moment-inspector__edit { margin-top: 12px; }
 
 .transcript-search { width: 100%; margin-bottom: 14px; }
 
 .transcript-search input { width: 100%; }
 
 .transcript-lines {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-2xl);
   overflow: hidden;
 }
 
@@ -2752,11 +2665,7 @@
   align-items: start;
   gap: 6px 14px;
   padding: 17px;
-  border: 0;
-  background: var(--card);
-  color: var(--foreground);
   text-align: left;
-  cursor: pointer;
 }
 
 .transcript-lines .transcript-line-mark { grid-column: 2; justify-self: start; }
@@ -2773,7 +2682,7 @@
 
 .transcript-line-mark { padding: 5px 7px; border-radius: var(--radius); background: color-mix(in oklch, var(--primary), transparent 82%); color: var(--primary-foreground); font-size: 12px; font-weight: 850; text-transform: uppercase; }
 
-.transcript-editor .textarea { min-height: 400px; padding: 20px; line-height: 1.75; }
+.transcript-editor .textarea { min-height: 400px; }
 
 .transcript-editor > div { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
 
@@ -2784,9 +2693,6 @@
   justify-content: space-between;
   gap: 18px;
   margin-top: 9px;
-  padding: 12px 15px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
 }
 
 .project-setting-row > span { display: flex; align-items: center; gap: 11px; }
@@ -2810,52 +2716,7 @@
 }
 
 .project-drawer-styles button {
-  position: relative;
-  min-height: 80px;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  background: var(--card);
   text-align: left;
-}
-
-.project-drawer-styles button.is-selected {
-  border-color: var(--foreground);
-  background: var(--muted);
-}
-
-.project-drawer-styles__mark {
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--secondary);
-  color: var(--muted-foreground);
-}
-.project-drawer-styles button.is-selected .project-drawer-styles__mark {
-  border-color: var(--foreground);
-  background: var(--foreground);
-  color: var(--background);
-}
-
-.project-drawer-styles b {
-  margin-top: 7px;
-  font-size: 12px;
-}
-
-.project-drawer-styles svg {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  padding: 2px;
-  border-radius: 50%;
-  background: var(--muted);
-  color: var(--primary-foreground);
 }
 
 
@@ -2879,9 +2740,6 @@
   position: relative;
   aspect-ratio: 9 / 16;
   overflow: hidden;
-  border-radius: var(--radius-2xl);
-  background: var(--foreground);
-  color: white;
 }
 
 .result-clip__media .dash-status { position: absolute; z-index: 3; top: 11px; left: 11px; }
@@ -2900,13 +2758,9 @@
 
 .result-clip__media > small { position: absolute; right: 12px; bottom: 10px; font-size: 12px; }
 
-.result-clip h3 { margin-top: 11px; font-size: 14px; line-height: 1.35; }
+.result-clip__content { padding-top: 12px; padding-bottom: 12px; }
 
-.result-clip > p { margin-top: 4px; color: var(--muted-foreground); font-size: 12px; }
-
-.result-clip__actions { display: flex; align-items: center; gap: 9px; margin-top: 10px; }
-
-.result-clip__actions > button { border: 0; background: transparent; color: color-mix(in oklch, var(--foreground), transparent 28%); font-size: 12px; font-weight: 750; }
+.result-clip__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
 
 .style-saved-state {
   display: inline-flex !important;
@@ -3016,33 +2870,7 @@
 }
 
 .moment-title-field {
-  position: relative;
-  display: block;
   margin-top: 6px;
-}
-
-.moment-title-field input {
-  width: 100%;
-  padding: 5px 28px 5px 0;
-  border: 0;
-  border-bottom: 1px solid transparent;
-  background: transparent;
-  color: var(--foreground);
-  font-size: 18px;
-  font-weight: 800;
-  line-height: 1.25;
-}
-
-.moment-title-field input:focus {
-  border-color: var(--ring);
-}
-
-.moment-title-field svg {
-  position: absolute;
-  top: 10px;
-  right: 0;
-  color: var(--muted-foreground);
-  pointer-events: none;
 }
 
 .moment-technical-summary {
@@ -4079,26 +3907,6 @@
   border-radius: var(--radius-xl);
 }
 
-.project-tabs::after {
-  content: "Параметры поиска и стиль собраны в одной панели";
-  margin: auto 0 18px auto;
-  color: var(--muted-foreground);
-  font-size: 12px;
-}
-
-.project-tabs button.is-active {
-  border-color: var(--foreground);
-  color: var(--foreground);
-}
-
-.project-tabs button span {
-  min-width: 19px;
-  padding: 3px 5px;
-  border-radius: var(--radius);
-  background: var(--muted);
-  font-size: 12px;
-}
-
 .moment-row + .moment-row {
   margin-top: -1px;
 }
@@ -4107,28 +3915,8 @@
   position: relative; z-index: 1; border-color: color-mix(in oklch, var(--primary), transparent 75%); background: color-mix(in oklch, var(--primary), transparent 90%);
 }
 
-.moment-inspector__body h2 {
-  margin-top: 9px; font-size: 18px; line-height: 1.25;
-}
-
 .moment-inspector__body > p {
   margin-top: 9px; color: color-mix(in oklch, var(--foreground), transparent 38%); font-size: 13px; line-height: 1.5;
-}
-
-.moment-inspector dl {
-  margin: 12px 0 0;
-}
-
-.moment-inspector dl div {
-  display: flex; justify-content: space-between; padding-block: 9px; border-bottom: 1px solid var(--border);
-}
-
-.moment-inspector dt {
-  color: var(--muted-foreground); font-size: 12px;
-}
-
-.moment-inspector dd {
-  margin: 0; font-size: 12px; font-weight: 750;
 }
 
 .style-library-add > svg {
@@ -4264,15 +4052,17 @@
   line-height: 1.5;
 }
 
-/* Label + control pairs inside the drawers. */
-.drawer-field {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin-bottom: 10px;
+.project-sheet__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-inline: 16px;
 }
 
-.drawer-field > span { font-size: 12px; font-weight: 700; }
+/* Spacing only; labels and controls are owned by registry Field primitives. */
+.drawer-field {
+  margin-bottom: 10px;
+}
 
 /* A disabled action plus the reason it is disabled, so the control never reads
    as broken. Same pattern the billing page uses for unconnected payments. */
@@ -4789,28 +4579,19 @@
   .wizard-style-options button,
   .wizard-control-card,
   .wizard-processing__card,
-  .project-workspace,
-  .moment-row,
   .billing-history__table,
   .dash-secondary-link,
-  .moment-list__head > button,
-  .moment-check,
-  .project-drawer-styles button,
-  .project-empty-results,
   .clip-editor__mobile-tabs
 ) { background: var(--card); }
 
 .dash-shell :is(
   .wizard-style-options svg,
-  .project-drawer-styles svg,
   .style-library-add > svg
 ) {
   background: rgba(17, 17, 18, .78);
   color: #fff;
 }
 
-.dash-shell .moment-check { border-color: var(--ring); }
-.dash-shell .moment-check.is-selected,
 .dash-shell .is-selected .billing-package-check { background: var(--accent); color: var(--accent-foreground); }
 
 /* Surface depth for the existing right-hand container. The geometry remains

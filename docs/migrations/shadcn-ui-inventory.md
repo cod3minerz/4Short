@@ -87,7 +87,7 @@ remain baseline facts until their assigned foundation/component phases.
 | `LockedField` | three product consumers, unavailable-capability contract | KEEP AS CANONICAL COMPOSITION | Refactored to registry Field anatomy; retain real lock reasons |
 | `components/hashpix/field.tsx` | no active imports | DEFER / REMOVE IN PHASE 7 | Do not use; registry `Field` is the only future field composition |
 | `ChoiceSegmented` | former one wizard consumer; wraps ToggleGroup with legacy classes | REMOVED — Phase 7.2 | Wizard now uses direct registry ToggleGroup; no active code consumer remains |
-| `HashpixDrawer` | workspace drawer; wraps Sheet with `dash-drawer-dialog` | DEFER | Replace with direct Sheet in workspace migration |
+| `HashpixDrawer` | workspace-only Sheet wrapper | REMOVED — Phase 7.3 | Direct registry Sheet now owns the workspace drawers; no consumer remains |
 | `OptionCard` | wizard/editor choices with feature state and local classes | DEFER | Replace with ToggleGroup/Card semantics per feature migration |
 | `InfoPanel` | one wizard consumer, legacy tone/icons/classes | DEFER | Re-evaluate against primitive/alert content during wizard migration |
 

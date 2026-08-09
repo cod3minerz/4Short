@@ -133,3 +133,26 @@ Do not change `blocked` to `verified` based on static code inspection alone.
   verified, processing, ready or failed project, so source-confirmed/
   processing, populated/deletion-dialog and error/retry matrices remain open.
   These are evidence gaps, not a static-code PASS.
+
+---
+
+## 2026-08-10 — Phase 7.3 Project Workspace wave
+
+- Route: `/dashboard/projects/podcast-24`; local test-admin preview project.
+- System: registry Tabs/Card/Field/Select/Switch/Sheet and Button
+  compositions; `AppIcon`/Hugeicons and semantic Page/Section/Card typography.
+  No workspace `ActionButton`, Choice-control, drawer wrapper or direct Lucide
+  source remains.
+- Interaction: both tabs change their active panel; settings Sheet opens with
+  real Select/Switch state, closes with Escape and returns focus to its
+  trigger; transcript Sheet exposes the named search Input and returns focus
+  to its trigger on Escape. The locked per-moment layout remains unavailable
+  with its real backend reason.
+- Responsive: browser viewport overrides at 360/768/1024/1440 all report
+  `scrollWidth === innerWidth`; the 360px settings Sheet is full viewport
+  width. A fresh tab after route hot-reload had no captured console errors.
+- Result: `blocked`. This environment has preview/demo project data only. Real
+  API loading/error/permission/processing/ready/failed states, real transcript
+  mutation, render/download/polling, destructive confirmation (not present on
+  this route) and retained screenshot evidence remain open. Phase 7.2 debts
+  are not reclassified by this record.

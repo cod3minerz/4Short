@@ -1,32 +1,38 @@
 "use client";
 
-import { ActionButton, IconButton } from "@/components/hashpix/action-button";
-import { ChoiceSelect, ChoiceSwitch } from "@/components/hashpix/choice-controls";
-import { HashpixDrawer } from "@/components/hashpix/drawer";
-import { StatusBadge } from "@/components/hashpix/status-badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
-  AlertTriangle,
-  ArrowLeft,
-  Check,
-  ChevronRight,
-  Download,
-  FileArchive,
-  FileText,
-  LayoutTemplate,
-  LoaderCircle,
-  Pencil,
-  RotateCcw,
-  Search,
-  Settings2,
-  Sparkles,
-  Subtitles,
-  WandSparkles,
-  X,
-} from "lucide-react";
+  Alert02Icon,
+  ArrowLeft01Icon,
+  ArrowRight01Icon,
+  Cancel01Icon,
+  Download02Icon,
+  File01Icon,
+  FileArchiveIcon,
+  Layout05Icon,
+  MagicWand01Icon,
+  PencilEdit02Icon,
+  RotateLeft02Icon,
+  Search01Icon,
+  Settings02Icon,
+  SparklesIcon,
+  SubtitleIcon,
+  Tick02Icon,
+} from "@hugeicons/core-free-icons";
+import { AppIcon } from "@/components/hashpix/app-icon";
+import { AsyncButton } from "@/components/hashpix/async-button";
+import { IconButton } from "@/components/hashpix/action-button";
+import { StatusBadge } from "@/components/hashpix/status-badge";
+import { PageDescription, PageTitle, SectionDescription, SectionTitle } from "@/components/hashpix/typography";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
+import { Field, FieldContent, FieldTitle } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { moments as demoMoments, readyClips as demoClips, transcript as demoTranscript } from "../data";
@@ -248,17 +254,6 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
       })
       .finally(() => setTranscriptLoaded(true));
   }, [canUseApi, projectId, transcriptOpen]);
-
-  useEffect(() => {
-    if (!settingsOpen && !transcriptOpen) return;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      setSettingsOpen(false);
-      setTranscriptOpen(false);
-    };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [settingsOpen, transcriptOpen]);
 
   const toggleMoment = async (id: string) => {
     const current = items.find((item) => item.id === id);
@@ -494,39 +489,47 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
     <main className="project-workspace">
       <header className="project-header">
         <div className="project-header__title">
-          <Link href="/dashboard/projects" aria-label="Назад к проектам"><ArrowLeft size={19} /></Link>
+          <Button
+            nativeButton={false}
+            render={<Link href="/dashboard/projects" />}
+            variant="outline"
+            size="icon"
+            aria-label="Назад к проектам"
+          >
+            <AppIcon icon={ArrowLeft01Icon} aria-hidden="true" />
+          </Button>
           <div>
             <StatusBadge tone={renderState === "ready" ? "success" : "accent"}>
               {renderState === "review" ? "Нужна проверка" : renderState === "rendering" ? "Создаём клипы" : renderState === "partial" ? "Частично готово" : "Готово"}
             </StatusBadge>
-            <h1>{projectTitle}</h1>
-            <p>
+            <PageTitle>{projectTitle}</PageTitle>
+            <PageDescription>
               {canUseApi && sourceInfo
                 ? <>{sourceInfo.kind === "youtube" ? "YouTube" : "Файл"} · {formatSourceDuration(sourceInfo.durationMs)} · стиль «{currentStyle.name}»</>
                 : <>YouTube · 01:03:42 · стиль «{currentStyle.name}» · исходник оплачен один раз</>}
-            </p>
+            </PageDescription>
           </div>
         </div>
         <div className="project-header__actions">
-          <ActionButton tone="secondary" onClick={() => setTranscriptOpen(true)}>
-            <FileText size={18} />
+          <AsyncButton variant="secondary" onClick={() => setTranscriptOpen(true)}>
+            <AppIcon icon={File01Icon} size="sm" aria-hidden="true" />
             Транскрипт
-          </ActionButton>
-          <ActionButton tone="secondary" onClick={() => setSettingsOpen(true)}>
-            <Settings2 size={18} />
+          </AsyncButton>
+          <AsyncButton variant="secondary" onClick={() => setSettingsOpen(true)}>
+            <AppIcon icon={Settings02Icon} size="sm" aria-hidden="true" />
             Параметры
-          </ActionButton>
+          </AsyncButton>
           {tab === "moments" ? (
-            <ActionButton disabled={!selected.length || busy} onClick={startRender}>
-              {busy ? <LoaderCircle className="is-spinning" size={18} /> : <Sparkles size={18} />}
+            <AsyncButton loading={busy} disabled={!selected.length} onClick={startRender}>
+              {!busy ? <AppIcon icon={SparklesIcon} size="sm" aria-hidden="true" /> : null}
               Создать клипы · {selected.length}
-            </ActionButton>
+            </AsyncButton>
           ) : (
             <span className="dash-action-with-hint">
-              <ActionButton disabled tone="secondary">
-                <FileArchive size={18} />
+              <AsyncButton disabled variant="secondary">
+                <AppIcon icon={FileArchiveIcon} size="sm" aria-hidden="true" />
                 Скачать ZIP
-              </ActionButton>
+              </AsyncButton>
               <small>Пакетная выгрузка появится вместе с архивацией проектов</small>
             </span>
           )}
@@ -536,36 +539,37 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
       {notice ? (
         <div className="project-notice" role="status">
           <span>{notice}</span>
-          <IconButton label="Скрыть сообщение" tooltip="Закрыть" onClick={() => setNotice("")}><X size={17} /></IconButton>
+          <IconButton label="Скрыть сообщение" tooltip="Закрыть" variant="ghost" onClick={() => setNotice("")}>
+            <AppIcon icon={Cancel01Icon} size="sm" aria-hidden="true" />
+          </IconButton>
         </div>
       ) : null}
 
-      <ToggleGroup
+      <Tabs
         className="project-tabs"
         aria-label="Основные режимы проекта"
-        value={[tab]}
-        onValueChange={(next) => { const selected = next[0] as Tab | undefined; if (selected) setTab(selected); }}
+        value={tab}
+        onValueChange={(value) => setTab(value as Tab)}
       >
-        {tabs.map((item) => (
-          <ToggleGroupItem
-            key={item.id}
-            value={item.id}
-          >
-            {item.label}
-            <span>{item.id === "moments" ? items.length : clips.length}</span>
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+        <TabsList>
+          {tabs.map((item) => (
+            <TabsTrigger key={item.id} value={item.id}>
+              {item.label}
+              <Badge variant="secondary">{item.id === "moments" ? items.length : clips.length}</Badge>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       {renderState === "rendering" ? (
-        <div className="project-render-banner">
-          <LoaderCircle className="is-spinning" size={21} />
+        <Card className="project-render-banner px-5 py-4">
+          <AppIcon icon={SparklesIcon} aria-hidden="true" />
           <div>
             <strong>Клипы создаются независимо</strong>
             <span>Готовые появятся по одному. Ошибка одного клипа не остановит остальные.</span>
           </div>
           <span>Обычно 9–16 минут</span>
-        </div>
+        </Card>
       ) : null}
 
       {tab === "moments" && canUseApi && !items.length ? (
@@ -580,12 +584,12 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
             />
           </div>
         ) : (
-          <div className="project-empty-results">
-            <Sparkles size={26} />
-            <h3>Моменты не найдены</h3>
-            <p>Не удалось выделить законченные мысли в этом видео. Попробуйте уточнить запрос.</p>
-            <ActionButton onClick={() => setSettingsOpen(true)}>Найти иначе</ActionButton>
-          </div>
+          <Card className="project-empty-results">
+            <AppIcon icon={SparklesIcon} size="lg" aria-hidden="true" />
+            <SectionTitle>Моменты не найдены</SectionTitle>
+            <SectionDescription>Не удалось выделить законченные мысли в этом видео. Попробуйте уточнить запрос.</SectionDescription>
+            <AsyncButton onClick={() => setSettingsOpen(true)}>Найти иначе</AsyncButton>
+          </Card>
         )
       ) : tab === "moments" ? (
         <div className="project-review-layout">
@@ -593,28 +597,29 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
             <div className="moment-list__head">
               <div>
                 <span className="dash-eyebrow">Найдено {items.length}</span>
-                <h2>Выберите, что превратить в клипы</h2>
-                <p>Границы, кадр и текст каждого момента можно исправить до рендера.</p>
+                <SectionTitle>Выберите, что превратить в клипы</SectionTitle>
+                <SectionDescription>Границы, кадр и текст каждого момента можно исправить до рендера.</SectionDescription>
               </div>
-              <ActionButton tone="secondary" onClick={() => setSettingsOpen(true)}>
-                <RotateCcw size={16} />
+              <AsyncButton variant="secondary" onClick={() => setSettingsOpen(true)}>
+                <AppIcon icon={RotateLeft02Icon} size="sm" aria-hidden="true" />
                 Найти иначе
-              </ActionButton>
+              </AsyncButton>
             </div>
 
             {items.map((moment, index) => (
               <article className={`moment-row ${activeId === moment.id ? "is-active" : ""}`} key={moment.id}>
                 <Button
-                  variant="outline"
-                  className={`moment-check ${moment.selected ? "is-selected" : ""}`}
+                  variant={moment.selected ? "default" : "outline"}
+                  size="icon"
+                  className="moment-check"
                   type="button"
                   aria-label={`${moment.selected ? "Исключить" : "Выбрать"} момент «${moment.title}»`}
                   aria-pressed={moment.selected}
                   onClick={() => void toggleMoment(moment.id)}
                 >
-                  {moment.selected ? <Check size={16} /> : index + 1}
+                  {moment.selected ? <AppIcon icon={Tick02Icon} size="sm" aria-hidden="true" /> : index + 1}
                 </Button>
-                <Button variant="ghost" className="moment-row__content" type="button" onClick={() => setActiveId(moment.id)}>
+                <Button variant="ghost" className="moment-row__content h-auto min-h-0 flex-1 items-start justify-start px-0 py-0 text-left whitespace-normal" type="button" onClick={() => setActiveId(moment.id)}>
                   <span className="moment-row__top">
                     <span>{moment.topic}</span>
                     <time>{moment.start}–{moment.end} · {moment.duration}</time>
@@ -622,17 +627,17 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                   <strong>{moment.title}</strong>
                   <p>{moment.excerpt}</p>
                   {moment.warnings?.length ? (
-                    <span className="moment-row__warning"><AlertTriangle size={13} /> {moment.warnings[0]}</span>
+                    <span className="moment-row__warning"><AppIcon icon={Alert02Icon} size="sm" aria-hidden="true" /> {moment.warnings[0]}</span>
                   ) : null}
                 </Button>
                 <Button variant="ghost" size="icon" className="moment-row__open" type="button" aria-label="Открыть момент" onClick={() => setActiveId(moment.id)}>
-                  <ChevronRight size={19} />
+                  <AppIcon icon={ArrowRight01Icon} aria-hidden="true" />
                 </Button>
               </article>
             ))}
           </section>
 
-          <aside className="moment-inspector">
+          <Card className="moment-inspector gap-0 py-0">
             <div className="moment-preview">
               <MediaThumb
                 className="moment-preview__source"
@@ -650,54 +655,53 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
               />
               <small>{active.start} / {active.end}</small>
             </div>
-            <div className="moment-inspector__body">
+            <CardContent className="moment-inspector__body">
               <span className="dash-eyebrow">{active.topic}</span>
-              <label className="moment-title-field">
-                <span className="sr-only">Название момента</span>
+              <Field className="moment-title-field">
                 <Input
+                  aria-label="Название момента"
                   value={active.title}
                   onChange={(event) => setItems((list) => list.map((item) => item.id === active.id ? { ...item, title: event.target.value } : item))}
                   onBlur={(event) => void updateActive({ title: event.target.value })}
                 />
-                <Pencil size={15} />
-              </label>
+              </Field>
               <p>{active.reason}</p>
               <div className="moment-technical-summary">
                 <span><strong>{active.start}–{active.end}</strong><small>Границы по словам</small></span>
                 <span><strong>{active.speaker}</strong><small>Спикер</small></span>
               </div>
               <LockedField
-                icon={<LayoutTemplate size={17} />}
+                icon={<AppIcon icon={Layout05Icon} size="sm" aria-hidden="true" />}
                 label="Кадр момента"
                 reason="Свой формат для отдельного момента — пока недоступно, используется формат проекта"
               />
-              <ActionButton className="moment-inspector__edit" tone="secondary" onClick={() => setTranscriptOpen(true)}>
+              <AsyncButton className="moment-inspector__edit w-full justify-between" variant="ghost" onClick={() => setTranscriptOpen(true)}>
                 Изменить границы по тексту
-                <ChevronRight size={17} />
-              </ActionButton>
-            </div>
-          </aside>
+                <AppIcon icon={ArrowRight01Icon} size="sm" aria-hidden="true" />
+              </AsyncButton>
+            </CardContent>
+          </Card>
         </div>
       ) : (
         <section className="project-results">
           <div className="project-results__head">
             <div>
               <span className="dash-eyebrow">{clips.filter((clip) => clip.status === "ready").length} из {clips.length} готово</span>
-              <h2>Клипы появляются по одному</h2>
-              <p>Откройте клип, исправьте текст, кадр или оформление и перерендерите только его.</p>
+              <SectionTitle>Клипы появляются по одному</SectionTitle>
+              <SectionDescription>Откройте клип, исправьте текст, кадр или оформление и перерендерите только его.</SectionDescription>
             </div>
             <span className="dash-action-with-hint">
-              <ActionButton disabled tone="secondary">
-                <FileArchive size={18} />
+              <AsyncButton disabled variant="secondary">
+                <AppIcon icon={FileArchiveIcon} size="sm" aria-hidden="true" />
                 Скачать готовые ZIP
-              </ActionButton>
+              </AsyncButton>
               <small>Пакетная выгрузка появится вместе с архивацией проектов</small>
             </span>
           </div>
           {clips.length ? (
             <div className="result-clip-grid">
               {clips.map((clip) => (
-                <article className="result-clip" key={clip.id}>
+                <Card className="result-clip gap-0 py-0" key={clip.id}>
                   <MediaThumb
                     className="result-clip__media"
                     src={sourceInfo?.thumbnailUrl ?? undefined}
@@ -706,68 +710,59 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                     tone="ink"
                   >
                     <StatusBadge tone={clip.status === "ready" ? "success" : clip.status === "failed" ? "danger" : "accent"}>
-                      {clip.status === "ready" ? <Check size={13} /> : clip.status === "failed" ? <AlertTriangle size={13} /> : <LoaderCircle className="is-spinning" size={13} />}
+                      <AppIcon icon={clip.status === "ready" ? Tick02Icon : clip.status === "failed" ? Alert02Icon : SparklesIcon} size="sm" aria-hidden="true" />
                       {clip.status === "ready" ? "Готово" : clip.status === "failed" ? "Ошибка клипа" : "В очереди"}
                     </StatusBadge>
                     <span className="result-clip__source-label">Кадр исходника</span>
                     <small>{clip.duration}</small>
                   </MediaThumb>
-                  <h3>{clip.title}</h3>
-                  <p>{clip.topic} · версия {clip.version || "готовится"}</p>
-                  <div className="result-clip__actions">
-                    <ActionButton
+                  <CardContent className="result-clip__content">
+                    <CardTitle>{clip.title}</CardTitle>
+                    <CardDescription>{clip.topic} · версия {clip.version || "готовится"}</CardDescription>
+                    <div className="result-clip__actions">
+                    <AsyncButton
                       disabled={clip.status !== "ready" || downloadingClipId === clip.id}
-                      tone="secondary"
+                      loading={downloadingClipId === clip.id}
+                      variant="secondary"
                       onClick={() => void downloadClip(clip.id, clip.title)}
                     >
-                      {downloadingClipId === clip.id
-                        ? <LoaderCircle className="is-spinning" size={17} />
-                        : <Download size={17} />}
+                      {downloadingClipId !== clip.id ? <AppIcon icon={Download02Icon} size="sm" aria-hidden="true" /> : null}
                       MP4
-                    </ActionButton>
-                    <Link
-                      href={`/dashboard/projects/${projectId}/clips/${clip.id}`}
+                    </AsyncButton>
+                    <Button
+                      nativeButton={false}
+                      render={<Link href={`/dashboard/projects/${projectId}/clips/${clip.id}`} />}
+                      variant="outline"
                       onClick={() => trackApp("clip_editor_open", { projectId, clipId: clip.id })}
                     >
                       Изменить
-                    </Link>
-                  </div>
-                </article>
+                    </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           ) : (
-            <div className="project-empty-results">
-              <Sparkles size={26} />
-              <h3>Сначала выберите моменты</h3>
-              <p>После запуска здесь будут отдельно появляться готовые клипы.</p>
-              <ActionButton onClick={() => setTab("moments")}>Вернуться к моментам</ActionButton>
-            </div>
+            <Card className="project-empty-results">
+              <AppIcon icon={SparklesIcon} size="lg" aria-hidden="true" />
+              <SectionTitle>Сначала выберите моменты</SectionTitle>
+              <SectionDescription>После запуска здесь будут отдельно появляться готовые клипы.</SectionDescription>
+              <AsyncButton onClick={() => setTab("moments")}>Вернуться к моментам</AsyncButton>
+            </Card>
           )}
         </section>
       )}
 
-      <HashpixDrawer
-        open={transcriptOpen}
-        onOpenChange={setTranscriptOpen}
-        title="Транскрипт"
-        description="Синхронизировано с видео"
-        className="transcript-drawer"
-        footer={
-          <>
-            <ActionButton tone="secondary" onClick={() => setEditingTranscript((value) => !value)}>
-              <Pencil size={17} />
-              {editingTranscript ? "Закрыть правку" : "Исправить текст"}
-            </ActionButton>
-            <ActionButton disabled={busy || !boundaryStart || !boundaryEnd} onClick={() => void applyBoundaries()}>
-              {busy ? <LoaderCircle className="is-spinning" size={17} /> : null}
-              Применить границы
-            </ActionButton>
-          </>
-        }
-      >
-        <p className="transcript-drawer__hint">Отметьте начало и конец по репликам или исправьте написание. Исходная версия сохранится.</p>
+      <Sheet open={transcriptOpen} onOpenChange={setTranscriptOpen}>
+        <SheetContent side="right" className="transcript-drawer !w-full sm:!max-w-sm">
+          <SheetHeader>
+            <SheetTitle>Транскрипт</SheetTitle>
+            <SheetDescription>Синхронизировано с видео</SheetDescription>
+          </SheetHeader>
+          <div className="project-sheet__body">
+            <p className="transcript-drawer__hint">Отметьте начало и конец по репликам или исправьте написание. Исходная версия сохранится.</p>
             <label className="dash-search transcript-search">
-              <Search size={18} />
+              <AppIcon icon={Search01Icon} size="sm" aria-hidden="true" />
               <span className="sr-only">Найти в транскрипте</span>
               <Input type="search" placeholder="Найти слово или фразу" value={search} onChange={(event) => setSearch(event.target.value)} />
             </label>
@@ -779,8 +774,8 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                   onChange={(event) => setTranscriptDraft(event.target.value)}
                 />
                 <div>
-                  <ActionButton tone="secondary" onClick={() => setEditingTranscript(false)}>Отменить</ActionButton>
-                  <ActionButton disabled={busy} onClick={saveTranscriptRevision}>{busy ? <LoaderCircle className="is-spinning" size={17} /> : null}Сохранить версию</ActionButton>
+                  <AsyncButton variant="secondary" onClick={() => setEditingTranscript(false)}>Отменить</AsyncButton>
+                  <AsyncButton loading={busy} onClick={saveTranscriptRevision}>Сохранить версию</AsyncButton>
                 </div>
               </div>
             ) : canUseApi && !filteredTranscript.length && !search ? (
@@ -792,7 +787,7 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                     : "Загрузка транскрипта…"}
               </p>
             ) : (
-              <div className="transcript-lines">
+              <Card className="transcript-lines gap-0 py-0">
                 {filteredTranscript.map((line) => (
                   <Button
                     variant="ghost"
@@ -812,76 +807,78 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                         : line.active ? <span className="transcript-line-mark">В моменте</span> : null}
                   </Button>
                 ))}
-              </div>
+              </Card>
             )}
-      </HashpixDrawer>
-
-      <HashpixDrawer
-        open={settingsOpen}
-        onOpenChange={setSettingsOpen}
-        title="Параметры проекта"
-        description="Без повторной транскрипции"
-        className="project-settings-drawer"
-        footer={
-          <>
-            <ActionButton disabled={busy} tone="secondary" onClick={recompute}>
-              {busy ? <LoaderCircle className="is-spinning" size={17} /> : <RotateCcw size={17} />}
-              Найти ещё
-            </ActionButton>
-            <ActionButton disabled={busy} onClick={() => void applyStyle()}>
-              {busy ? <LoaderCircle className="is-spinning" size={17} /> : null}
-              Применить стиль
-            </ActionButton>
-          </>
-        }
-      >
-        <p className="transcript-drawer__hint">Поиск и стиль собраны здесь, а не разбросаны по отдельным вкладкам.</p>
-
-        <section>
-          <h3>Что найти</h3>
-          <label className="drawer-field"><span>Задача</span><ChoiceSelect
-            aria-label="Задача"
-            value={searchMode}
-            onValueChange={(value) => setSearchMode(value as typeof searchMode)}
-            options={[
-              { id: "tips", label: "Практические советы" },
-              { id: "best", label: "Лучшие моменты" },
-              { id: "opinions", label: "Сильные мнения" },
-              { id: "stories", label: "Истории" },
-              { id: "custom", label: "Свой запрос" },
-            ]}
-          /></label>
-          <div className="project-settings-drawer__pair">
-            <label className="drawer-field"><span>Количество</span><ChoiceSelect
-              aria-label="Количество"
-              value={searchCount}
-              onValueChange={setSearchCount}
-              options={[
-                { id: "recommended", label: "Рекомендуемое" },
-                { id: "6", label: "Ровно 6" },
-                { id: "8", label: "Ровно 8" },
-              ]}
-            /></label>
-            <label className="drawer-field"><span>Длительность</span><ChoiceSelect
-              aria-label="Длительность"
-              value={searchDuration}
-              onValueChange={setSearchDuration}
-              options={[
-                { id: "short", label: "До 30 сек." },
-                { id: "medium", label: "30–60 сек." },
-                { id: "long", label: "60–90 сек." },
-              ]}
-            /></label>
           </div>
-        </section>
+          <SheetFooter>
+            <AsyncButton variant="secondary" onClick={() => setEditingTranscript((value) => !value)}>
+              <AppIcon icon={PencilEdit02Icon} size="sm" aria-hidden="true" />
+              {editingTranscript ? "Закрыть правку" : "Исправить текст"}
+            </AsyncButton>
+            <AsyncButton loading={busy} disabled={!boundaryStart || !boundaryEnd} onClick={() => void applyBoundaries()}>
+              Применить границы
+            </AsyncButton>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <SheetContent side="right" className="project-settings-drawer !w-full sm:!max-w-sm">
+          <SheetHeader>
+            <SheetTitle>Параметры проекта</SheetTitle>
+            <SheetDescription>Без повторной транскрипции</SheetDescription>
+          </SheetHeader>
+          <div className="project-sheet__body">
+            <p className="transcript-drawer__hint">Поиск и стиль собраны здесь, а не разбросаны по отдельным вкладкам.</p>
 
             <section>
-              <h3>Как оформить</h3>
+              <SectionTitle>Что найти</SectionTitle>
+              <Field className="drawer-field">
+                <FieldTitle>Задача</FieldTitle>
+                <Select value={searchMode} onValueChange={(value) => setSearchMode(value as typeof searchMode)}>
+                  <SelectTrigger aria-label="Задача"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="tips">Практические советы</SelectItem>
+                    <SelectItem value="best">Лучшие моменты</SelectItem>
+                    <SelectItem value="opinions">Сильные мнения</SelectItem>
+                    <SelectItem value="stories">Истории</SelectItem>
+                    <SelectItem value="custom">Свой запрос</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+              <div className="project-settings-drawer__pair">
+                <Field className="drawer-field">
+                  <FieldTitle>Количество</FieldTitle>
+                  <Select value={searchCount} onValueChange={(value) => value && setSearchCount(value)}>
+                    <SelectTrigger aria-label="Количество"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="recommended">Рекомендуемое</SelectItem>
+                      <SelectItem value="6">Ровно 6</SelectItem>
+                      <SelectItem value="8">Ровно 8</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field className="drawer-field">
+                  <FieldTitle>Длительность</FieldTitle>
+                  <Select value={searchDuration} onValueChange={(value) => value && setSearchDuration(value)}>
+                    <SelectTrigger aria-label="Длительность"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="short">До 30 сек.</SelectItem>
+                      <SelectItem value="medium">30–60 сек.</SelectItem>
+                      <SelectItem value="long">60–90 сек.</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </div>
+            </section>
+
+            <section>
+              <SectionTitle>Как оформить</SectionTitle>
               <div className="project-drawer-styles">
                 {styles.map((style) => (
                   <Button
                     variant={styleId === style.id ? "secondary" : "outline"}
-                    className={styleId === style.id ? "is-selected" : ""}
+                    className="h-auto min-h-20 flex-col items-start justify-start whitespace-normal"
                     type="button"
                     key={style.id}
                     onClick={() => {
@@ -890,28 +887,46 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
                       setSilence(style.silenceRemoval);
                     }}
                   >
-                    <span className="project-drawer-styles__mark" aria-hidden="true"><Subtitles size={15} /></span>
-                    <b>{style.name}</b>
-                    {styleId === style.id ? <Check size={15} /> : null}
+                    <AppIcon icon={SubtitleIcon} size="sm" aria-hidden="true" />
+                    <span>{style.name}</span>
+                    {styleId === style.id ? <AppIcon icon={Tick02Icon} size="sm" aria-hidden="true" /> : null}
                   </Button>
                 ))}
               </div>
-              <div className="project-setting-row">
-                <span><Subtitles size={19} /><span><strong>Субтитры</strong><small>Применить к выбранным клипам</small></span></span>
-                <ChoiceSwitch checked={captions} label="Субтитры" onCheckedChange={setCaptions} />
-              </div>
-              <div className="project-setting-row">
-                <span><WandSparkles size={19} /><span><strong>Удаление пауз</strong><small>Не обрезать окончания фраз</small></span></span>
-                <ChoiceSwitch checked={silence} label="Удаление пауз" onCheckedChange={setSilence} />
-              </div>
+              <Field orientation="horizontal" className="project-setting-row">
+                <AppIcon icon={SubtitleIcon} aria-hidden="true" />
+                <FieldContent>
+                  <FieldTitle>Субтитры</FieldTitle>
+                  <span>Применить к выбранным клипам</span>
+                </FieldContent>
+                <Switch checked={captions} aria-label="Субтитры" onCheckedChange={setCaptions} />
+              </Field>
+              <Field orientation="horizontal" className="project-setting-row">
+                <AppIcon icon={MagicWand01Icon} aria-hidden="true" />
+                <FieldContent>
+                  <FieldTitle>Удаление пауз</FieldTitle>
+                  <span>Не обрезать окончания фраз</span>
+                </FieldContent>
+                <Switch checked={silence} aria-label="Удаление пауз" onCheckedChange={setSilence} />
+              </Field>
             </section>
 
             <div className="project-warning">
-              <AlertTriangle size={18} />
+              <AppIcon icon={Alert02Icon} size="sm" aria-hidden="true" />
               <span><strong>Минуты не спишутся повторно.</strong> Новый поиск использует сохранённый транскрипт.</span>
             </div>
-
-      </HashpixDrawer>
+          </div>
+          <SheetFooter>
+            <AsyncButton loading={busy} variant="secondary" onClick={recompute}>
+              {!busy ? <AppIcon icon={RotateLeft02Icon} size="sm" aria-hidden="true" /> : null}
+              Найти ещё
+            </AsyncButton>
+            <AsyncButton loading={busy} onClick={() => void applyStyle()}>
+              Применить стиль
+            </AsyncButton>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </main>
   );
 }
