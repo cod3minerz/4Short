@@ -20,9 +20,9 @@ count as browser completion evidence.
 
 | Route | Surface | Baseline state | Phase 0 evidence | Future migration status |
 | --- | --- | --- | --- | --- |
-| `/sign-in` | Auth | custom auth composition | desktop browser capture; 2 inputs, 3 buttons, no console error | Pending |
-| `/sign-up` | Auth | shared auth flow | static audit | Pending |
-| `/forgot-password` | Auth | shared auth flow | static audit | Pending |
+| `/sign-in` | Auth | migrated Phase 7.1 | 360/1440 browser: default, focus, error, password reveal, keyboard and no overflow | Complete — Better Auth behaviour retained |
+| `/sign-up` | Auth | migrated Phase 7.1 | 768 browser: validation and real local signup to OTP | Complete — Better Auth behaviour retained |
+| `/forgot-password` | Auth | migrated Phase 7.1 | 1024 browser: validation and reset-password transition | Complete — Better Auth behaviour retained |
 | `/dashboard` | Source wizard | dashboard shell + wizard/stepper | 1280×720: 6 buttons, 2 inputs, vertical scroll only, no console error | Pending; do not restore recovery diff automatically |
 | `/dashboard/new` | Redirect/entry flow | dashboard entry | static audit | Pending |
 | `/dashboard/projects` | Projects | listing, filters, search | 1280×720: 7 buttons, 1 input, no horizontal overflow or console error | Pending |

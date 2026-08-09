@@ -134,6 +134,27 @@ test("server-renders the dashboard and its primary factory entry point", async (
   assert.match(html, /robots\" content=\"noindex, nofollow/);
 });
 
+test("server-renders canonical auth entry routes", async () => {
+  const [signIn, signUp, forgotPassword, authSource] = await Promise.all([
+    render("/sign-in"),
+    render("/sign-up"),
+    render("/forgot-password"),
+    readFile(new URL("../app/sign-in/page.tsx", import.meta.url), "utf8"),
+  ]);
+
+  for (const response of [signIn, signUp, forgotPassword]) {
+    assert.equal(response.status, 200);
+  }
+
+  assert.match(await signIn.text(), /Вход в Hashpix/);
+  assert.match(await signUp.text(), /Создайте аккаунт/);
+  assert.match(await forgotPassword.text(), /Восстановление пароля/);
+  assert.match(authSource, /@\/components\/ui\/card/);
+  assert.match(authSource, /@\/components\/ui\/input-otp/);
+  assert.match(authSource, /@\/components\/hashpix\/async-button/);
+  assert.doesNotMatch(authSource, /lucide-react|sign-in\.css/);
+});
+
 test("server-renders retained cabinet surfaces and does not expose the removed styles route", async () => {
   const [projects, wizard, styles, billing, project] = await Promise.all([
     render("/dashboard/projects"),

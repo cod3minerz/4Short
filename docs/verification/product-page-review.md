@@ -87,3 +87,26 @@ Do not change `blocked` to `verified` based on static code inspection alone.
   invented media.
 - Result: `blocked` only for the real source-confirmed browser state; it cannot
   be created without uploading or importing actual user video.
+
+---
+
+## 2026-08-09 — Phase 7.1 auth wave
+
+- Routes: `/sign-in`, `/sign-up`, `/forgot-password`; anonymous local Better
+  Auth surface with one disposable `@hashpix.local` development account.
+- States exercised: sign-in default/focus/invalid/reveal; sign-up
+  default/invalid/real OTP transition; OTP partial, complete, incorrect and
+  resend cooldown; forgot-password default/invalid/submitted/reset-password.
+- Responsive: 360, 768, 1024 and 1440 px; every inspected route had
+  `document.documentElement.scrollWidth === innerWidth`. Card width was 328px
+  at 360px and 448px at wider viewports.
+- Accessibility: Field labels name every input; error is an alert and is
+  referenced by active fields; password reveal is named, pressable and has a
+  Tooltip; OTP accepts one-time-code input; keyboard-visible Vega focus ring
+  was inspected. No console errors occurred.
+- System: registry Card/Field/Input/InputOTP/Button/Tooltip and Phase 5
+  `AsyncButton`, `AppIcon`, typography only; no raw auth controls, local focus
+  paint, Lucide import or auth stylesheet remains.
+- Result: `verified`. The controller is faster than a browser-frame capture,
+  so transient loading is deterministically verified by the auth unit test
+  (`aria-busy`, disabled canonical `h-9` Button) rather than a screenshot.

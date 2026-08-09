@@ -13,7 +13,9 @@ Target UI foundation: `b37sSWfzM`
 - [x] Phase 4 — canonical primitive set
 - [x] Phase 5 — typography and shared compositions
 - [x] Phase 6 — remove `/dashboard/styles` management route
-- [ ] Phase 7 — rich content, legacy cleanup and final verification
+- [ ] Phase 7 — remaining route waves, legacy cleanup and final verification
+  - [x] Phase 7.1 — auth (`/sign-in`, `/sign-up`, `/forgot-password`)
+  - [ ] Phase 7.2 — not started
 
 ## Phase 0 record
 
@@ -210,3 +212,31 @@ Target UI foundation: `b37sSWfzM`
 - Full Codebase Memory reindex/impact audit — pass (933 nodes, 1,700 edges):
   no `StylesPage`/`StylesView`; `listStyles → hydrate`, wizard project creation
   and workspace style updates remain connected to their runtime APIs.
+
+## Phase 7.1 record — auth
+
+- Migrated the three auth routes through their one shared `AuthScreen` to
+  registry `Card`, `Field`, `Input`, `InputOTP`, `Button`/Tooltip and Phase 5
+  `AsyncButton`, `AppIcon` and semantic typography.
+- Deleted `app/sign-in/sign-in.css`: its custom Card/input/button/focus/OTP
+  paint is not retained. The password reveal is now a named ghost
+  `Button size="icon"` with a registry Tooltip and Hugeicons.
+- Better Auth endpoints, validation, redirects, OTP/resend/cooldown and inline
+  error semantics are unchanged. See `shadcn-phase-7-1-auth-audit.md` for the
+  before/after dependency classification and local browser evidence.
+
+## Phase 7.1 verification
+
+- Targeted auth unit suite — pass (4 tests), including canonical async loading
+  semantics and source-level primitive/legacy-style assertions.
+- Browser QA — default, focus, validation, password reveal, signup→OTP,
+  partial/complete/incorrect OTP, resend cooldown, forgot/reset transition,
+  keyboard focus, 360/768/1024/1440 layouts, no overflow and no console errors.
+- `git diff --check`, `npx shadcn@latest diff`, `npm run typecheck` and
+  `npm run lint` — pass; the registry reports `No updates found.`
+- Full verification — pass: 197 unit tests, 11 rendered-HTML/SSR checks and
+  `npm run build:vercel` generated all 27 routes, including the three auth
+  entries.
+- Codebase Memory full reindex and auth impact audit — pass; the shared
+  `AuthScreen` remains connected only to its retained Better Auth actions.
+  Phase 7.2 remains unstarted.

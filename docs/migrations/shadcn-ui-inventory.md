@@ -13,7 +13,7 @@ changed only the official preset foundation; product routes remain pending.
 | --- | --- | --- | --- |
 | Current shadcn foundation | `components.json`: `base-vega`, neutral, Hugeicons, CSS variables | Canonical target foundation | Applied and registry-verified |
 | Product foundation CSS | `app/globals.css` | Exact Vega semantic map, root dark mode and Geist variables | Phase 3 complete; no product legacy palette or overlay bridge remains in this foundation file |
-| Route CSS layer | `app/dashboard/dashboard.css` (5,416), `app/admin/admin-minimal.css` (104), auth CSS | Legacy/custom feature visual implementation to migrate | Captured; route work is still pending |
+| Route CSS layer | `app/dashboard/dashboard.css` (5,416), `app/admin/admin-minimal.css` (104) | Legacy/custom feature visual implementation to migrate | Auth-specific CSS was removed in Phase 7.1; remaining route work is pending |
 | Registry primitives | `components/ui` has 21 primitives | Canonical primitive location | Existing sources registry-verified after Vega apply; target gaps listed below |
 | Hashpix compositions | `components/hashpix` has 19 files | Retain only behaviour-backed compositions after primitive audit | Captured; visual ownership must be reviewed |
 | Historic b38 migration docs and skills | migration ledgers, product UI skills, audit script | Conflicts with target preset and cannot remain active UI guidance | Conflict recorded for Phase 1 |
@@ -103,3 +103,13 @@ workspace persists its selected `styleId` for later renders. The standalone
 management route, its view and only its dead client-side mutation helpers are
 removed. Backend `/v1/styles` routes, schema, contracts, versioning and
 renderer/HVE consumers are intentionally retained.
+
+## Phase 7.1 auth-wave state
+
+`/sign-in`, `/sign-up` and `/forgot-password` now use registry `Card`,
+`Field`, `Input`, `InputOTP`, `Button` and `Tooltip`, plus the behavioural
+`AsyncButton`, `AppIcon` and semantic typography compositions. Their shared
+`AuthScreen` has no local visual classes, Lucide import or `sign-in.css`; the
+only local classes are structural layout and the registry Input's necessary
+password-toggle clearance. Better Auth transport and OTP/reset behaviour are
+unchanged. See `shadcn-phase-7-1-auth-audit.md`.
