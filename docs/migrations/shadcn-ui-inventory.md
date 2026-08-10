@@ -13,7 +13,7 @@ changed only the official preset foundation; product routes remain pending.
 | --- | --- | --- | --- |
 | Current shadcn foundation | `components.json`: `base-vega`, neutral, Hugeicons, CSS variables | Canonical target foundation | Applied and registry-verified |
 | Product foundation CSS | `app/globals.css` | Exact Vega semantic map, root dark mode and Geist variables | Phase 3 complete; no product legacy palette or overlay bridge remains in this foundation file |
-| Route CSS layer | `app/dashboard/dashboard.css` (5,416), `app/admin/admin-minimal.css` (104) | Legacy/custom feature visual implementation to migrate | Auth-specific CSS was removed in Phase 7.1; remaining route work is pending |
+| Route CSS layer | `app/dashboard/dashboard.css` (5,416) | Legacy/custom feature visual implementation to migrate | Auth and Admin local visual CSS were removed in Phases 7.1 and 7.6; remaining dashboard route work is pending |
 | Registry primitives | `components/ui` has 21 primitives | Canonical primitive location | Existing sources registry-verified after Vega apply; target gaps listed below |
 | Hashpix compositions | `components/hashpix` has 19 files | Retain only behaviour-backed compositions after primitive audit | Captured; visual ownership must be reviewed |
 | Historic b38 migration docs and skills | migration ledgers, product UI skills, audit script | Conflicts with target preset and cannot remain active UI guidance | Conflict recorded for Phase 1 |
@@ -143,3 +143,13 @@ account component family. The only unavailable controls are honest: self-serve
 plan changes and TOTP/passkey lack product/server contracts. Help intentionally
 does not use `typeset`; rich Markdown/documentation rendering is a Phase 8
 candidate. See `shadcn-phase-7-5-billing-account-help-audit.md`.
+
+## Phase 7.6 Admin state
+
+The admin route family now uses the registry Sidebar, Card, Table, Button,
+Input, Select, Badge, AlertDialog, Sheet and Skeleton plus Phase 5 shared
+PageHeader, EmptyState, StatusBadge, AsyncButton and AppIcon. The route-level
+shell is persistent in `app/admin/layout.tsx`; `AdminConsole` and
+`admin-minimal.css` are removed. No admin-specific visual primitive was added.
+All remaining admin route evidence requires an authorized local browser session;
+see `shadcn-phase-7-6-admin-audit.md`.

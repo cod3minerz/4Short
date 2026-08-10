@@ -32,11 +32,11 @@ count as browser completion evidence.
 | `/dashboard/billing` | Billing | canonical billing surfaces; payment/ledger contracts preserved | static audit and pre-redirect browser DOM; authenticated browser interaction blocked | Implementation complete; full browser matrix blocked by rejected local session |
 | `/dashboard/account` | Account | canonical identity/security; real Better Auth contracts retained | static audit; authenticated session/dialog/sign-out browser evidence blocked | Implementation complete; full browser matrix blocked by rejected local session |
 | `/dashboard/help` | Help | canonical application-help shell; no Typeset | static audit; route redirect prevented browser interaction | Implementation complete; full browser matrix blocked by rejected local session; rich content deferred to Phase 8 |
-| `/admin` | Admin shell | admin dashboard | 1280×720: 3 buttons, no horizontal overflow or console error | Pending |
-| `/admin/users` | Admin | user management | static audit | Pending |
-| `/admin/workspaces` | Admin | workspace management | static audit | Pending |
-| `/admin/jobs` | Admin | job management | static audit | Pending |
-| `/admin/audit` | Admin | audit log | static audit | Pending |
+| `/admin` | Admin shell | persistent Vega Sidebar and real access bootstrap | static contract audit; authenticated browser evidence blocked | Implementation complete; browser matrix blocked |
+| `/admin/users` | Admin | canonical table, role/status actions and confirmation | static contract audit; authenticated browser evidence blocked | Implementation complete; browser matrix blocked |
+| `/admin/workspaces` | Admin | canonical workspace Cards, plan and minutes controls | static contract audit; authenticated browser evidence blocked | Implementation complete; browser matrix blocked |
+| `/admin/jobs` | Admin | canonical task table, retry/cancel actions and confirmation | static contract audit; authenticated browser evidence blocked | Implementation complete; browser matrix blocked |
+| `/admin/audit` | Admin | canonical audit log and search/pagination | static contract audit; authenticated browser evidence blocked | Implementation complete; browser matrix blocked |
 
 Public controls (`/`, `/blog`, `/blog/[slug]`) remain out of scope and are
 mandatory regression surfaces. Phase 0 browser evidence is desktop-only and

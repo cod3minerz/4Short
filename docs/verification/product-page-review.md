@@ -194,3 +194,21 @@ Do not change `blocked` to `verified` based on static code inspection alone.
   the revoke dialog, real sessions/sign-out, billing purchase/error/history,
   Help search and console evidence require a reproducible authenticated local
   fixture. Phase 7.4 browser debt remains blocked unchanged.
+
+---
+
+## 2026-08-10 — Phase 7.6 Admin wave
+
+- Routes: `/admin`, `/admin/users`, `/admin/workspaces`, `/admin/jobs` and
+  `/admin/audit`.
+- System: persistent registry Sidebar/Sheet shell; Card/Table/Input/Select/
+  Button/AlertDialog/Skeleton; shared PageHeader, EmptyState, StatusBadge,
+  AsyncButton and Hugeicons AppIcon. No local admin stylesheet, Lucide import
+  or manually painted primitive remains.
+- Contract: the layout bootstrap calls real `/v1/admin/me` and
+  `/v1/admin/overview`; every read/mutation keeps its existing protected
+  Control API endpoint and permission predicate. User suspension and job
+  cancellation have canonical destructive confirmation.
+- Result: `blocked`. The known local test-admin credential is rejected by
+  Better Auth, so no successful/denied access, transitions, real data actions,
+  dialog focus return, console or responsive browser evidence is claimed.

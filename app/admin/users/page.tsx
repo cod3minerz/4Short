@@ -1,5 +1,5 @@
-import { AdminConsole } from "../components/admin-console";
+import { AdminRouteView } from "../components/admin-route-view";
 
 export default function AdminUsersPage() {
-  return <AdminConsole initialView="users" />;
+  return <AdminRouteView view="users" />;
 }

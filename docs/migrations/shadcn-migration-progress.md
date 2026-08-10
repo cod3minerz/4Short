@@ -19,6 +19,22 @@ Target UI foundation: `b37sSWfzM`
   - [ ] Phase 7.3 — Project Workspace implementation committed; real API/state evidence remains blocked
   - [ ] Phase 7.4 — Clip Editor implementation committed; authenticated browser evidence remains blocked
   - [ ] Phase 7.5 — Billing, Account and Help implementation committed; authenticated browser evidence remains blocked
+  - [ ] Phase 7.6 — Admin implementation committed; authenticated browser and Codebase Memory reindex evidence remain blocked
+
+## Phase 7.6 record
+
+- `app/admin/layout.tsx` now owns a persistent `AdminShell`: one real access
+  bootstrap and sidebar survive navigation across all five admin routes.
+- The former `AdminConsole` was decomposed only by existing route boundaries.
+  Cards, tables, forms, empty/loading states, destructive confirmation and
+  mobile navigation now use canonical Vega/shared primitives and Hugeicons.
+- `admin-minimal.css` and all admin Lucide imports were removed. Server routes,
+  idempotency keys, permissions, route IA and administrative workflows did not
+  change.
+- Browser evidence is still blocked by the rejected local Better Auth admin
+  credential. A fresh Phase 7.6 Codebase Memory reindex/impact audit passed
+  (6,903 nodes, 16,159 edges); historical Phase 7.4/7.5 reindex debt is not
+  retroactively closed. Generated artifacts are not committed.
 
 ## Phase 0 record
 

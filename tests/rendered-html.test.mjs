@@ -176,12 +176,12 @@ test("server-renders retained cabinet surfaces and does not expose the removed s
   assert.match(await project.text(), /Выберите, что превратить в клипы/);
 });
 
-test("ships the closed admin entry without mock platform data", async () => {
+test("ships the persistent closed admin shell without mock platform data", async () => {
   const response = await render("/admin");
   assert.equal(response.status, 200);
   const html = await response.text();
 
-  assert.match(html, /admin-console/);
+  assert.match(html, /admin-shell/);
   assert.match(html, /robots\" content=\"noindex, nofollow, nocache/);
   assert.doesNotMatch(html, /demo-admin|mock-admin/);
 });
