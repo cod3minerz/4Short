@@ -113,6 +113,10 @@ that missing browser interaction evidence.
   tests pass.
 - `npm run test` — pass, including rendered HTML/SSR checks and the Vinext
   production build.
+- PostgreSQL queue integration commands were invoked but safely skipped locally:
+  no `HVE_TEST_DATABASE_URL`/`DATABASE_URL` is configured. They require an
+  explicitly opted-in isolated test database and run as real integration tests
+  in CI's PostgreSQL service; this local environment limitation is not a PASS.
 - `npm run build:vercel` — pass; 27 routes generated.
 - `npm run hve:smoke:g4` — pass. HVE-G3 is not applicable because Phase 10
   does not touch preview, renderer, ClipEDL, timeline or media geometry

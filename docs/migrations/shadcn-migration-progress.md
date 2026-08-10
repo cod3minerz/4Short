@@ -499,6 +499,10 @@ no bypass or fabricated production session was introduced.
 - `npm run typecheck`, `npm run lint`, `npm run test:unit` (198 pass), `npm run
   test` (198 unit + rendered HTML/SSR checks), `npm run build` and `npm run
   build:vercel` — pass. The Vercel build produces the expected 27 routes.
+- Queue integration suites were safely skipped locally because no explicitly
+  opted-in isolated PostgreSQL test URL is configured. CI supplies that service
+  and executes the actual queue integration/load suites; the local skip is
+  retained as environment evidence, not reported as a pass.
 - `npm run hve:smoke:g4` — pass. HVE-G3 is not applicable: this phase changes
   enforcement, documentation and a zero-consumer heading only; it does not
   change preview, renderer, ClipEDL, timeline or media geometry contracts.
