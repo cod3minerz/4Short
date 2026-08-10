@@ -132,3 +132,14 @@ colour picker is an explicitly documented exception; `RangeTimeline`, preview
 overlays and timecode retain their functional geometry. The audit record is
 `shadcn-phase-7-4-clip-editor-audit.md`. Browser verification is blocked by
 the rejected local test-admin credential, not considered complete.
+
+## Phase 7.5 Billing, Account and Help state
+
+Billing, Account and Help use canonical `PageHeader`/`SectionHeader`, `Card`,
+`Button`/`AsyncButton`, semantic `Field`/`LockedField`, `StatusBadge`,
+`Skeleton`, `EmptyState`, `Table` and Hugeicons where relevant. The phase
+removed route-specific legacy paint rather than creating a parallel billing or
+account component family. The only unavailable controls are honest: self-serve
+plan changes and TOTP/passkey lack product/server contracts. Help intentionally
+does not use `typeset`; rich Markdown/documentation rendering is a Phase 8
+candidate. See `shadcn-phase-7-5-billing-account-help-audit.md`.

@@ -29,9 +29,9 @@ count as browser completion evidence.
 | `/dashboard/projects/[id]` | Workspace | migrated Phase 7.3 without IA redesign | preview `podcast-24`: tabs, Sheets, Select/Switch, transcript search, Escape/focus return and no overflow at 360/768/1024/1440 | Blocked: real loading/error/permission/processing/ready/failed, transcript persistence, render/download/polling and screenshot evidence require live fixtures |
 | `/dashboard/projects/[id]/clips/[clipId]` | Clip editor | migrated Phase 7.4 without workspace/mechanics redesign | static audit; HVE-G4 PASS; initial populated DOM at 1280 had no horizontal overflow | Blocked: local authenticated fixture/session expired; loading/error/ready, toolbar/dialog, preview/timeline, keyboard/focus, console and 360/768/1024/1440 browser evidence remain required |
 | `/dashboard/styles` | Styles management | removed in Phase 6 | direct route returns Not Found; no navigation or internal product links remain | Removed — domain remains consumed by wizard/workspace |
-| `/dashboard/billing` | Billing | account/billing surface | static audit | Pending |
-| `/dashboard/account` | Account | sessions/security surface | 1280×720: 3 buttons, no inputs, no console error | Pending |
-| `/dashboard/help` | Help | documentation/help surface | static audit | Pending |
+| `/dashboard/billing` | Billing | canonical billing surfaces; payment/ledger contracts preserved | static audit and pre-redirect browser DOM; authenticated browser interaction blocked | Implementation complete; full browser matrix blocked by rejected local session |
+| `/dashboard/account` | Account | canonical identity/security; real Better Auth contracts retained | static audit; authenticated session/dialog/sign-out browser evidence blocked | Implementation complete; full browser matrix blocked by rejected local session |
+| `/dashboard/help` | Help | canonical application-help shell; no Typeset | static audit; route redirect prevented browser interaction | Implementation complete; full browser matrix blocked by rejected local session; rich content deferred to Phase 8 |
 | `/admin` | Admin shell | admin dashboard | 1280×720: 3 buttons, no horizontal overflow or console error | Pending |
 | `/admin/users` | Admin | user management | static audit | Pending |
 | `/admin/workspaces` | Admin | workspace management | static audit | Pending |

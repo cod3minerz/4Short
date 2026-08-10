@@ -18,6 +18,7 @@ Target UI foundation: `b37sSWfzM`
   - [ ] Phase 7.2 — implementation committed; final browser evidence is blocked
   - [ ] Phase 7.3 — Project Workspace implementation committed; real API/state evidence remains blocked
   - [ ] Phase 7.4 — Clip Editor implementation committed; authenticated browser evidence remains blocked
+  - [ ] Phase 7.5 — Billing, Account and Help implementation committed; authenticated browser evidence remains blocked
 
 ## Phase 0 record
 
@@ -347,3 +348,39 @@ Target UI foundation: `b37sSWfzM`
   The only observed populated editor DOM at 1280px had no horizontal overflow
   before redirect; no editor interaction, console or responsive matrix is
   claimed as passed without a reproducible authenticated fixture.
+
+## Phase 7.5 record — Billing, Account and Help
+
+- Billing, Account and Help now consume the installed canonical Vega primitive
+  set and Phase 5 compositions without redesigning their product information
+  architecture. Route-owned Lucide imports, manual cards, pseudo-table,
+  legacy status paint and route-specific Help/Account/Billing CSS are removed.
+- Billing keeps the real minute-package purchase redirect and real transaction
+  ledger. Self-service plan changes remain explicitly unavailable because the
+  repository has no corresponding product payment contract.
+- Account keeps the Better Auth identity, session-list, revoke-other-sessions
+  and sign-out calls. Revoke uses a confirmed AlertDialog. No current-device
+  marker is fabricated because the list API does not expose current-session
+  identity. TOTP/passkey is a truthful locked field because no server contract
+  exists.
+- Help is an application UI surface only; the former `typeset` root was
+  removed. Rich Markdown/documentation rendering is deferred to Phase 8.
+- See `shadcn-phase-7-5-billing-account-help-audit.md`. No Phase 7.6 work is
+  included.
+
+## Phase 7.5 verification
+
+- `git diff --check`, `npx shadcn@latest diff`, `npm run lint` and
+  `npm run typecheck` — pass; the registry reports `No updates found.`
+- `npm run test` — 197 unit tests and rendered-HTML/SSR checks pass;
+  `npm run build:vercel` — pass.
+- `npm run audit:product-ui` and `npm run audit:dark-surfaces` — pass.
+- Authenticated browser QA is **blocked**: Billing rendered its new initial
+  DOM before the local Better Auth session redirected to `/sign-in`; the
+  documented development credential remains rejected. No bypass was used.
+  Billing payment, Account sessions/revoke/sign-out, Help search and the
+  required responsive/keyboard/dialog matrices remain evidence debt.
+- Codebase Memory reindex retried twice but its indexing worker crashed on an
+  unspecified file. The existing graph and direct source/API tracing were used
+  only for impact review; a successful reindex remains a tooling evidence debt.
+- The Phase 7.4 authenticated-browser debt remains blocked and unchanged.

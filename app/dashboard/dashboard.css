@@ -576,48 +576,6 @@
   cursor: pointer;
 }
 
-/* Unified credits balance card (replaces the old plan/extra split pair). */
-.billing-balance {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 24px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--card);
-}
-
-.billing-balance__value {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 8px;
-  color: var(--foreground);
-  font-family: inherit;
-  font-size: 40px;
-  line-height: 1;
-}
-
-.billing-balance p {
-  margin-top: 10px;
-  color: var(--muted-foreground);
-  font-size: 11px;
-  line-height: 1.45;
-}
-
-.billing-plan__included {
-  margin-top: 14px;
-  color: var(--muted-foreground);
-  font-size: 12px;
-}
-
-.billing-plan__actions small {
-  display: block;
-  margin-top: 8px;
-  color: var(--muted-foreground);
-  font-size: 10px;
-}
-
 /* Dual-handle trim timeline (RangeTimeline primitive). */
 .range-timeline {
   margin-top: 10px;
@@ -741,21 +699,6 @@
   font-weight: 600;
   opacity: .75;
 }
-
-.account-actions [data-slot="button"]:disabled,
-.account-session [data-slot="button"]:disabled {
-  cursor: not-allowed;
-  opacity: .5;
-}
-
-.account-section__hint {
-  margin-top: 12px;
-  color: var(--muted-foreground);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.account-section__hint a { color: var(--accent); font-weight: 700; }
 
 .dash-profile-menu__email {
   display: block;
@@ -1334,171 +1277,6 @@
   margin: 0;
   text-align: right;
 }
-
-/* Billing */
-.billing-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 12px;
-}
-.billing-plan, .billing-balance {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 0;
-  padding: 18px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--card);
-  color: var(--foreground);
-  box-shadow: none;
-}
-.billing-plan__head h2 {
-  letter-spacing: -.04em; margin-top: 3px; font-family: inherit; font-size: 18px; }
-.billing-plan__head small { color: var(--muted-foreground); font-size: 10px; }
-.billing-plan__actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 16px; }
-.billing-packages, .billing-history { margin-top: 28px; }
-.dash-section-head {
-  gap: 24px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between; margin-bottom: 12px; }
-.dash-section-head h2 {
-  margin-top: 6px;
-  letter-spacing: -0.035em; font-family: inherit; font-size: 17px; }
-.dash-section-head > p { max-width: 44ch; color: var(--muted-foreground); font-size: 11px; text-align: end; }
-.billing-packages__grid {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 1.1fr; gap: 8px; }
-.billing-packages__grid > button, .billing-purchase-summary {
-  border: 1px solid var(--border);
-  background: color-mix(in oklch, var(--primary), transparent 82%);
-  color: var(--foreground);
-  text-align: left;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start; min-height: 150px; padding: 14px; border-radius: var(--radius-lg); }
-.billing-packages__grid > button {
-  gap: 4px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  text-align: start;
-  cursor: pointer;
-}
-.billing-packages__grid > button:hover { border-color: var(--ring); }
-.billing-packages__grid > button strong { font-size: 15px; }
-.billing-packages__grid > button p { color: var(--muted-foreground); font-size: 11px; }
-.billing-packages__grid > button b { margin-top: auto; font-size: 17px; }
-.billing-package-badge {
-  padding: 6px 9px;
-  border-radius: var(--radius);
-  background: var(--accent);
-  color: var(--accent-foreground);
-  font-weight: 850;
-  text-transform: uppercase;
-  position: absolute;
-  top: -10px;
-  left: 20px; font-size: 9px; }
-.billing-history__table {
-  background: var(--card); overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); }
-.billing-history__table > div {
-  gap: 12px;
-  padding-inline: 17px;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center; min-height: 54px; padding: 9px 12px; border: 0; border-radius: 0; }
-.billing-history__table > div + div { border-top: 1px solid var(--border); }
-
-/* Help and account */
-.help-search {
-  width: min(100%, 520px);
-  min-height: 40px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding-inline: 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--secondary);
-}
-.help-search input { width: 100%; border: 0; outline: 0; background: transparent; font-size: 13px; }
-.help-list {
-  width: min(100%, 840px);
-  margin-top: 18px;
-  border-block: 1px solid var(--border);
-}
-.help-list a {
-  min-height: 78px;
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 20px;
-  align-items: center;
-  gap: 12px;
-  padding: 13px 4px;
-  color: var(--foreground);
-}
-.help-list a + a { border-top: 1px solid var(--border); }
-.help-list a > span { width: 32px; height: 32px; display: grid; place-items: center; border-radius: var(--radius-sm); background: color-mix(in oklch, var(--primary), transparent 90%); color: var(--primary-foreground); }
-.help-list small { color: var(--muted-foreground); font-size: 10px; }
-.help-list h2 { margin-top: 3px; color: inherit; font-size: 16px; line-height: 1.35; }
-.help-list p { margin-top: 5px; color: color-mix(in oklch, var(--foreground), transparent 28%); font-size: 13px; line-height: 1.45; }
-.help-contact {
-  display: grid;
-  align-items: center;
-  width: min(100%, 760px);
-  min-height: 72px;
-  grid-template-columns: auto 1fr auto;
-  gap: 16px;
-  margin-top: 18px;
-  padding: 18px;
-  border-radius: var(--radius-lg);
-  background: var(--secondary);
-}
-.help-contact h2 {
-  margin-top: 5px; font-size: 13px; }
-.help-contact p {
-  color: var(--primary-foreground); margin-top: 3px; font-size: 12px; }
-.help-contact a { min-height: 34px; border-radius: var(--radius-sm); }
-
-.account-sections { width: min(100%, 860px); display: grid; gap: 16px; }
-.account-section {
-  padding: 20px;
-  border-top: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--card);
-}
-.account-section:last-child { border-bottom: 1px solid var(--border); }
-.account-section > div:first-child { display: flex; align-items: flex-start; gap: 10px; }
-.account-section h2 { font-size: 14px; }
-.account-section p { margin-top: 3px; color: var(--muted-foreground); font-size: 11px; }
-.account-section dl { margin: 18px 0 0 28px; }
-.account-section dl div { display: grid; grid-template-columns: 160px 1fr; padding: 8px 0; font-size: 12px; }
-.account-section dt { color: var(--muted-foreground); }
-.account-section dd { margin: 0; font-weight: 650; }
-.account-session { display: flex; align-items: center; justify-content: space-between; margin: 14px 0 0 28px; }
-.account-session span { display: flex; flex-direction: column; }
-.account-session strong { font-size: 12px; }
-.account-session small { margin-top: 3px; color: var(--muted-foreground); font-size: 10px; }
-.account-session > [data-slot="button"] {
-  min-height: 34px;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding-inline: 11px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--card);
-  font-size: 11px;
-  cursor: pointer;
-}
-.account-actions { display: flex; gap: 8px; margin: 14px 0 0 28px; }
-.account-security-locks { display: grid; gap: 10px; margin: 18px 0 0 28px; }
-.account-security-locks .locked-field { margin: 0; }
-.account-section__hint { display: flex; align-items: center; gap: 6px; }
 
 .dash-mobile-nav { display: none; }
 
@@ -2603,34 +2381,6 @@
 
 .style-upload-asset { min-height: 42px; display: flex; align-items: center; justify-content: center; gap: 7px; border: 1px dashed var(--ring); border-radius: var(--radius-lg); background: var(--secondary); font-size: 12px; font-weight: 750; }
 
-.billing-packages,
-.billing-history {
-  margin-top: 46px;
-}
-
-.billing-packages__grid > button.is-selected { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-
-.billing-package-check { width: 25px; aspect-ratio: 1; display: grid; place-items: center; align-self: flex-end; border: 1px solid var(--border); border-radius: 50%; }
-
-.is-selected .billing-package-check { border-color: var(--foreground); background: var(--foreground); color: white; }
-
-.billing-purchase-summary { padding: 22px; border-radius: var(--radius-2xl); background: color-mix(in oklch, var(--primary), transparent 82%); align-items: stretch; }
-.billing-purchase-summary dl { width: 100%; }
-
-.billing-purchase-summary dl { margin: 17px 0; }
-
-.billing-purchase-summary dl div { display: flex; justify-content: space-between; gap: 12px; padding-block: 8px; border-bottom: 1px solid var(--border); font-size: 12px; }
-
-.billing-purchase-summary dd { margin: 0; font-weight: 800; }
-
-.billing-purchase-summary > p { margin-top: 9px; color: color-mix(in oklch, var(--foreground), transparent 28%); font-size: 12px; line-height: 1.4; }
-
-.billing-transaction-icon { width: 37px; aspect-ratio: 1; display: grid; place-items: center; border-radius: var(--radius-lg); background: var(--muted); }
-
-.billing-transaction-icon.tone-credit { background: color-mix(in oklch, var(--primary), transparent 82%); color: var(--primary-foreground); }
-
-.billing-transaction-icon.tone-refund { background: color-mix(in oklch, var(--primary), transparent 87%); color: var(--primary); }
-
 .dashboard-connection-notice {
   display: flex;
   align-items: center;
@@ -2874,8 +2624,6 @@
   .project-row > time { display: none; }
   .styles-layout { grid-template-columns: 200px minmax(0, 1fr); }
   .style-editor { grid-template-columns: minmax(0, 1fr); }
-  .billing-packages__grid { grid-template-columns: repeat(3, 1fr); }
-  .billing-purchase-summary { grid-column: 1 / -1; min-height: 0; }
 }
 
 @media (max-width: 1100px) {
@@ -3095,16 +2843,6 @@
   .style-library-card { min-width: 180px; scroll-snap-align: start; }
   .style-library-add { min-width: 170px; scroll-snap-align: start; }
   .style-editor { grid-template-columns: 1fr; }
-  .billing-hero { grid-template-columns: 1fr; }
-  .billing-packages__grid { display: flex; overflow-x: auto; }
-  .billing-packages__grid > button { min-width: 190px; }
-  .billing-purchase-summary { min-width: 240px; }
-
-  .help-contact { grid-template-columns: auto 1fr; }
-  .help-contact a { grid-column: 2; justify-self: start; }
-  .account-section dl div { grid-template-columns: 1fr; gap: 3px; }
-  .account-session { align-items: flex-start; flex-direction: column; gap: 10px; }
-  .account-actions { flex-direction: column; align-items: flex-start; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3134,8 +2872,6 @@
   grid-row: 1 / span 2; grid-column: 2; }
   .wizard-summary__charge { grid-row: 1 / span 2; margin-top: 0; }
   .result-clip-grid { grid-template-columns: repeat(3, 1fr); }
-  .billing-packages__grid { grid-template-columns: repeat(3, 1fr); }
-  .billing-purchase-summary { grid-column: 1 / -1; }
   /*
    * .style-editor's two-column layout lives only in the bounded
    * `@media (max-width: 1220px) and (min-width: 761px)` block further down.
@@ -3229,7 +2965,6 @@
   .moment-inspector { position: static; display: grid; grid-template-columns: 300px 1fr; }
   .moment-preview { min-height: 330px; }
   .result-clip-grid { grid-template-columns: repeat(2, 1fr); }
-  .billing-hero { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
@@ -3279,10 +3014,6 @@
   .dash-page-heading h1 { font-size: 24px; line-height: 1.16; }
   .dash-page-heading p { font-size: 14px; }
   .dash-page-heading__actions { display: none; }
-  .dash-section-head { align-items: flex-start; }
-  .dash-section-head h2 { font-size: 22px; }
-  .dash-section-head > a { font-size: 0; }
-  .dash-section-head > a svg { width: 20px; height: 20px; }
   .wizard-header { min-height: 0; padding-inline: 0; }
   .wizard-header > a span { display: none; }
   .wizard-body { width: min(calc(100% - 24px), 600px); padding-block: 32px 120px; }
@@ -3342,14 +3073,6 @@
   .style-field-row { grid-template-columns: 1fr; }
   .style-editor__colors { flex-direction: column; }
   .style-editor__footer { display: grid; grid-template-columns: 1fr; }
-  .billing-plan { padding: 22px 18px; }
-  .billing-plan__head { flex-direction: column; }
-  .billing-packages .dash-section-head > p { display: none; }
-  .billing-packages__grid { display: flex; overflow-x: auto; padding-top: 12px; scroll-snap-type: x mandatory; }
-  .billing-packages__grid > button { min-width: 230px; scroll-snap-align: start; }
-  .billing-purchase-summary { min-width: 260px; scroll-snap-align: start; }
-  .help-contact { grid-template-columns: auto 1fr; padding: 22px; }
-  .help-contact > a { grid-column: 1 / -1; }
 }
 
 @media (max-width: 640px) {
@@ -3542,18 +3265,6 @@
   font-size: 14px;
 }
 
-.dash-section-head > a,
-.dash-section-head > button {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  border: 0;
-  background: transparent;
-  color: color-mix(in oklch, var(--foreground), transparent 28%);
-  font-size: 14px;
-  font-weight: 750;
-}
-
 .wizard-header > a {
   display: flex;
   align-items: center;
@@ -3709,71 +3420,11 @@
    Do not re-add bare `label` / `input[type="color"]` selectors under
    .style-editor__colors; style .dash-color-field* directly instead. */
 
-.billing-plan__head {
-  display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;
-}
-
-.billing-plan__head > span {
-  padding: 9px 12px; border-radius: var(--radius); background: var(--muted); font-size: 13px; font-weight: 750;
-}
-
-.billing-plan__actions > button {
-  border: 0; background: transparent; color: color-mix(in oklch, var(--foreground), transparent 38%); font-size: 12px; font-weight: 750;
-}
-
-.billing-packages .dash-section-head > p {
-  max-width: 500px; color: var(--muted-foreground); font-size: 13px; line-height: 1.5; text-align: right;
-}
-
-.billing-packages__grid > button > strong {
-  margin-top: 16px; font-size: 18px;
-}
-
-.billing-packages__grid > button > p {
-  margin-top: 6px; color: var(--muted-foreground); font-size: 12px;
-}
-
-.billing-packages__grid > button > b {
-  margin-top: auto; font-size: 21px;
-}
-
-.billing-history__table > div > span:nth-child(2) {
-  display: flex; flex-direction: column;
-}
-
-.billing-history__table strong {
-  font-size: 13px;
-}
-
-.billing-history__table small {
-  margin-top: 4px; color: var(--muted-foreground); font-size: 12px;
-}
-
-.billing-history__table b {
-  font-size: 13px;
-}
-
-.billing-history__table b.is-positive {
-  color: var(--primary);
-}
-
-.help-contact > span {
-  width: 49px; aspect-ratio: 1; display: grid; place-items: center; border-radius: var(--radius-xl); background: var(--muted);
-}
-
-.help-contact > a {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 32px; padding-inline: 18px; border: 0; border-radius: var(--radius); background: var(--foreground); color: white; font-size: 14px; font-weight: 800;
-}
-
 @supports (corner-shape: squircle) {
   .dash-project-card,
   .wizard-source-ready,
   .wizard-processing__card,
   .moment-inspector,
-  .billing-plan,
   .style-editor {
     corner-shape: squircle;
   }
@@ -4248,7 +3899,6 @@
   .wizard-style-options button,
   .wizard-control-card,
   .wizard-processing__card,
-  .billing-history__table,
   .dash-secondary-link
 ) { background: var(--card); }
 
@@ -4259,8 +3909,6 @@
   background: rgba(17, 17, 18, .78);
   color: #fff;
 }
-
-.dash-shell .is-selected .billing-package-check { background: var(--accent); color: var(--accent-foreground); }
 
 /* Surface depth for the existing right-hand container. The geometry remains
    untouched; a subdued light on the canvas is what makes its blur meaningful. */
@@ -4299,8 +3947,6 @@
 .dash-nav a.is-active,
 .dash-nav--utility a.is-active { background: var(--card); color: var(--foreground); box-shadow: inset 0 1px rgba(255,255,255,.05); }
 .dash-profile-menu summary:hover { background: var(--accent); }
-.help-contact > a { background: var(--accent); color: var(--accent-foreground); }
-
 /* The editor is a separate root, but belongs to the same dark system. */
 .editor-focus-shell,
 .clip-editor { background: var(--background); color: var(--foreground); }

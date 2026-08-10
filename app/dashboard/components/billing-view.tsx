@@ -1,9 +1,27 @@
 "use client";
 
-import { ArrowRight, Check, Clock3, CreditCard, Zap } from "lucide-react";
+import {
+  ArrowRight01Icon,
+  CheckmarkCircle01Icon,
+  Clock01Icon,
+  CreditCardIcon,
+  FlashIcon,
+  Invoice01Icon,
+} from "@hugeicons/core-free-icons";
 import { useEffect, useState } from "react";
-import { ActionButton } from "@/components/hashpix/action-button";
+import { AppIcon } from "@/components/hashpix/app-icon";
+import { AsyncButton } from "@/components/hashpix/async-button";
+import { EmptyState } from "@/components/hashpix/empty-state";
+import { LockedField } from "@/components/hashpix/locked-field";
+import { PageHeader } from "@/components/hashpix/page-header";
+import { SectionHeader } from "@/components/hashpix/section-header";
+import { StatusBadge } from "@/components/hashpix/status-badge";
+import { typographyVariants } from "@/components/hashpix/typography";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 import { minutePackages, productPlans } from "@/packages/product-config/src";
 import { minuteTransactions as previewTransactions } from "../data";
 import {
@@ -15,7 +33,6 @@ import {
 import { trackApp } from "../lib/track-app";
 import { useDashboardStore } from "../store";
 import type { MinuteTransaction } from "../types";
-import { PageHeading } from "./page-heading";
 
 function formatTransactionDate(iso: string) {
   const date = new Date(iso);
@@ -39,6 +56,12 @@ function formatRubles(kopecks: number) {
   return `${(kopecks / 100).toLocaleString("ru-RU")} ₽`;
 }
 
+function transactionTone(kind: MinuteTransaction["kind"]) {
+  if (kind === "charge") return { tone: "warning" as const, label: "Списание", icon: Clock01Icon };
+  if (kind === "refund") return { tone: "accent" as const, label: "Возврат", icon: CheckmarkCircle01Icon };
+  return { tone: "success" as const, label: "Начисление", icon: CreditCardIcon };
+}
+
 export function BillingView() {
   const [selected, setSelected] = useState(180);
   const [notice, setNotice] = useState("");
@@ -59,11 +82,18 @@ export function BillingView() {
         }
       },
       (error: unknown) => {
-        if (!cancelled) setTransactionsError(error instanceof ControlApiError ? error.message : "Не удалось загрузить операции. Проверьте соединение и попробуйте ещё раз.");
+        if (!cancelled) {
+          setTransactionsError(
+            error instanceof ControlApiError
+              ? error.message
+              : "Не удалось загрузить операции. Проверьте соединение и попробуйте ещё раз.",
+          );
+        }
       },
     );
     return () => { cancelled = true; };
   }, []);
+
   const credits = balanceSeconds === null ? null : Math.floor(balanceSeconds / 60);
   const plan = planCode ? productPlans[planCode as keyof typeof productPlans] : undefined;
   const selectedPackage = minutePackages.find((item) => item.seconds / 60 === selected);
@@ -87,113 +117,157 @@ export function BillingView() {
   };
 
   return (
-    <main className="dash-page">
-      <PageHeading
+    <main className="dash-page space-y-8">
+      <PageHeader
         title="Минуты и тариф"
         description="Минуты списываются один раз по длительности исходного видео. Повторный поиск и ререндер не расходуют баланс снова."
       />
 
-      <section className="billing-hero">
-        <div className="billing-balance">
-          <span className="dash-eyebrow">Баланс</span>
-          <strong className="billing-balance__value">
-            <Zap size={30} fill="currentColor" />
-            {credits === null ? "…" : credits}
-          </strong>
-          <p>
+      <section className="grid gap-4 lg:grid-cols-2" aria-label="Баланс и тариф">
+        <Card>
+          <CardHeader>
+            <CardDescription>Баланс</CardDescription>
+            <CardTitle className="flex items-center gap-2 text-2xl">
+              <AppIcon icon={FlashIcon} size="lg" aria-hidden="true" />
+              {credits === null ? "…" : `${credits} мин.`}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className={typographyVariants({ role: "muted" })}>
             {credits === null
               ? "Загружаем баланс с российского сервера."
-              : "Один баланс на всё: минуты тарифа и купленные пакеты расходуются из него же."}
-          </p>
-        </div>
+              : "Один баланс на минуты тарифа и купленные пакеты."}
+          </CardContent>
+        </Card>
 
-        <div className="billing-plan">
-          <div className="billing-plan__head">
-            <div>
-              <small>Текущий тариф</small>
-              <h2>{plan?.name ?? "—"}</h2>
-            </div>
-            <span>{plan ? `${formatRubles(plan.priceKopecks)} / месяц` : ""}</span>
-          </div>
-          <p className="billing-plan__included">
-            {plan ? `${plan.includedSeconds / 60} минут начисляется каждый месяц` : "Тариф загружается"}
-          </p>
-          <div className="billing-plan__actions">
-            <ActionButton tone="secondary" disabled>Изменить тариф</ActionButton>
-            <small>Смена тарифа появится вместе с подключением оплаты.</small>
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardDescription>Текущий тариф</CardDescription>
+            <CardTitle className="flex flex-wrap items-center gap-2">
+              {plan?.name ?? "—"}
+              {plan ? <StatusBadge tone="neutral">{formatRubles(plan.priceKopecks)} / месяц</StatusBadge> : null}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className={typographyVariants({ role: "muted" })}>
+              {plan ? `${plan.includedSeconds / 60} минут начисляется каждый месяц.` : "Тариф загружается."}
+            </p>
+            <LockedField
+              label="Смена тарифа"
+              reason="Самостоятельная смена тарифа пока не поддерживается: доступен только выбор пакета минут."
+            />
+          </CardContent>
+        </Card>
       </section>
 
-      <section className="billing-packages">
-        <div className="dash-section-head">
-          <div><h2>Добавить минуты</h2></div>
-          <p>Пакет не меняет тариф и сразу добавляется к тому же балансу.</p>
-        </div>
-        <div className="billing-packages__grid">
+      <section className="space-y-4" aria-label="Добавить минуты">
+        <SectionHeader
+          title="Добавить минуты"
+          description="Пакет не меняет тариф и сразу добавляется к тому же балансу."
+        />
+        <div className="grid gap-4 xl:grid-cols-4">
           {minutePackages.map((item) => {
             const minutes = item.seconds / 60;
+            const isSelected = selected === minutes;
             const isPopular = item.code === popularPackageCode;
             return (
               <Button
-                variant={selected === minutes ? "secondary" : "outline"}
-                className={`${selected === minutes ? "is-selected" : ""} ${isPopular ? "is-popular" : ""}`}
-                type="button"
                 key={item.code}
-                aria-pressed={selected === minutes}
+                type="button"
+                variant={isSelected ? "secondary" : "outline"}
+                aria-pressed={isSelected}
+                className="h-auto min-h-36 flex-col items-start justify-start gap-2 whitespace-normal text-left"
                 onClick={() => {
                   setSelected(minutes);
                   trackApp("minutes_package_select", { package: minutes });
                 }}
               >
-                {isPopular ? <span className="billing-package-badge">Чаще выбирают</span> : null}
-                <span className="billing-package-check">{selected === minutes ? <Check size={15} /> : null}</span>
-                <strong>{minutes} минут</strong>
-                <p>{packageNotes[item.code] ?? `Действует ${item.expiresDays / 30} месяцев`}</p>
-                <b>{formatRubles(item.priceKopecks)}</b>
+                <span className="flex w-full items-center justify-between gap-2">
+                  {isPopular ? <StatusBadge tone="accent">Чаще выбирают</StatusBadge> : <span />}
+                  {isSelected ? <AppIcon icon={CheckmarkCircle01Icon} size="sm" aria-label="Выбрано" /> : null}
+                </span>
+                <span className="text-base font-semibold">{minutes} минут</span>
+                <span className="text-sm font-normal text-muted-foreground">
+                  {packageNotes[item.code] ?? `Действует ${item.expiresDays / 30} месяцев`}
+                </span>
+                <span className="mt-auto text-base font-semibold">{formatRubles(item.priceKopecks)}</span>
               </Button>
             );
           })}
-          <div className="billing-purchase-summary">
-            <small>После покупки</small>
-            <dl>
-              <div><dt>Сейчас</dt><dd>{credits ?? "…"}</dd></div>
-              <div><dt>Пакет</dt><dd>+{selected}</dd></div>
-              <div><dt>Итого</dt><dd>{credits === null ? "…" : `${credits + selected} минут`}</dd></div>
-            </dl>
-            <ActionButton className="w-full" onClick={purchase} disabled={isPurchasing}>
-              {isPurchasing ? "Переходим к оплате…" : "Добавить минуты"} <ArrowRight size={17} />
-            </ActionButton>
-            {notice ? <p role="status">{notice}</p> : null}
-          </div>
+
+          <Card className="min-h-36">
+            <CardHeader>
+              <CardDescription>После покупки</CardDescription>
+              <CardTitle>{selected} минут</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <dl className="space-y-2 text-sm">
+                <div className="flex items-center justify-between gap-4"><dt className="text-muted-foreground">Сейчас</dt><dd>{credits ?? "…"} мин.</dd></div>
+                <div className="flex items-center justify-between gap-4"><dt className="text-muted-foreground">Пакет</dt><dd>+{selected} мин.</dd></div>
+                <div className="flex items-center justify-between gap-4 border-t pt-2 font-medium"><dt>Итого</dt><dd>{credits === null ? "…" : `${credits + selected} мин.`}</dd></div>
+              </dl>
+              <AsyncButton className="w-full" onClick={() => void purchase()} loading={isPurchasing}>
+                Добавить минуты
+                {!isPurchasing ? <AppIcon icon={ArrowRight01Icon} size="sm" aria-hidden="true" /> : null}
+              </AsyncButton>
+              {notice ? <p className="text-sm text-destructive" role="alert">{notice}</p> : null}
+            </CardContent>
+          </Card>
         </div>
       </section>
 
-      <section className="billing-history">
-        <div className="dash-section-head">
-          <div><h2>История операций</h2></div>
-        </div>
-        {transactions === null ? (
-          transactionsError
-            ? <p className="dash-field-error" role="alert">{transactionsError}</p>
-            : <p className="dash-empty-note">Загружаем операции…</p>
-        ) : transactions.length ? (
-          <div className="billing-history__table">
-            {transactions.map((transaction) => (
-              <div key={transaction.id}>
-                <span className={`billing-transaction-icon tone-${transaction.kind}`}>
-                  {transaction.kind === "credit" ? <CreditCard size={18} /> : <Clock3 size={18} />}
-                </span>
-                <span><strong>{transaction.title}</strong><small>{transaction.date}</small></span>
-                <b className={transaction.amount > 0 ? "is-positive" : ""}>
-                  {transaction.amount > 0 ? "+" : ""}{transaction.amount} мин.
-                </b>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="dash-empty-note">Операций пока нет — здесь появятся начисления и списания минут.</p>
-        )}
+      <section className="space-y-4" aria-label="История операций">
+        <SectionHeader title="История операций" />
+        <Card>
+          <CardContent className="p-0">
+            {transactions === null ? (
+              transactionsError ? (
+                <p className="p-6 text-sm text-destructive" role="alert">{transactionsError}</p>
+              ) : (
+                <div className="space-y-3 p-6" aria-label="Загрузка операций">
+                  <Skeleton className="h-5 w-1/3" />
+                  <Skeleton className="h-5 w-2/3" />
+                  <Skeleton className="h-5 w-1/2" />
+                </div>
+              )
+            ) : transactions.length ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Операция</TableHead>
+                    <TableHead>Статус</TableHead>
+                    <TableHead className="text-right">Минуты</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {transactions.map((transaction) => {
+                    const state = transactionTone(transaction.kind);
+                    return (
+                      <TableRow key={transaction.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <AppIcon icon={state.icon} size="sm" className="text-muted-foreground" aria-hidden="true" />
+                            <div className="min-w-0"><p className="font-medium">{transaction.title}</p><p className="text-xs text-muted-foreground">{transaction.date}</p></div>
+                          </div>
+                        </TableCell>
+                        <TableCell><StatusBadge tone={state.tone}>{state.label}</StatusBadge></TableCell>
+                        <TableCell className={cn("text-right font-medium", transaction.amount > 0 && "text-primary")}>
+                          {transaction.amount > 0 ? "+" : ""}{transaction.amount} мин.
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            ) : (
+              <EmptyState
+                className="p-10"
+                icon={<AppIcon icon={Invoice01Icon} size="lg" />}
+                title="Операций пока нет"
+                description="Здесь появятся начисления и списания минут."
+              />
+            )}
+          </CardContent>
+        </Card>
       </section>
     </main>
   );

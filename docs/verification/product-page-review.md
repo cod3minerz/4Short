@@ -172,3 +172,25 @@ Do not change `blocked` to `verified` based on static code inspection alone.
   Better Auth. No authenticated editor interaction, dialog/focus, console or
   responsive assertion is claimed. A valid local test-admin session plus the
   reproducible preview fixture is needed to close this route evidence.
+
+---
+
+## 2026-08-10 — Phase 7.5 Billing, Account and Help wave
+
+- Routes: `/dashboard/billing`, `/dashboard/account`, `/dashboard/help`.
+- System: Page/Section headers, Card, Field, Input, Table, Button/AsyncButton,
+  AlertDialog, Skeleton, EmptyState, StatusBadge and Hugeicons/AppIcon replace
+  route-owned cards, pseudo-table, Lucide imports and CSS paint. Help has no
+  `typeset` root.
+- Contract review: Billing retains the real package purchase redirect and
+  transactions API; Account retains Better Auth list/revoke-other/sign-out.
+  The revoke action is confirmed. Plan change and TOTP/passkey stay truthful
+  locked states; no fake control or auth/payment contract was introduced.
+- Browser: `/dashboard/billing` rendered the initial canonical layout and
+  reported no horizontal overflow before its existing local session redirected
+  to `/sign-in`. The known test credential is rejected by Better Auth. No
+  browser action was claimed after that redirect and no bypass was used.
+- Result: `blocked`. The 360/768/1024/1440 matrix, keyboard/focus return for
+  the revoke dialog, real sessions/sign-out, billing purchase/error/history,
+  Help search and console evidence require a reproducible authenticated local
+  fixture. Phase 7.4 browser debt remains blocked unchanged.

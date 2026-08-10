@@ -1,17 +1,39 @@
 "use client";
 
-import { KeyRound, LoaderCircle, LogOut, Mail, ShieldCheck, Smartphone } from "lucide-react";
+import {
+  Key01Icon,
+  Logout01Icon,
+  Mail01Icon,
+  Shield01Icon,
+  SmartPhone01Icon,
+} from "@hugeicons/core-free-icons";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ActionButton } from "@/components/hashpix/action-button";
+import { AppIcon } from "@/components/hashpix/app-icon";
+import { AsyncButton } from "@/components/hashpix/async-button";
 import { LockedField } from "@/components/hashpix/locked-field";
-import { PageHeading } from "../components/page-heading";
+import { PageHeader } from "@/components/hashpix/page-header";
+import { SectionHeader } from "@/components/hashpix/section-header";
+import { typographyVariants } from "@/components/hashpix/typography";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldContent, FieldDescription, FieldTitle } from "@/components/ui/field";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ControlApiError, isControlApiConfigured, listSessions, revokeOtherSessions, signOut } from "../lib/control-api";
 import { useDashboardStore } from "../store";
 
 type SessionRow = Awaited<ReturnType<typeof listSessions>>[number];
 
-/** "Mozilla/5.0 (Macintosh; …" → "macOS" — enough to recognise your own device. */
 function describeDevice(userAgent?: string | null) {
   if (!userAgent) return "Устройство не определено";
   if (/iPhone|iPad/i.test(userAgent)) return "iOS";
@@ -32,6 +54,7 @@ export function AccountView() {
   const [sessionsError, setSessionsError] = useState("");
   const [busy, setBusy] = useState<"revoke" | "signout" | null>(null);
   const [notice, setNotice] = useState("");
+  const [revokeDialogOpen, setRevokeDialogOpen] = useState(false);
 
   const loadSessions = async () => {
     if (!isControlApiConfigured()) return;
@@ -49,7 +72,9 @@ export function AccountView() {
     listSessions().then(
       (rows) => { if (!cancelled) setSessions(rows); },
       (error: unknown) => {
-        if (!cancelled) setSessionsError(error instanceof ControlApiError ? error.message : "Не удалось загрузить сессии. Проверьте соединение и попробуйте ещё раз.");
+        if (!cancelled) {
+          setSessionsError(error instanceof ControlApiError ? error.message : "Не удалось загрузить сессии. Проверьте соединение и попробуйте ещё раз.");
+        }
       },
     );
     return () => { cancelled = true; };
@@ -61,6 +86,7 @@ export function AccountView() {
     try {
       await revokeOtherSessions();
       setNotice("Остальные сессии завершены.");
+      setRevokeDialogOpen(false);
       await loadSessions();
     } catch (error) {
       setSessionsError(error instanceof ControlApiError ? error.message : "Не удалось завершить сессии. Проверьте соединение и попробуйте ещё раз.");
@@ -81,85 +107,106 @@ export function AccountView() {
   };
 
   const signedIn = Boolean(user);
+  const canRevokeOthers = Boolean(sessions && sessions.length > 1);
 
   return (
-    <main className="dash-page">
-      <PageHeading title="Аккаунт" description="Вход, безопасность и управление данными." />
-      <div className="account-sections">
-        <section className="account-section account-section--identity">
-          <div><Mail size={18} /><span><h2>Данные аккаунта</h2><p>Основной способ связи и входа.</p></span></div>
-          {signedIn ? (
-            <dl className="account-identity-grid">
-              <div><dt>Email</dt><dd>{user!.email}</dd></div>
-              {user!.name ? <div><dt>Имя</dt><dd>{user!.name}</dd></div> : null}
-            </dl>
-          ) : (
-            <p className="dash-empty-note">
-              {connection === "loading"
-                ? "Загружаем данные аккаунта…"
-                : "Вход не подключён к этому окружению — данные аккаунта недоступны."}
-            </p>
-          )}
-        </section>
+    <main className="dash-page space-y-8">
+      <PageHeader title="Аккаунт" description="Вход, безопасность и управление данными." />
 
-        <section className="account-section account-section--security">
-          <div><ShieldCheck size={18} /><span><h2>Безопасность</h2><p>Активные входы в аккаунт.</p></span></div>
-          {sessions === null ? (
-            sessionsError
-              ? <p className="dash-field-error" role="alert">{sessionsError}</p>
-              : <p className="dash-empty-note">{isControlApiConfigured() ? "Загружаем сессии…" : "Список сессий доступен только при подключённом API."}</p>
-          ) : (
-            <>
-              {sessions.map((session, index) => (
-                <div className="account-session" key={session.id}>
-                  <span>
-                    <strong>{describeDevice(session.userAgent)}</strong>
-                    <small>Вход {formatDate(session.createdAt)}{session.ipAddress ? ` · ${session.ipAddress}` : ""}</small>
-                  </span>
-                  {index === 0 && sessions.length > 1 ? (
-                    <ActionButton tone="secondary" disabled={busy !== null} loading={busy === "revoke"} onClick={() => void revokeOthers()}>
-                      {busy === "revoke" ? "Завершаем…" : "Завершить другие сессии"}
-                    </ActionButton>
-                  ) : null}
+      <section className="space-y-4" aria-label="Данные аккаунта">
+        <SectionHeader title="Данные аккаунта" description="Основной способ связи и входа." />
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><AppIcon icon={Mail01Icon} size="sm" aria-hidden="true" />Личные данные</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {signedIn ? (
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field><FieldContent><FieldTitle>Email</FieldTitle><FieldDescription>{user!.email}</FieldDescription></FieldContent></Field>
+                {user!.name ? <Field><FieldContent><FieldTitle>Имя</FieldTitle><FieldDescription>{user!.name}</FieldDescription></FieldContent></Field> : null}
+              </div>
+            ) : (
+              <p className={typographyVariants({ role: "muted" })}>
+                {connection === "loading" ? "Загружаем данные аккаунта…" : "Вход не подключён к этому окружению — данные аккаунта недоступны."}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="space-y-4" aria-label="Безопасность">
+        <SectionHeader title="Безопасность" description="Активные входы в аккаунт и доступные меры защиты." />
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><AppIcon icon={Shield01Icon} size="sm" aria-hidden="true" />Активные сессии</CardTitle>
+            <CardDescription>Сервер сохраняет текущую сессию при завершении остальных входов.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {sessions === null ? (
+              sessionsError ? (
+                <p className="text-sm text-destructive" role="alert">{sessionsError}</p>
+              ) : isControlApiConfigured() ? (
+                <div className="space-y-3" aria-label="Загрузка сессий"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-4/5" /></div>
+              ) : (
+                <p className={typographyVariants({ role: "muted" })}>Список сессий доступен только при подключённом API.</p>
+              )
+            ) : (
+              <>
+                <div className="divide-y rounded-md border">
+                  {sessions.map((session) => (
+                    <div className="flex items-start gap-3 p-4" key={session.id}>
+                      <AppIcon icon={SmartPhone01Icon} size="sm" className="mt-0.5 text-muted-foreground" aria-hidden="true" />
+                      <div className="min-w-0"><p className="font-medium">{describeDevice(session.userAgent)}</p><p className="text-sm text-muted-foreground">Вход {formatDate(session.createdAt)}{session.ipAddress ? ` · ${session.ipAddress}` : ""}</p></div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-              {sessions.length <= 1 ? (
-                <p className="account-section__hint">Это единственный активный вход.</p>
-              ) : null}
-              {sessionsError ? <p className="dash-field-error" role="alert">{sessionsError}</p> : null}
-              {notice ? <p className="account-section__hint" role="status">{notice}</p> : null}
-            </>
-          )}
-          <div className="account-security-locks">
+                {canRevokeOthers ? (
+                  <AlertDialog open={revokeDialogOpen} onOpenChange={setRevokeDialogOpen}>
+                    <AlertDialogTrigger render={<Button variant="outline" disabled={busy !== null}>Завершить другие сессии</Button>} />
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Завершить остальные сессии?</AlertDialogTitle>
+                        <AlertDialogDescription>Все другие активные входы будут завершены. Текущая сессия останется открытой.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel disabled={busy !== null}>Отмена</AlertDialogCancel>
+                        <AsyncButton variant="destructive" loading={busy === "revoke"} onClick={() => void revokeOthers()}>Завершить сессии</AsyncButton>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                ) : <p className={typographyVariants({ role: "muted" })}>Это единственный активный вход.</p>}
+                {sessionsError ? <p className="text-sm text-destructive" role="alert">{sessionsError}</p> : null}
+                {notice ? <p className="text-sm text-muted-foreground" role="status">{notice}</p> : null}
+              </>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader><CardTitle className="flex items-center gap-2"><AppIcon icon={Key01Icon} size="sm" aria-hidden="true" />Дополнительная защита</CardTitle></CardHeader>
+          <CardContent>
             <LockedField
-              icon={<Smartphone size={16} />}
+              icon={<AppIcon icon={SmartPhone01Icon} size="sm" aria-hidden="true" />}
               label="Двухфакторная защита"
               reason="TOTP и passkey станут доступны после добавления серверного security-контракта."
             />
-            <p className="account-section__hint"><KeyRound size={14} aria-hidden="true" /> Пароль и подтверждение email уже защищают текущий вход.</p>
-          </div>
-        </section>
+          </CardContent>
+        </Card>
+      </section>
 
-        <section className="account-section">
-          <div><LogOut size={18} /><span><h2>Управление аккаунтом</h2><p>Действия применяются ко всему workspace.</p></span></div>
-          <div className="account-actions">
-            <ActionButton
-              tone="secondary"
-              disabled={!signedIn || busy !== null}
-              title={signedIn ? undefined : "Вход не подключён к этому окружению"}
-              onClick={() => void handleSignOut()}
-              loading={busy === "signout"}
-            >
-              {busy === "signout" ? <LoaderCircle className="is-spinning" size={16} /> : <LogOut size={16} />}
-              {busy === "signout" ? "Выходим…" : "Выйти"}
-            </ActionButton>
-          </div>
-          <p className="account-section__hint">
-            Удаление аккаунта и данных — по запросу через <Link href="/dashboard/help">поддержку</Link>:
-            мы отвязываем оплату и удаляем исходники вручную, чтобы ничего не потерялось безвозвратно по ошибке.
-          </p>
-        </section>
-      </div>
+      <section className="space-y-4" aria-label="Управление аккаунтом">
+        <SectionHeader title="Управление аккаунтом" description="Действия применяются ко всему workspace." />
+        <Card>
+          <CardContent className="space-y-4">
+            <AsyncButton variant="outline" disabled={!signedIn || busy !== null} loading={busy === "signout"} onClick={() => void handleSignOut()}>
+              {!busy ? <AppIcon icon={Logout01Icon} size="sm" aria-hidden="true" /> : null}
+              Выйти
+            </AsyncButton>
+            <p className={typographyVariants({ role: "muted" })}>
+              Удаление аккаунта и данных — по запросу через <Link className="underline underline-offset-4 hover:text-foreground" href="/dashboard/help">поддержку</Link>: мы отвязываем оплату и удаляем исходники вручную, чтобы ничего не потерялось безвозвратно по ошибке.
+            </p>
+          </CardContent>
+        </Card>
+      </section>
     </main>
   );
 }
