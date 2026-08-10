@@ -48,6 +48,12 @@ rollback() {
   exit "${exit_code}"
 }
 
+dump_control_api_diagnostics() {
+  echo "Control API did not become ready; recent container diagnostics follow." >&2
+  docker inspect --format='{{json .State.Health}}' 4short-control-api-1 >&2 || true
+  docker logs --tail 200 4short-control-api-1 >&2 || true
+}
+
 trap rollback ERR
 
 install -d -m 0750 -o deploy -g deploy "${release_root}" "${release_dir}"
@@ -78,8 +84,15 @@ for _ in $(seq 1 60); do
   sleep 2
 done
 
-[[ "${api_state}" == "healthy" ]]
-curl --fail --silent --show-error http://127.0.0.1:4100/health/ready >/dev/null
+if [[ "${api_state}" != "healthy" ]]; then
+  dump_control_api_diagnostics
+  exit 1
+fi
+
+if ! curl --fail --silent --show-error http://127.0.0.1:4100/health/ready >/dev/null; then
+  dump_control_api_diagnostics
+  exit 1
+fi
 
 ln -sfn "${release_dir}" "${current_link}"
 rm -f "${archive_path}"
