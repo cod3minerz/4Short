@@ -51,3 +51,13 @@ guide Cards, support action and the dashboard shell remain application UI and ar
 outside the boundary. Public Blog keeps its independent `.article-prose` MDX surface;
 there is no Typeset public use. The Help browser matrix remains blocked by the rejected
 local session and is not closed by static coverage.
+
+## Phase 9 legacy-cleanup state
+
+Phase 9 made no route, API, interaction or HVE behaviour change. It removed
+only zero-consumer Hashpix compatibility/composition sources and generic
+dashboard primitive paint, while retaining the route-scoped shell, wizard and
+specialist editor/media geometry under `app/dashboard/dashboard-geometry.css`.
+All browser QA debt from Phases 7 and 8 remains **BLOCKED**: this static cleanup
+does not provide authenticated responsive, interaction, focus or console
+evidence for any route.

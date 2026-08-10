@@ -1,6 +1,6 @@
-# Shadcn migration inventory — Phase 5 shared-foundation state
+# Shadcn migration inventory — Phase 9 legacy-cleanup state
 
-Date: 2026-08-09
+Date: 2026-08-10
 Migration branch baseline: `b110fe5`
 Target foundation (approved master-spec): `b37sSWfzM`
 
@@ -13,9 +13,9 @@ changed only the official preset foundation; product routes remain pending.
 | --- | --- | --- | --- |
 | Current shadcn foundation | `components.json`: `base-vega`, neutral, Hugeicons, CSS variables | Canonical target foundation | Applied and registry-verified |
 | Product foundation CSS | `app/globals.css` | Exact Vega semantic map, root dark mode and Geist variables | Phase 3 complete; no product legacy palette or overlay bridge remains in this foundation file |
-| Route CSS layer | `app/dashboard/dashboard.css` (5,416) | Legacy/custom feature visual implementation to migrate | Auth and Admin local visual CSS were removed in Phases 7.1 and 7.6; remaining dashboard route work is pending |
+| Product geometry layer | `app/dashboard/dashboard-geometry.css` | Scoped shell, responsive wizard and specialist media/editor geometry | Generic primitive paint and dead compatibility CSS removed in Phase 9; this is not a second primitive system |
 | Registry primitives | `components/ui` has 21 primitives | Canonical primitive location | Existing sources registry-verified after Vega apply; target gaps listed below |
-| Hashpix compositions | `components/hashpix` has 19 files | Retain only behaviour-backed compositions after primitive audit | Captured; visual ownership must be reviewed |
+| Hashpix compositions | `components/hashpix` | Retain only behaviour-backed compositions over registry primitives | Phase 9 removed zero-consumer `ActionButton`, `Field` and `InfoPanel`; `IconButton` is canonical |
 | Historic b38 migration docs and skills | migration ledgers, product UI skills, audit script | Conflicts with target preset and cannot remain active UI guidance | Conflict recorded for Phase 1 |
 | Public UI | `/` and `/blog/**` | Out of product migration scope; visual regression controls | Isolated behind `app/public-boundary.css`; HeroUI and preserved marketing typography are public-only |
 
@@ -39,11 +39,11 @@ but have no new feature consumers yet.
 | Internal product routes | 16 (after Phase 6 decommissioned `/dashboard/styles`) |
 | Public control routes | `/`, `/blog`, `/blog/[slug]` |
 | Internal HeroUI imports | 0 |
-| Files importing Lucide internally | 25 |
+| Files importing Lucide internally | 0 |
 | Raw `<button>` in internal routes/shared UI | 0 |
 | Raw `<input>` in internal routes/shared UI | 12 |
 | `text-[…]` / `rounded-[…]` occurrences | 7 |
-| Product CSS lines | 9,644 |
+| Product CSS lines | 3,981 (`globals.css` + scoped dashboard geometry + Typeset) |
 
 The absence of raw buttons or HeroUI imports is not a visual-system pass: local
 CSS and custom compositions still own much of the product geometry.
@@ -78,18 +78,18 @@ remain baseline facts until their assigned foundation/component phases.
 | --- | --- | --- | --- |
 | `PageHeader` | dashboard `PageHeading` has 5 callers; admin local header has 5 | KEEP AS CANONICAL COMPOSITION | Adopt in Phase 6 without carrying route CSS/layout assumptions |
 | `SectionHeader` | repeated settings/admin section title+description+actions role | KEEP AS CANONICAL COMPOSITION | Adopt in Phase 6; admin search remains feature content |
-| `AsyncButton` | `ActionButton` has 7 consumers and shared loading semantics | KEEP AS CANONICAL COMPOSITION | New code uses `AsyncButton`; legacy `tone` bridge is retired after route migration |
-| `IconButton` | 4 existing consumers, icon-only actions need label+tooltip | KEEP AS CANONICAL COMPOSITION | Now always uses canonical `size="icon"`; later routes replace legacy tone |
+| `AsyncButton` | registry Button loading behaviour has route consumers | KEEP AS CANONICAL COMPOSITION | Standard `variant`, `size` and `disabled`; no legacy tone bridge |
+| `IconButton` | workspace/editor icon-only actions need label+tooltip | KEEP AS CANONICAL COMPOSITION | Direct canonical composition in `components/hashpix/icon-button.tsx` |
 | `AppIcon` | Vega registry uses Hugeicons; 25 product files still import Lucide | KEEP AS CANONICAL COMPOSITION | New shared code uses adapter; feature icon migration is Phase 6 work |
 | `EmptyState` | admin local helper has 5 consumers; dashboard has separate empty markup | KEEP AS CANONICAL COMPOSITION | Generic structural state added; route adoption deferred |
 | `LoadingState` | only local admin helper (5 calls) | REPLACE WITH PRIMITIVE | Use `Skeleton` during admin migration; no project loading surface added |
 | `StatusBadge` | shared workspace domain status mapping | KEEP AS CANONICAL COMPOSITION | Retain limited semantic-to-Badge mapping |
 | `LockedField` | three product consumers, unavailable-capability contract | KEEP AS CANONICAL COMPOSITION | Refactored to registry Field anatomy; retain real lock reasons |
-| `components/hashpix/field.tsx` | no active imports | DEFER / REMOVE IN PHASE 7 | Do not use; registry `Field` is the only future field composition |
+| `components/hashpix/field.tsx` | no active imports | REMOVED — Phase 9 | Registry `Field` is the only field anatomy |
 | `ChoiceSegmented` | former one wizard consumer; wraps ToggleGroup with legacy classes | REMOVED — Phase 7.2 | Wizard now uses direct registry ToggleGroup; no active code consumer remains |
 | `HashpixDrawer` | workspace-only Sheet wrapper | REMOVED — Phase 7.3 | Direct registry Sheet now owns the workspace drawers; no consumer remains |
 | `OptionCard` | final editor choice consumer was the save-scope selector | REMOVED — Phase 7.4 | Replaced by direct registry `ToggleGroup`; no compatibility wrapper remains |
-| `InfoPanel` | one wizard consumer, legacy tone/icons/classes | DEFER | Re-evaluate against primitive/alert content during wizard migration |
+| `InfoPanel` | one wizard consumer, legacy tone/icons/classes | REMOVED — Phase 9 | Replaced with registry Card content and inline truthful status |
 
 The target preset and complete canonical primitive set remain registry-verified.
 Feature routes have not adopted these Phase 5 compositions; route migration

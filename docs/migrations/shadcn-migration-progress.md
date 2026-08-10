@@ -421,3 +421,42 @@ Target UI foundation: `b37sSWfzM`
 - See `shadcn-phase-8-typeset-audit.md`. Phase 9 is not started.
 - Codebase Memory full reindex/impact audit — pass (6,919 nodes, 16,173 edges):
   Help retains its existing controls and gains no API or behaviour dependency.
+
+## Phase 9 record — legacy cleanup
+
+- Deleted the zero-consumer `ActionButton`, legacy `Field` and `InfoPanel`
+  Hashpix sources. The two remaining icon-only consumers now use the canonical
+  `IconButton` composition over registry `Button` and `Tooltip`.
+- Replaced the wizard's last `InfoPanel` use with registry `Card` content and
+  an inline truthful destructive status; no source-validation, credit or HVE
+  logic changed.
+- Renamed the dashboard stylesheet to `dashboard-geometry.css` and removed
+  generic primitive reset/paint, dead input/status/link/media-mark rules and
+  unused legacy `LockedField`/`PanelSection` CSS. The retained stylesheet is
+  limited to shell, responsive wizard and specialist media/editor geometry.
+- Internal HeroUI and Lucide imports remain absent. Public HeroUI/Lucide and
+  public Blog `.article-prose` remain in their isolated public boundary; the
+  Phase 8 Help-only Typeset root is unchanged.
+- The Phase 7/8 authenticated browser QA debt remains **BLOCKED** and is not
+  reclassified by this static cleanup. See `shadcn-phase-9-legacy-cleanup-audit.md`.
+
+## Phase 9 verification
+
+- `git diff --check`, `npm run typecheck`, `npm run lint` and `npm run test:unit`
+  — pass (198 unit tests).
+- `npx shadcn@latest diff` — `No updates found.` `npm run audit:product-ui`
+  reports 18 preset roles and 18 shared compositions; `npm run audit:dark-surfaces`
+  passes for landing and the scoped dashboard geometry stylesheet.
+- `npm run hve:smoke:g4` — pass. HVE-G3 is not applicable: no preview,
+  renderer, timeline or HVE implementation/geometry contract changed.
+- `npm run test` — 198 unit plus 11 rendered HTML/SSR checks pass; `npm run
+  build:vercel` — pass with 27 routes.
+- Residual scans report zero active `--hp-*`, `--dash-*`, `.hp-overlay-scope`,
+  ActionButton/InfoPanel/legacy Field references, internal HeroUI imports,
+  internal Lucide imports and removed styles-route class families. The only raw
+  product controls are the native file input plus two editor colour inputs and
+  the documented RangeTimeline reference.
+- Codebase Memory full reindex/impact audit — pass (6,933 nodes, 16,176
+  edges). The source wizard retains its control API, processing and analytics
+  call paths; IconButton and RangeTimeline remain distinct registered
+  compositions. Generated graph artifacts are not committed.

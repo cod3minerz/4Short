@@ -20,7 +20,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { AppIcon } from "@/components/hashpix/app-icon";
 import { AsyncButton } from "@/components/hashpix/async-button";
-import { IconButton } from "@/components/hashpix/action-button";
+import { IconButton } from "@/components/hashpix/icon-button";
 import { StatusBadge } from "@/components/hashpix/status-badge";
 import { PageDescription, PageTitle, SectionDescription, SectionTitle } from "@/components/hashpix/typography";
 import { Badge } from "@/components/ui/badge";

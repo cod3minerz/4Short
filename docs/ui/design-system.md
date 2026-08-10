@@ -145,3 +145,12 @@ by `/` and `/blog/**`; never import those styles from `app/globals.css` or a
 product route. `docs/archive/legacy-ui-instructions/` and
 `docs/migrations/archive/` are not active instruction sources and must never
 be needed to implement new UI.
+
+### Product geometry boundary
+
+`app/dashboard/dashboard-geometry.css` is a route-scoped structural exception,
+not a visual component library. It may own only dashboard shell, responsive
+workflow placement and specialist media/timeline geometry which a registry
+primitive cannot express. Canonical primitives continue to own control
+anatomy, typography, focus, surface paint and state variants. A new generic
+button, field, card, dialog, badge or overlay rule does not belong there.

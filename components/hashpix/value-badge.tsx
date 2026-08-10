@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface ValueBadgeProps {
   children: string;
@@ -13,5 +14,5 @@ interface ValueBadgeProps {
  * user can scan current settings without opening every control.
  */
 export function ValueBadge({ children, className }: ValueBadgeProps) {
-  return <span className={cn("value-badge", className)}>{children}</span>;
+  return <Badge variant="secondary" className={cn(className)}>{children}</Badge>;
 }

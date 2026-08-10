@@ -28,7 +28,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppIcon } from "@/components/hashpix/app-icon";
 import { AsyncButton } from "@/components/hashpix/async-button";
-import { IconButton } from "@/components/hashpix/action-button";
+import { IconButton } from "@/components/hashpix/icon-button";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";

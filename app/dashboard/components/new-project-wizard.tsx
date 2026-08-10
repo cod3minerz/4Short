@@ -32,7 +32,6 @@ import { trackApp } from "../lib/track-app";
 import { useProjectProcessing } from "../lib/use-project-processing";
 import { refreshBalance, useDashboardStore } from "../store";
 import type { ClipLayout } from "../types";
-import { InfoPanel } from "@/components/hashpix/info-panel";
 import { LockedField } from "@/components/hashpix/locked-field";
 import { MediaThumb } from "@/components/hashpix/media-thumb";
 import { PlatformLogo } from "@/components/hashpix/platform-logo";
@@ -930,11 +929,7 @@ export function NewProjectWizard({
                 </div>
               ) : null}
 
-              {notEnoughCredits ? (
-                <InfoPanel tone="warning">
-                  Минут не хватает на весь диапазон. Сократите его выше или пополните баланс.
-                </InfoPanel>
-              ) : null}
+              {notEnoughCredits ? <p className="text-sm text-destructive" role="status">Минут не хватает на весь диапазон. Сократите его выше или пополните баланс.</p> : null}
             </div>
 
             <Button
@@ -991,16 +986,16 @@ export function NewProjectWizard({
             <div className="wizard-style-layout">
               <div className="wizard-style-controls">
                 {styleMode === "auto" ? (
-                  <InfoPanel
-                    tone="accent"
-                    bullets={[
-                      `Стиль «${currentStyle.name}» — субтитры и кадрирование как в сохранённом пресете`,
-                      "Длинные паузы убираются автоматически",
-                      "Место под баннер не резервируется",
-                    ]}
-                  >
-                    Рекомендуемые настройки
-                  </InfoPanel>
+                  <Card>
+                    <CardContent className="space-y-2 pt-6">
+                      <p className="text-sm font-medium">Рекомендуемые настройки</p>
+                      <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                        <li>Стиль «{currentStyle.name}» — субтитры и кадрирование как в сохранённом пресете</li>
+                        <li>Длинные паузы убираются автоматически</li>
+                        <li>Место под баннер не резервируется</li>
+                      </ul>
+                    </CardContent>
+                  </Card>
                 ) : null}
 
                 {styleMode === "preset" ? (
