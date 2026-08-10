@@ -3,24 +3,6 @@
 
 /* Public marketing owns its legacy visual contract. This stylesheet is loaded
    only by `/` and `/blog/**`; product routes receive no HeroUI CSS. */
-@font-face {
-  font-family: "Geist Variable";
-  src: url("/fonts/geist-latin-wght-normal.woff2") format("woff2");
-  font-display: swap;
-  font-style: normal;
-  font-weight: 100 900;
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2190-21FF, U+2212, U+2215;
-}
-
-@font-face {
-  font-family: "Geist Variable";
-  src: url("/fonts/geist-cyrillic-wght-normal.woff2") format("woff2");
-  font-display: swap;
-  font-style: normal;
-  font-weight: 100 900;
-  unicode-range: U+0400-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
-}
-
 .public-boundary {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -54,7 +36,8 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-  --ds-font-sans: "Geist Variable", Arial, sans-serif;
+  /* Reuse the root next/font family to avoid a second public font swap. */
+  --ds-font-sans: var(--font-geist), Arial, sans-serif;
   --ds-canvas: #000000;
   --ds-surface: #171718;
   --ds-surface-raised: #27272A;

@@ -5,7 +5,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { cn } from "@/lib/utils";
 
 const geist = Geist({ subsets: ["latin", "cyrillic"], variable: "--font-geist" });
-const geistMono = Geist_Mono({ subsets: ["latin", "cyrillic"], variable: "--font-geist-mono" });
+// Mono is used only inside the Help rich-content boundary. Keep it available
+// through next/font, without making every route preload a non-critical face.
+const geistMono = Geist_Mono({ subsets: ["latin", "cyrillic"], variable: "--font-geist-mono", preload: false });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://hashpix.ru"),

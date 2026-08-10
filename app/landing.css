@@ -138,7 +138,7 @@
   z-index: 2;
   max-width: 1180px;
   color: #fff;
-  font-family: "Geist Variable", Arial, sans-serif;
+  font-family: var(--ds-font-sans);
   font-size: clamp(42px, 4.8vw, 62px);
   font-weight: 600;
   letter-spacing: -0.045em;
