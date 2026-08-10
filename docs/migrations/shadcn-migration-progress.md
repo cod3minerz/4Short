@@ -400,3 +400,24 @@ Target UI foundation: `b37sSWfzM`
   unspecified file. The existing graph and direct source/API tracing were used
   only for impact review; a successful reindex remains a tooling evidence debt.
 - The Phase 7.4 authenticated-browser debt remains blocked and unchanged.
+
+## Phase 8 record — canonical Typeset
+
+- Replaced the incomplete legacy `app/typeset.css` with the supplied full canonical
+  shadcn/typeset implementation: headings through h6, inline semantics, GFM task
+  lists, disclosures, code, blockquotes, dividers, footnotes, math, media, figures,
+  tables, scroll wrappers and print/forced-colors behavior.
+- Added the one approved `.typeset-help` preset (Geist, Geist Mono, `16px`, `1.6`,
+  `1em`) and applied it only to a discrete semantic Help documentation article.
+  Existing Help controls and all other application UI remain outside it.
+- Preserved the public MDX Blog and its `.article-prose` unchanged. The rich-content
+  audit found no product Markdown/CMS renderer; JSON-LD `dangerouslySetInnerHTML`
+  occurrences are metadata, not prose surfaces.
+- Added an isolated unit fixture for the semantic types current Help copy does not
+  need to render. Browser access to Help remains blocked by the rejected local
+  session; the browser-control bridge also yielded only an inert blank tab for public
+  Blog despite a reachable local SSR server. No Phase 7 blocked evidence is
+  reclassified.
+- See `shadcn-phase-8-typeset-audit.md`. Phase 9 is not started.
+- Codebase Memory full reindex/impact audit — pass (6,919 nodes, 16,173 edges):
+  Help retains its existing controls and gains no API or behaviour dependency.

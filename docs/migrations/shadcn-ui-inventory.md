@@ -153,3 +153,16 @@ shell is persistent in `app/admin/layout.tsx`; `AdminConsole` and
 `admin-minimal.css` are removed. No admin-specific visual primitive was added.
 All remaining admin route evidence requires an authorized local browser session;
 see `shadcn-phase-7-6-admin-audit.md`.
+
+## Phase 8 rich-content inventory
+
+| Surface | Typography system | Boundary status |
+| --- | --- | --- |
+| `/dashboard/help` documentation article | canonical `shadcn/typeset` + `.typeset-help` | active, one explicit rich-content root |
+| `/dashboard/help` header/search/cards/support | Phase 5 semantic UI typography + registry primitives | intentionally outside Typeset |
+| `/blog/**` MDX | retained public `.article-prose` | public-only; intentionally not Typeset |
+| Other product routes | Phase 5 semantic UI typography + registry primitives | no rich-content renderer / no Typeset |
+
+The complete Typeset source lives in `app/typeset.css` and is imported once by
+`app/globals.css`; it is not a component primitive or a replacement UI typography
+system. See `shadcn-phase-8-typeset-audit.md`.

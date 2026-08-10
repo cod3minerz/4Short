@@ -212,3 +212,21 @@ Do not change `blocked` to `verified` based on static code inspection alone.
 - Result: `blocked`. The known local test-admin credential is rejected by
   Better Auth, so no successful/denied access, transitions, real data actions,
   dialog focus return, console or responsive browser evidence is claimed.
+
+---
+
+## 2026-08-10 — Phase 8 Help Typeset boundary
+
+- Route: `/dashboard/help`; change: one isolated `typeset typeset-help`
+  documentation article. The PageHeader, search Input, guide Cards, support Button
+  and shell remain outside Typeset.
+- Static/SSR evidence: local server output contains the exact Help root and heading;
+  the public `/blog/youtube-to-shorts` response retains `.article-prose`, has no
+  Typeset root and preloads Geist plus Geist Mono assets. Unit coverage includes an
+  isolated rich-content fixture for all canonical semantic elements that current Help
+  copy does not publish.
+- Result: `blocked`. The known Better Auth local credential still prevents an
+  authenticated Help browser review. Separately, the browser-control bridge returned
+  only `about:blank` while the local server was reachable, so visual light/dark,
+  360/768/1024/1440 overflow, focus-visible and console evidence is not claimed.
+  This entry does not close Phase 7 browser debt.

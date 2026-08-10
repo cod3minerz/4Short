@@ -61,6 +61,17 @@ Both are loaded by `next/font/google` with Latin and Cyrillic subsets. Rich cont
 an opt-in `typeset` surface for Markdown/MDX/documentation only, never for
 ordinary dashboard controls or dense editor UI.
 
+### Rich-content Typeset boundary
+
+`app/typeset.css` is the complete canonical shadcn/typeset stylesheet and is imported
+once from `app/globals.css` after Tailwind. `app/globals.css` defines its only product preset,
+`.typeset-help` (`Geist`, `Geist Mono`, `16px`, `1.6` leading and `1em` flow). The
+sole current product root is the semantic documentation article on `/dashboard/help`:
+`typeset typeset-help max-w-[42em]`. It does not include a page header, Card, form,
+button, navigation, sidebar or application shell. Embedded interactive content must
+use `not-typeset` or `data-not-typeset`. Public Blog is intentionally separate and
+retains public-only `.article-prose`; it must not receive Typeset.
+
 | Semantic role | Target utility direction |
 | --- | --- |
 | Page title | `text-2xl font-semibold tracking-tight` |

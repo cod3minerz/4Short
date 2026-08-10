@@ -31,7 +31,7 @@ count as browser completion evidence.
 | `/dashboard/styles` | Styles management | removed in Phase 6 | direct route returns Not Found; no navigation or internal product links remain | Removed — domain remains consumed by wizard/workspace |
 | `/dashboard/billing` | Billing | canonical billing surfaces; payment/ledger contracts preserved | static audit and pre-redirect browser DOM; authenticated browser interaction blocked | Implementation complete; full browser matrix blocked by rejected local session |
 | `/dashboard/account` | Account | canonical identity/security; real Better Auth contracts retained | static audit; authenticated session/dialog/sign-out browser evidence blocked | Implementation complete; full browser matrix blocked by rejected local session |
-| `/dashboard/help` | Help | canonical application-help shell; no Typeset | static audit; route redirect prevented browser interaction | Implementation complete; full browser matrix blocked by rejected local session; rich content deferred to Phase 8 |
+| `/dashboard/help` | Help | canonical application-help shell plus one Help-only Typeset documentation article | static audit; route redirect prevented browser interaction | Implementation complete; full browser matrix blocked by rejected local session; Phase 8 rich-content boundary is static-documentation only |
 | `/admin` | Admin shell | persistent Vega Sidebar and real access bootstrap | static contract audit; authenticated browser evidence blocked | Implementation complete; browser matrix blocked |
 | `/admin/users` | Admin | canonical table, role/status actions and confirmation | static contract audit; authenticated browser evidence blocked | Implementation complete; browser matrix blocked |
 | `/admin/workspaces` | Admin | canonical workspace Cards, plan and minutes controls | static contract audit; authenticated browser evidence blocked | Implementation complete; browser matrix blocked |
@@ -42,3 +42,12 @@ Public controls (`/`, `/blog`, `/blog/[slug]`) remain out of scope and are
 mandatory regression surfaces. Phase 0 browser evidence is desktop-only and
 representative; responsive, keyboard, overlay, error, empty and dynamic-media
 matrices are explicitly deferred to their assigned migration phases.
+
+## Phase 8 Typeset state
+
+`/dashboard/help` is the sole product `typeset` consumer: its discrete semantic
+documentation article uses `typeset typeset-help max-w-[42em]`. Page headers, search,
+guide Cards, support action and the dashboard shell remain application UI and are
+outside the boundary. Public Blog keeps its independent `.article-prose` MDX surface;
+there is no Typeset public use. The Help browser matrix remains blocked by the rejected
+local session and is not closed by static coverage.

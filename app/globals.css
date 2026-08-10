@@ -3,6 +3,17 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+@layer components {
+  .typeset-help {
+    --typeset-font-body: var(--font-geist);
+    --typeset-font-heading: var(--font-geist);
+    --typeset-font-mono: var(--font-geist-mono);
+    --typeset-size: 16px;
+    --typeset-leading: 1.6;
+    --typeset-flow: 1em;
+  }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
