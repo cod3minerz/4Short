@@ -78,7 +78,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     <div className="dash-shell dark">
       <header className="dash-topbar">
         <div className="dash-topbar__inner">
-          <Link className="dash-topbar__logo" href="/" aria-label="Hashpix — на главную"><Logo priority /></Link>
+          <Link className="dash-topbar__logo" href="/" aria-label="Hashpix — на главную"><Logo priority tone="light" /></Link>
           <div className="dash-topbar__actions">
             <Button nativeButton={false} render={<Link href="/dashboard/billing" />} variant="outline" size="sm" aria-label={availableMinutes === null ? "Баланс загружается" : `${availableMinutes} минут доступно`}>
               <span className="grid size-5 place-items-center rounded-sm bg-muted text-foreground" aria-hidden="true"><AppIcon icon={FlashIcon} size="sm" /></span>

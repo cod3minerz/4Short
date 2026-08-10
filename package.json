@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext dev",
     "predev": "npm run build:contracts",
-    "dev:api": "tsx watch services/control-api/src/server.ts",
+    "dev:api": "tsx watch --env-file=.env services/control-api/src/server.ts",
     "build": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
     "build:vercel": "next build",
     "prebuild:vercel": "npm run build:contracts",

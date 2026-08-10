@@ -92,7 +92,7 @@ function AdminAccessGate({ state, error }: { state: "unconfigured" | "denied"; e
   return (
     <main className="grid min-h-svh place-items-center bg-background p-4 text-foreground">
       <section className="grid w-full max-w-md gap-5 rounded-xl bg-card p-6 text-center ring-1 ring-foreground/10">
-        <Link className="justify-self-center" href="/" aria-label="Hashpix — на главную"><Logo priority /></Link>
+        <Link className="justify-self-center" href="/" aria-label="Hashpix — на главную"><Logo priority tone="light" /></Link>
         <AppIcon className="mx-auto text-muted-foreground" icon={ShieldUserIcon} size="lg" aria-hidden="true" />
         <div className="grid gap-2"><span className="text-xs font-medium tracking-wide text-muted-foreground">HASHPIX / ADMIN</span><PageTitle>{title}</PageTitle><p className="text-sm text-muted-foreground">{description}</p></div>
         <Button className="justify-self-center" variant="outline" nativeButton={false} render={<Link href="/dashboard" />}><AppIcon icon={ArrowLeft05Icon} size="sm" aria-hidden="true" />Вернуться в кабинет</Button>
@@ -142,7 +142,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     <AdminAccessContext.Provider value={context}>
       <SidebarProvider>
         <Sidebar collapsible="offcanvas">
-          <SidebarHeader className="gap-3"><div className="flex items-center justify-between gap-2 px-2"><Link href="/" aria-label="Hashpix — на главную"><Logo priority /></Link><Badge variant="secondary">ADMIN</Badge></div></SidebarHeader>
+          <SidebarHeader className="gap-3"><div className="flex items-center justify-between gap-2 px-2"><Link href="/" aria-label="Hashpix — на главную"><Logo priority tone="light" /></Link><Badge variant="secondary">ADMIN</Badge></div></SidebarHeader>
           <SidebarContent>
             <nav aria-label="Разделы админ-панели"><SidebarMenu>{views.map(({ id, label, href, icon }) => <SidebarMenuItem key={id}><SidebarMenuButton isActive={pathname === href} render={<Link href={href} />}><AppIcon icon={icon} size="sm" aria-hidden="true" /><span>{label}</span></SidebarMenuButton></SidebarMenuItem>)}</SidebarMenu></nav>
           </SidebarContent>
