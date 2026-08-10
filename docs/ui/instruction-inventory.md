@@ -1,6 +1,6 @@
 # Product UI instruction inventory
 
-Updated: 2026-08-09 — Phase 1
+Updated: 2026-08-10 — Phase 10 enforcement review
 
 This inventory separates visual authority from product and renderer safety
 rules. `ARCHIVE` content is historical only and must never be read to choose
@@ -40,3 +40,11 @@ new UI visuals.
 No active instruction authorizes b38/Mira, HeroUI product primitives, Manrope
 product UI typography, Lucide as the product icon standard, or a `--hp-*` /
 `--dash-*` visual layer.
+
+## Phase 10 verification
+
+`docs/ui/design-system.md`, this verification protocol, the active product UI
+and page-verification skills, and `AGENTS.md` remain the complete active UI
+instruction flow. `npm run audit:product-ui` now enforces that source of truth
+in CI. Historical Mira/b38 wording may remain only in explicitly archived
+records; it has no implementation authority.

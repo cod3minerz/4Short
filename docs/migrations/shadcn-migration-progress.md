@@ -13,13 +13,17 @@ Target UI foundation: `b37sSWfzM`
 - [x] Phase 4 — canonical primitive set
 - [x] Phase 5 — typography and shared compositions
 - [x] Phase 6 — remove `/dashboard/styles` management route
-- [ ] Phase 7 — remaining route waves, legacy cleanup and final verification
+- [x] Phase 7 — route implementation and legacy cleanup (authenticated browser
+  evidence remains blocked; see the final acceptance ledger)
   - [x] Phase 7.1 — auth (`/sign-in`, `/sign-up`, `/forgot-password`)
-  - [ ] Phase 7.2 — implementation committed; final browser evidence is blocked
-  - [ ] Phase 7.3 — Project Workspace implementation committed; real API/state evidence remains blocked
-  - [ ] Phase 7.4 — Clip Editor implementation committed; authenticated browser evidence remains blocked
-  - [ ] Phase 7.5 — Billing, Account and Help implementation committed; authenticated browser evidence remains blocked
-  - [ ] Phase 7.6 — Admin implementation committed; authenticated browser and Codebase Memory reindex evidence remain blocked
+  - [x] Phase 7.2 — implementation complete; final browser evidence is blocked
+  - [x] Phase 7.3 — Project Workspace implementation complete; real API/state evidence remains blocked
+  - [x] Phase 7.4 — Clip Editor implementation complete; authenticated browser evidence remains blocked
+  - [x] Phase 7.5 — Billing, Account and Help implementation complete; authenticated browser evidence remains blocked
+  - [x] Phase 7.6 — Admin implementation complete; authenticated browser evidence remains blocked
+- [x] Phase 8 — rich-content Typeset boundary
+- [x] Phase 9 — legacy product UI cleanup
+- [x] Phase 10 — enforcement and final architecture gate
 
 ## Phase 7.6 record
 
@@ -460,3 +464,44 @@ Target UI foundation: `b37sSWfzM`
   edges). The source wizard retains its control API, processing and analytics
   call paths; IconButton and RangeTimeline remain distinct registered
   compositions. Generated graph artifacts are not committed.
+
+## Phase 10 record — enforcement and final gate
+
+- `npm run audit:product-ui` is now a deterministic CI architecture gate. It
+  validates the exact Vega foundation, registry-owned primitive layer, Geist
+  foundation, public HeroUI boundary, semantic heading/Typeset boundaries,
+  legacy-import/token absence, raw-control and arbitrary-value exceptions,
+  primitive geometry exceptions and the scoped dashboard geometry checksum.
+- ESLint forbids HeroUI, Lucide, archived UI, retired Hashpix compatibility
+  sources and direct Base UI/Radix anatomy in dashboard, admin, auth and shared
+  product compositions. Public landing/blog remain intentionally outside that
+  restriction.
+- `app/public-boundary.css` is the sole entry for HeroUI and landing CSS;
+  `app/layout.tsx` no longer globally imports a public stylesheet. The removed
+  zero-consumer dashboard `PageHeading` no longer creates a duplicate heading
+  implementation.
+- All remaining specialist controls and exact layout/geometry exceptions are
+  versioned in `scripts/product-ui-allowlist.mjs` and explained in
+  `docs/ui/product-ui-allowlist.md`; no wildcard exception exists.
+
+## Phase 10 status
+
+**ARCHITECTURALLY COMPLETE WITH BLOCKED VISUAL EVIDENCE.** The final technical,
+registry, static architecture and HVE-G4 gates are recorded in
+`shadcn-final-acceptance.md`. Authenticated browser route/state evidence from
+Phases 7/8 remains blocked by the rejected real local Better Auth credential;
+no bypass or fabricated production session was introduced.
+
+## Phase 10 verification
+
+- `git diff --check`, `npm run audit:product-ui`, `npm run audit:dark-surfaces`
+  and `npx shadcn@latest diff` — pass; the registry reports `No updates found.`
+- `npm run typecheck`, `npm run lint`, `npm run test:unit` (198 pass), `npm run
+  test` (198 unit + rendered HTML/SSR checks), `npm run build` and `npm run
+  build:vercel` — pass. The Vercel build produces the expected 27 routes.
+- `npm run hve:smoke:g4` — pass. HVE-G3 is not applicable: this phase changes
+  enforcement, documentation and a zero-consumer heading only; it does not
+  change preview, renderer, ClipEDL, timeline or media geometry contracts.
+- Full Codebase Memory reindex/impact audit — pass (6,981 nodes, 16,353 edges).
+  Dashboard control/API and editor/HVE graph paths remain present. Generated
+  Codebase Memory artifacts are excluded from the migration commit.

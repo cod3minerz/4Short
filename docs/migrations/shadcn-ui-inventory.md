@@ -14,23 +14,20 @@ changed only the official preset foundation; product routes remain pending.
 | Current shadcn foundation | `components.json`: `base-vega`, neutral, Hugeicons, CSS variables | Canonical target foundation | Applied and registry-verified |
 | Product foundation CSS | `app/globals.css` | Exact Vega semantic map, root dark mode and Geist variables | Phase 3 complete; no product legacy palette or overlay bridge remains in this foundation file |
 | Product geometry layer | `app/dashboard/dashboard-geometry.css` | Scoped shell, responsive wizard and specialist media/editor geometry | Generic primitive paint and dead compatibility CSS removed in Phase 9; this is not a second primitive system |
-| Registry primitives | `components/ui` has 21 primitives | Canonical primitive location | Existing sources registry-verified after Vega apply; target gaps listed below |
+| Registry primitives | `components/ui` has 27 primitives | Canonical primitive location | Complete Vega set; registry-verified after Phase 4 |
 | Hashpix compositions | `components/hashpix` | Retain only behaviour-backed compositions over registry primitives | Phase 9 removed zero-consumer `ActionButton`, `Field` and `InfoPanel`; `IconButton` is canonical |
 | Historic b38 migration docs and skills | migration ledgers, product UI skills, audit script | Conflicts with target preset and cannot remain active UI guidance | Conflict recorded for Phase 1 |
 | Public UI | `/` and `/blog/**` | Out of product migration scope; visual regression controls | Isolated behind `app/public-boundary.css`; HeroUI and preserved marketing typography are public-only |
 
 ## Current primitive baseline
 
-Present: `AlertDialog`, `Badge`, `Button`, `Dialog`, `DropdownMenu`, `Field`,
-`Input`, `Label`, `Popover`, `Progress`, `ScrollArea`, `Select`, `Separator`,
-`Sheet`, `Skeleton`, `Switch`, `Table`, `Textarea`, `ToggleGroup`, `Toggle`,
-`Tooltip`.
+Present: `AlertDialog`, `Badge`, `Button`, `Card`, `Checkbox`, `Dialog`,
+`DropdownMenu`, `Field`, `Input`, `InputOTP`, `Label`, `Popover`, `Progress`,
+`ScrollArea`, `Select`, `Separator`, `Sheet`, `Sidebar`, `Skeleton`, `Slider`,
+`Switch`, `Table`, `Tabs`, `Textarea`, `Toggle`, `ToggleGroup` and `Tooltip`.
 
-The canonical minimal set is complete: `Card`, `Checkbox`, `Tabs`, `Slider`,
-`InputOTP`, and `Sidebar` were generated from the Vega registry in Phase 4.
-`hooks/use-mobile.ts` is the matching registry helper for Sidebar and
-`input-otp` is its only new runtime dependency. These primitives are installed
-but have no new feature consumers yet.
+The canonical minimal set is complete. `hooks/use-mobile.ts` is the matching
+registry helper for Sidebar and `input-otp` is its only new runtime dependency.
 
 ## Static baseline metrics
 
@@ -166,3 +163,19 @@ see `shadcn-phase-7-6-admin-audit.md`.
 The complete Typeset source lives in `app/typeset.css` and is imported once by
 `app/globals.css`; it is not a component primitive or a replacement UI typography
 system. See `shadcn-phase-8-typeset-audit.md`.
+
+## Phase 10 enforcement state
+
+The canonical foundation is now protected by `npm run audit:product-ui` and
+the product-only ESLint import restrictions. The gate verifies 27
+registry-owned Vega primitives, exact semantic maps and radius, Geist/Geist
+Mono root configuration, Hugeicons product ownership, semantic heading and
+Typeset boundaries, and public HeroUI isolation. It has no feature-specific
+visual workaround mode.
+
+Final static metrics are recorded in `shadcn-final-acceptance.md`: no generic
+raw product button/text control, legacy import/token/overlay-scope, internal
+Lucide/HeroUI import, arbitrary typography/radius or duplicate generic
+PageHeading remains. Three native inputs (one file, two colour) and 16 exact
+primitive geometry exceptions remain documented specialist surfaces. The
+dashboard stylesheet is checksum-protected as structural/media geometry only.

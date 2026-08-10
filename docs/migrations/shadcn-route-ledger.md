@@ -61,3 +61,19 @@ specialist editor/media geometry under `app/dashboard/dashboard-geometry.css`.
 All browser QA debt from Phases 7 and 8 remains **BLOCKED**: this static cleanup
 does not provide authenticated responsive, interaction, focus or console
 evidence for any route.
+
+## Phase 10 final route state
+
+The build manifest contains 27 routes. The 16 retained product routes in the
+table above are implementation-migrated and covered by the final static,
+registry, lint/type/unit/SSR/build and HVE-G4 gates. `/dashboard/styles` is
+intentionally removed and verified as a normal 404. Public `/`, `/blog` and
+`/blog/[slug]` are unchanged public-boundary regression surfaces.
+
+Route-level browser evidence remains exactly as classified in the table:
+auth flows retain their recorded real browser checks; the dashboard, workspace,
+editor, billing/account/help and five admin routes remain **BLOCKED WITH
+EXTERNAL/ENVIRONMENT REASON** where authenticated state fixtures are required.
+The local Better Auth test credential is rejected, so no final browser PASS,
+console/overflow or accessibility interaction claim is added without real
+evidence. See `shadcn-final-acceptance.md` for the complete final gate.

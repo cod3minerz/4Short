@@ -16,6 +16,14 @@ Classify every match as a target-compliant implementation, functional
 non-visual rule, intentional historical/archive reference, or unresolved
 conflict. An archive match is never a reason to restore legacy behaviour.
 
+`npm run audit:product-ui` is the required executable version of this review.
+It verifies the Vega preset/theme/font/icon foundation, registry ownership,
+public HeroUI boundary, semantic headings, Typeset boundary, raw-control and
+arbitrary-value exceptions, and the scoped dashboard geometry checksum. CI
+runs it with `npm run audit:dark-surfaces`; any new unclassified exception
+fails before merge. See `docs/ui/product-ui-allowlist.md` for the reviewed
+exception register.
+
 ## Preset and component audit
 
 After the foundation phase, prove that `components.json`, theme variables,
@@ -41,6 +49,12 @@ Review at least one normal page, complex form, settings page, card surface,
 dialog, dropdown/popover, destructive confirmation, empty state and dark-mode
 surface. HVE/editor changes also run their applicable HVE gates; an
 `INSUFFICIENT` gate remains a blocker, never a pass.
+
+When an authenticated browser fixture is unavailable, record the exact
+environmental cause and retain the route as **BLOCKED WITH EXTERNAL/
+ENVIRONMENT REASON**. Static, SSR, registry and accessibility-source evidence
+can establish architectural completion, but cannot be relabelled as browser
+PASS.
 
 ## Phase acceptance
 

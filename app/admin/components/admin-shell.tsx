@@ -14,6 +14,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { usePathname } from "next/navigation"
 
 import { AppIcon } from "@/components/hashpix/app-icon"
+import { PageTitle } from "@/components/hashpix/typography"
 import { Logo } from "@/app/components/logo"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -93,7 +94,7 @@ function AdminAccessGate({ state, error }: { state: "unconfigured" | "denied"; e
       <section className="grid w-full max-w-md gap-5 rounded-xl bg-card p-6 text-center ring-1 ring-foreground/10">
         <Link className="justify-self-center" href="/" aria-label="Hashpix — на главную"><Logo priority /></Link>
         <AppIcon className="mx-auto text-muted-foreground" icon={ShieldUserIcon} size="lg" aria-hidden="true" />
-        <div className="grid gap-2"><span className="text-xs font-medium tracking-wide text-muted-foreground">HASHPIX / ADMIN</span><h1 className="font-heading text-xl font-semibold">{title}</h1><p className="text-sm text-muted-foreground">{description}</p></div>
+        <div className="grid gap-2"><span className="text-xs font-medium tracking-wide text-muted-foreground">HASHPIX / ADMIN</span><PageTitle>{title}</PageTitle><p className="text-sm text-muted-foreground">{description}</p></div>
         <Button className="justify-self-center" variant="outline" nativeButton={false} render={<Link href="/dashboard" />}><AppIcon icon={ArrowLeft05Icon} size="sm" aria-hidden="true" />Вернуться в кабинет</Button>
       </section>
     </main>

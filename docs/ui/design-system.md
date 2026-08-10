@@ -154,3 +154,20 @@ workflow placement and specialist media/timeline geometry which a registry
 primitive cannot express. Canonical primitives continue to own control
 anatomy, typography, focus, surface paint and state variants. A new generic
 button, field, card, dialog, badge or overlay rule does not belong there.
+
+## Enforcement boundary
+
+`npm run audit:product-ui` is the deterministic architecture gate for this
+contract and runs in CI. Its versioned, narrow exceptions live in
+`scripts/product-ui-allowlist.mjs`, with their product rationale in
+`docs/ui/product-ui-allowlist.md`. The gate rejects a second product UI
+foundation, raw generic controls, unapproved Typeset roots, legacy tokens,
+unreviewed primitive geometry overrides, and visual arbitrary values outside
+that allowlist.
+
+The gate is intentionally not a feature-layout linter. Specialist upload,
+colour, preview, media and timeline controls remain possible only when their
+owner, category and reason are explicitly documented. Changing
+`dashboard-geometry.css` is similarly a deliberate architecture decision: its
+reviewed checksum must be updated together with the allowlist and evidence,
+never silently through a generic route patch.
