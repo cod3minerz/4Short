@@ -3,7 +3,7 @@
 ## Canonical source of truth
 
 The product UI target is shadcn preset `b37sSWfzM`: **Vega**, **Hugeicons** and
-**Geist**. This document is the active visual contract for sign-in, dashboard,
+**Onest**. This document is the active visual contract for sign-in, dashboard,
 editor, admin and product overlays.
 
 Precedence for product UI decisions:
@@ -56,7 +56,7 @@ system; they remain migration debt until their assigned phases.
 
 ## Typography
 
-Application UI uses `--font-geist`; monospace content uses `--font-geist-mono`.
+Application UI uses `--font-onest`; monospace content uses `--font-geist-mono`.
 Both are loaded by `next/font/google` with Latin and Cyrillic subsets. Rich content is
 an opt-in `typeset` surface for Markdown/MDX/documentation only, never for
 ordinary dashboard controls or dense editor UI.
@@ -65,7 +65,7 @@ ordinary dashboard controls or dense editor UI.
 
 `app/typeset.css` is the complete canonical shadcn/typeset stylesheet and is imported
 once from `app/globals.css` after Tailwind. `app/globals.css` defines its only product preset,
-`.typeset-help` (`Geist`, `Geist Mono`, `16px`, `1.6` leading and `1em` flow). The
+`.typeset-help` (`Onest`, `Geist Mono`, `16px`, `1.6` leading and `1em` flow). The
 sole current product root is the semantic documentation article on `/dashboard/help`:
 `typeset typeset-help max-w-[42em]`. It does not include a page header, Card, form,
 button, navigation, sidebar or application shell. Embedded interactive content must

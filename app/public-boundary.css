@@ -37,7 +37,7 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
   /* Reuse the root next/font family to avoid a second public font swap. */
-  --ds-font-sans: var(--font-geist), Arial, sans-serif;
+  --ds-font-sans: var(--font-onest), Arial, sans-serif;
   --ds-canvas: #000000;
   --ds-surface: #171718;
   --ds-surface-raised: #27272A;

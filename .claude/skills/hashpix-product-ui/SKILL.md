@@ -1,13 +1,13 @@
 ---
 name: hashpix-product-ui
-description: Build, change, or review Hashpix product UI using the canonical shadcn `b37sSWfzM` target (Vega, Hugeicons, Geist) without a competing visual system.
+description: Build, change, or review Hashpix product UI using the canonical shadcn `b37sSWfzM` target (Vega, Hugeicons, Onest) without a competing visual system.
 ---
 
 # Hashpix Product UI
 
 Preserve Hashpix information architecture and working flows. Its internal visual
 system is the approved shadcn target: preset `b37sSWfzM`, Vega, Hugeicons and
-Geist. Hashpix does not own a second colour, radius, focus, icon or control
+Onest. Hashpix does not own a second colour, radius, focus, icon or control
 system.
 
 ## Read first
@@ -36,7 +36,7 @@ system.
   primitive.
 - Use Hugeicons for new internal product icons. Existing icon imports are a
   Phase 2 migration inventory, not permission to add more Lucide icons.
-- Use Geist for application UI. `typeset` is opt-in rich-content typography,
+- Use Onest for application UI. `typeset` is opt-in rich-content typography,
   never dashboard/editor control typography.
 - Do not copy competitor branding, screens, copy, or interaction details.
   Adopt a verified interaction principle only when it fits Hashpix HVE.

@@ -15,6 +15,6 @@ reporting a page as ready, run the evidence-based process in
 `.claude/skills/hashpix-page-verification/SKILL.md`.
 
 The product UI source of truth is the target shadcn preset `b37sSWfzM` (Vega,
-Hugeicons, Geist) and the documents above. Archived b38/Mira material is
+Hugeicons, Onest) and the documents above. Archived b38/Mira material is
 historical migration evidence only. The public landing remains outside the
 product UI migration.

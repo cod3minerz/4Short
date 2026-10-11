@@ -41,7 +41,7 @@ test("typeset keeps the full canonical rich-content contract and Help-only prese
     assert.match(typeset, new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   }
 
-  assert.match(globals, /\.typeset-help\s*\{[\s\S]*?--typeset-font-body: var\(--font-geist\)/);
+  assert.match(globals, /\.typeset-help\s*\{[\s\S]*?--typeset-font-body: var\(--font-onest\)/);
   assert.match(globals, /--typeset-font-mono: var\(--font-geist-mono\)/);
   assert.match(globals, /--typeset-size: 16px/);
   assert.match(globals, /--typeset-leading: 1\.6/);

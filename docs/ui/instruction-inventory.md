@@ -9,7 +9,7 @@ new UI visuals.
 | Source | Classification | Phase 1 disposition |
 | --- | --- | --- |
 | `AGENTS.md` | MIGRATE | Names only current UI documentation, target preset and verification flow. |
-| `docs/ui/design-system.md` | MIGRATE | Canonical visual source: b37sSWfzM / Vega / Hugeicons / Geist. |
+| `docs/ui/design-system.md` | MIGRATE | Canonical visual source: b37sSWfzM / Vega / Hugeicons / Onest. |
 | `docs/ui/verification-protocol.md` | MIGRATE | Canonical verification source. |
 | `.claude/skills/hashpix-product-ui` | MIGRATE | Defers visual decisions to canonical docs; preserves product/HVE boundaries. |
 | `.claude/skills/hashpix-page-verification` | MIGRATE | Verifies the target system and real interactions. |

@@ -113,7 +113,7 @@ const productSources = await Promise.all(productFiles.map(async (file) => [file,
 if (componentsJson.style !== "base-vega") failures.push("components.json must use base-vega.");
 if (componentsJson.iconLibrary !== "hugeicons") failures.push("components.json must use Hugeicons.");
 if (componentsJson.tailwind?.baseColor !== "neutral" || componentsJson.tailwind?.cssVariables !== true) failures.push("components.json must retain neutral CSS-variable foundation.");
-if (!/Geist\(/.test(layout) || !/Geist_Mono\(/.test(layout) || !/latin/.test(layout) || !/cyrillic/.test(layout) || !/--font-geist-mono/.test(layout)) failures.push("Root layout must load Geist and Geist Mono with Cyrillic coverage.");
+if (!/Onest\(/.test(layout) || !/Geist_Mono\(/.test(layout) || !/latin/.test(layout) || !/cyrillic/.test(layout) || !/--font-onest/.test(layout) || !/--font-geist-mono/.test(layout)) failures.push("Root layout must load Onest and Geist Mono with Cyrillic coverage.");
 if (/landing\.css/.test(layout)) failures.push("Root layout must not import public landing CSS.");
 
 for (const [scope, expected] of Object.entries(requiredTheme)) {

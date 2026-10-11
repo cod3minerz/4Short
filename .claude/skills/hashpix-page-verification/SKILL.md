@@ -28,7 +28,7 @@ and use a safe test account before release. Do not mark the route verified.
 
 1. Structural: intended shell, no overflow, sensible container width, correct
    panel collapse at 360/768/1024/1440 px.
-2. System: only canonical shadcn `b37sSWfzM` (Vega/Hugeicons/Geist) roles and
+2. System: only canonical shadcn `b37sSWfzM` (Vega/Hugeicons/Onest) roles and
    registry primitives; controls use the target preset's radius, focus ring and
    variants; no `--hp-*`, `--dash-*`, Mira, Manrope, Lucide-as-standard or
    HeroUI product-control override. A media card contains a real retained

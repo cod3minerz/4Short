@@ -40,7 +40,7 @@ described as ready. The companion procedures are
   `ActionButton` composition.
 - [ ] All icon-only actions use a named shadcn button and `aria-label`.
 - [ ] Choice rows use a semantic selector; they are not decorative cards.
-- [ ] New controls use only canonical `b37sSWfzM` (Vega/Hugeicons/Geist)
+- [ ] New controls use only canonical `b37sSWfzM` (Vega/Hugeicons/Onest)
   semantic roles; no `--hp-*`, `--dash-*`, legacy library or local primitive
   bridge is introduced.
 - [ ] Primary and neutral actions use their target preset variants without
@@ -222,7 +222,7 @@ Do not change `blocked` to `verified` based on static code inspection alone.
   and shell remain outside Typeset.
 - Static/SSR evidence: local server output contains the exact Help root and heading;
   the public `/blog/youtube-to-shorts` response retains `.article-prose`, has no
-  Typeset root and preloads Geist plus Geist Mono assets. Unit coverage includes an
+  Typeset root and preloads the then-canonical sans and Geist Mono assets. Unit coverage includes an
   isolated rich-content fixture for all canonical semantic elements that current Help
   copy does not publish.
 - Result: `blocked`. The known Better Auth local credential still prevents an
