@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Dropdown, Label, Link, Modal } from "@heroui/react";
-import { ArrowDown01Icon, FlashIcon, FolderOpenIcon, HelpCircleIcon, Home01Icon, Menu01Icon, SidebarLeft01Icon, UserIcon } from "@hugeicons/core-free-icons";
+import { ArrowDown01Icon, Cancel01Icon, FlashIcon, FolderOpenIcon, HelpCircleIcon, Home01Icon, Menu01Icon, SidebarLeft01Icon, UserIcon } from "@hugeicons/core-free-icons";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AppIcon } from "@/components/hashpix/app-icon";
@@ -48,7 +48,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <Button variant="ghost" size="sm" isIconOnly aria-label={drawer ? "Закрыть меню" : narrow ? "Развернуть меню" : "Свернуть меню"} onPress={() => {
           if (drawer) setMobileOpen(false);
           else setCollapsed(!collapsed);
-        }}><AppIcon icon={SidebarLeft01Icon} size="md" /></Button>
+        }}><AppIcon icon={drawer ? Cancel01Icon : SidebarLeft01Icon} size="md" /></Button>
       </div>
       <Dropdown>
         <Button className="hp-account" variant="ghost" aria-label="Открыть меню аккаунта">

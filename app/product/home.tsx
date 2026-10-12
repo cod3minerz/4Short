@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, FieldError, InputGroup, Link, Modal, TextField } from "@heroui/react";
-import { FolderOpenIcon, Link01Icon, Upload01Icon } from "@hugeicons/core-free-icons";
+import { Cancel01Icon, FolderOpenIcon, Link01Icon, Upload01Icon } from "@hugeicons/core-free-icons";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -9,10 +9,10 @@ import { AppIcon } from "@/components/hashpix/app-icon";
 import { ControlApiError, createMultipartUpload, createSourcePreview, listSources, type ApiSource } from "../dashboard/lib/control-api";
 import { useDashboardStore } from "../dashboard/store";
 
-export function ProductHome() {
+export function ProductHome({ initialSource = "" }: { initialSource?: string }) {
   const router = useRouter();
   const { projects, connection } = useDashboardStore();
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(initialSource);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [sources, setSources] = useState<ApiSource[]>([]);
@@ -72,7 +72,7 @@ export function ProductHome() {
         <Modal isOpen={sourcePicker} onOpenChange={setSourcePicker}>
           <Button variant="ghost" isDisabled={!connected || pending} onPress={() => void openSources()}><AppIcon icon={FolderOpenIcon} size="md" />Из источников</Button>
           <Modal.Backdrop><Modal.Container><Modal.Dialog>
-            <Modal.Header><Modal.Heading>Ранее импортированные источники</Modal.Heading><Modal.CloseTrigger /></Modal.Header>
+            <Modal.Header><Modal.Heading>Ранее импортированные источники</Modal.Heading><Modal.CloseTrigger aria-label="Закрыть"><AppIcon icon={Cancel01Icon} size="md" /></Modal.CloseTrigger></Modal.Header>
             <Modal.Body>{sources.length ? sources.map((source) => <Button key={source.id} variant="ghost" onPress={() => { setSourcePicker(false); router.push(`/dashboard/new?sourceId=${encodeURIComponent(source.id)}`); }}>{String(source.metadata.title || source.providerRef || "Видео")}</Button>) : <p className="hp-empty">Здесь появятся источники с готовой транскрипцией.</p>}</Modal.Body>
           </Modal.Dialog></Modal.Container></Modal.Backdrop>
         </Modal>

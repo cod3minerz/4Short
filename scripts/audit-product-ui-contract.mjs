@@ -23,7 +23,7 @@ for (const path of productFiles) {
   const source = await read(path);
   if (/from\s*["'][^"']*(?:components\/ui\/|@base-ui\/|@radix-ui\/)/.test(source)) legacy.push(path);
   if (!checked.includes(path)) continue;
-  if (/from\s*["'][^"']*(?:components\/ui\/|@base-ui\/|@radix-ui\/|lucide-react)/.test(source)) failures.push(`${path}: non-HeroUI control/icon import`);
+  if (/from\s*["'][^"']*(?:components\/ui\/|@base-ui\/|@radix-ui\/|lucide-react|react-icons|@gravity-ui\/icons|@tabler\/icons)/.test(source)) failures.push(`${path}: non-HeroUI control or non-Hugeicons import`);
   if (/<(?:button|select|dialog)\b/.test(source)) failures.push(`${path}: raw interactive control`);
   for (const match of source.matchAll(/<input\b[^>]*>/g)) {
     if (!/type="(?:file|color)"/.test(match[0])) failures.push(`${path}: raw generic input`);

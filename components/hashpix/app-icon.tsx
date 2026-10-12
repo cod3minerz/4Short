@@ -15,7 +15,7 @@ type AppIconProps = Omit<ComponentProps<typeof HugeiconsIcon>, "icon" | "size"> 
 }
 
 /**
- * Product-level Hugeicons contract: shared sizes and the Vega two-pixel
+ * Product-level Hugeicons contract: shared sizes and a consistent two-pixel
  * stroke. It has no colour or visual variant system.
  */
 function AppIcon({
