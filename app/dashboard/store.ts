@@ -51,6 +51,11 @@ let state: DashboardStore = serverState;
 let hydrated = false;
 const listeners = new Set<() => void>();
 
+function isLoopbackDevelopment() {
+  if (process.env.NODE_ENV !== "development" || typeof window === "undefined") return false;
+  return ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+}
+
 function emit() {
   listeners.forEach((listener) => listener());
 }
@@ -139,47 +144,40 @@ function projectFromApi(item: Awaited<ReturnType<typeof listProjects>>["items"][
   };
 }
 
+function activatePreview() {
+  let parsed: Pick<DashboardStore, "styles" | "defaultStyleId"> | null = null;
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    parsed = raw ? JSON.parse(raw) as Pick<DashboardStore, "styles" | "defaultStyleId"> : null;
+  } catch {
+    // A corrupt local preview cache should fall back to the built-in examples.
+  }
+
+  replace({
+    ...serverState,
+    styles: parsed?.styles?.length ? parsed.styles : serverState.styles,
+    defaultStyleId: parsed?.defaultStyleId ?? serverState.defaultStyleId,
+    connection: "preview",
+    balanceSeconds: previewBalanceSeconds,
+    planCode: previewPlanCode,
+    storage: {
+      planCode: previewPlanCode,
+      usedBytes: 0,
+      limitBytes: productPlans[previewPlanCode].storageBytes,
+      availableBytes: productPlans[previewPlanCode].storageBytes,
+      usagePercent: 0,
+      blocked: false,
+      byKind: {},
+    },
+    projects: previewProjects,
+  });
+}
+
 async function hydrate() {
   if (hydrated || typeof window === "undefined") return;
   hydrated = true;
   if (!isControlApiConfigured()) {
-    try {
-      const raw = window.localStorage.getItem(storageKey);
-      const parsed = raw ? JSON.parse(raw) as Pick<DashboardStore, "styles" | "defaultStyleId"> : null;
-      replace({
-        ...serverState,
-        styles: parsed?.styles?.length ? parsed.styles : serverState.styles,
-        defaultStyleId: parsed?.defaultStyleId ?? serverState.defaultStyleId,
-        connection: "preview",
-        balanceSeconds: previewBalanceSeconds,
-        planCode: previewPlanCode,
-        storage: {
-          planCode: previewPlanCode,
-          usedBytes: 0,
-          limitBytes: productPlans[previewPlanCode].storageBytes,
-          availableBytes: productPlans[previewPlanCode].storageBytes,
-          usagePercent: 0,
-          blocked: false,
-          byKind: {},
-        },
-      });
-    } catch {
-      replace({
-        ...serverState,
-        connection: "preview",
-        balanceSeconds: previewBalanceSeconds,
-        planCode: previewPlanCode,
-        storage: {
-          planCode: previewPlanCode,
-          usedBytes: 0,
-          limitBytes: productPlans[previewPlanCode].storageBytes,
-          availableBytes: productPlans[previewPlanCode].storageBytes,
-          usagePercent: 0,
-          blocked: false,
-          byKind: {},
-        },
-      });
-    }
+    activatePreview();
     return;
   }
   // A signed-out visitor should still see the dashboard shell, just without
@@ -192,6 +190,15 @@ async function hydrate() {
   // still-signed-in user — that user must not be reported as `user: null`.
   const session = await getSession().catch(() => null);
   const user = session?.user ? { name: session.user.name ?? null, email: session.user.email } : null;
+
+  // Let developers inspect product routes without creating an account. This is
+  // a read-only local preview: skip workspace-scoped API calls and keep the
+  // existing sample data. It is unavailable in production builds and on
+  // non-loopback hosts; real API authorization remains unchanged.
+  if (!user && isLoopbackDevelopment()) {
+    activatePreview();
+    return;
+  }
 
   try {
     // Nothing else here can succeed without a workspace: every other
