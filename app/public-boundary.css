@@ -1,8 +1,7 @@
-@import "@heroui/styles";
 @import "./landing.css";
 
 /* Public marketing owns its legacy visual contract. This stylesheet is loaded
-   only by `/` and `/blog/**`; product routes receive no HeroUI CSS. */
+   only by `/` and `/blog/**`. HeroUI anatomy is shared; product tokens are scoped. */
 .public-boundary {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);

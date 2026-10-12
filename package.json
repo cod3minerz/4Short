@@ -82,6 +82,7 @@
     "next": "^16.2.12",
     "postgres": "^3.4.7",
     "react": "19.2.6",
+    "react-aria": "3.48.0",
     "react-dom": "19.2.6",
     "react-hook-form": "^7.62.0",
     "rehype-slug": "^6.0.0",
