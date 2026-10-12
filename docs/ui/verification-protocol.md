@@ -1,64 +1,10 @@
-# Product UI verification protocol
-
-Use this protocol with `docs/ui/design-system.md` after every product UI phase.
-A green build is necessary but never visual-system acceptance evidence.
-
-## Static system audit
-
-Search active instructions and changed product code for legacy leaks:
-
-- b38/Mira, HeroUI product controls, Manrope product typography, Lucide as the
-  product icon standard;
-- `--hp-*`, `--dash-*`, legacy primitive paths and duplicated UI recipes;
-- raw primitive substitutes and arbitrary typography/geometry values.
-
-Classify every match as a target-compliant implementation, functional
-non-visual rule, intentional historical/archive reference, or unresolved
-conflict. An archive match is never a reason to restore legacy behaviour.
-
-`npm run audit:product-ui` is the required executable version of this review.
-It verifies the Vega preset/theme/font/icon foundation, registry ownership,
-public HeroUI boundary, semantic headings, Typeset boundary, raw-control and
-arbitrary-value exceptions, and the scoped dashboard geometry checksum. CI
-runs it with `npm run audit:dark-surfaces`; any new unclassified exception
-fails before merge. See `docs/ui/product-ui-allowlist.md` for the reviewed
-exception register.
-
-## Preset and component audit
-
-After the foundation phase, prove that `components.json`, theme variables,
-fonts, icon library, base style and generated primitives match `b37sSWfzM`.
-For each core primitive, inventory variants, sizes and local `className`
-overrides. A local layout adjustment is valid only when it does not redefine
-primitive geometry, typography, colour, radius or focus behaviour.
-
-## Typography and semantic audit
-
-Inventory page title, section title, card title, label, body, muted and caption
-roles across changed surfaces. Flag multiple visual recipes for the same role.
-Verify that `typeset` appears only on rich-content roots.
-
-## Browser evidence
-
-For every migrated route, capture the route/state matrix in
-`docs/verification/product-page-review.md` at 360, 768, 1024 and 1440 px.
-Record URL, auth/data state, screenshot, overflow computation, console errors,
-keyboard/focus behaviour, overlays and controls actually exercised.
-
-Review at least one normal page, complex form, settings page, card surface,
-dialog, dropdown/popover, destructive confirmation, empty state and dark-mode
-surface. HVE/editor changes also run their applicable HVE gates; an
-`INSUFFICIENT` gate remains a blocker, never a pass.
-
-When an authenticated browser fixture is unavailable, record the exact
-environmental cause and retain the route as **BLOCKED WITH EXTERNAL/
-ENVIRONMENT REASON**. Static, SSR, registry and accessibility-source evidence
-can establish architectural completion, but cannot be relabelled as browser
-PASS.
-
-## Phase acceptance
-
-Do not mark a phase complete until its changed code has relevant lint/type/test
-coverage, the static audit is classified, browser evidence exists, active
-instruction paths name only the target system, and no product control promises
-a backend/renderer capability that does not exist.
+# Product UI verification — Opus rebuild
+Use opus-rebuild.md and design-system.md.
+Every wave runs changed-area lint, typecheck, relevant tests, git diff --check and scoped architecture audit. Name remaining consumers; scoped PASS is not final PASS. Commit independently verified waves.
+Compare reference/render at normalized scale: structure, density, typography, gaps, surfaces, radii, borders and exercised states.
+Browser matrix: 360/768/1024/1280/1440/1920/2560 CSS px; Chrome/Firefox/Safari, mobile Safari/Chrome. Record route, auth/data mode, screenshot, overflow, console and controls. Fixtures are labeled, never real E2E.
+Check keyboard, focus-visible, Escape/outside/focus return, 200% zoom and reduced motion. Missing environments remain named debt.
+Exercise upload/URL preflight, errors/unknown metadata, exact range charge/balance, close-browser auto-render, refresh, partial failure, grid/list/modal, HVE draft/commit/render/download, actual expiry and retry/idempotency. Verify 100-workspace isolation without increasing heavy concurrency.
+No fake profiles/media/transactions/progress/ETA/retention. Disconnected local preview is read-only and never production error fallback.
+Foundation/workflow/final checkpoints run full lint/type/unit/worker/build. HVE-G4 editor, G3 geometry/aspect, G7 scheduling plus skill-routed gates. INSUFFICIENT is unresolved, never PASS.
+Landing/blog before/after checks and full HeroUI-only migrated-product audit are release requirements. Critical/high defects and missing applicable HVE evidence prevent production claims.
