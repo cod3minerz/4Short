@@ -60,11 +60,11 @@ export default function HelpPage() {
         )}
       </section>
 
-      <section aria-label="Как работает Hashpix">
+      <section aria-label="Как работает Narezai">
         <article className="typeset typeset-help max-w-[42em]">
           <h2>Как проходит работа с видео</h2>
           <p>
-            Hashpix помогает перейти от исходника к готовым коротким клипам по
+            Narezai помогает перейти от исходника к готовым коротким клипам по
             понятному маршруту. Каждый шаг сохраняет рабочие данные проекта, чтобы
             вернуться к ним позже.
           </p>
@@ -96,7 +96,7 @@ export default function HelpPage() {
           <CardDescription>Напишите в поддержку — ответим на {supportEmail}.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button nativeButton={false} render={<a href={`mailto:${supportEmail}?subject=${encodeURIComponent("Вопрос по Hashpix")}`} />}>
+            <Button nativeButton={false} render={<a href={`mailto:${supportEmail}?subject=${encodeURIComponent("Вопрос по Narezai")}`} />}>
             Написать в поддержку
           </Button>
         </CardContent>

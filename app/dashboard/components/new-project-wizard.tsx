@@ -20,6 +20,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   type ApiSource,
   ControlApiError,
+  cancelUpload,
   createMultipartUpload,
   createProject,
   createSourcePreview,
@@ -375,8 +376,10 @@ export function NewProjectWizard({
       if (seconds !== null) setSourceDurationSeconds(Math.round(seconds));
       if (poster) setSourceThumbnail(poster);
     });
+    let completedUploadId: string | null = null;
     try {
       const upload = await createMultipartUpload(file);
+      completedUploadId = upload.uploadId;
       setUploadId(upload.uploadId);
       const created = await createSourcePreview({ sourceId: upload.sourceId });
       let preview = created;
@@ -393,6 +396,10 @@ export function NewProjectWizard({
       setSourceReady(true);
       trackApp("source_upload_complete");
     } catch (uploadError) {
+      if (completedUploadId) {
+        await cancelUpload(completedUploadId).catch(() => undefined);
+        setUploadId(null);
+      }
       setError(uploadError instanceof ControlApiError ? uploadError.message : "Не удалось загрузить файл. Проверьте соединение и попробуйте ещё раз.");
     } finally {
       setUploading(false);
@@ -450,7 +457,7 @@ export function NewProjectWizard({
   const launchProject = async () => {
     setLaunchError("");
     if (!isControlApiConfigured()) {
-      setLaunchError("Control API не подключён. Проект не запущен и минуты не списаны.");
+      setLaunchError("Не удалось запустить проект. Минуты не списаны, попробуйте позже.");
       return;
     }
     if (!currentStyle?.versionId) {
@@ -477,6 +484,18 @@ export function NewProjectWizard({
       setLaunchError("Минут не хватает на весь диапазон. Уменьшите его или пополните баланс.");
       return;
     }
+    if (cuttingMode === "manual" && rangeSeconds !== null
+      && (rangeSeconds < durationRange[0] || rangeSeconds > durationRange[1])) {
+      setLaunchError(sourceDurationSeconds !== null && sourceDurationSeconds < durationRange[0]
+        ? `Видео короче минимальной длительности клипа — ${durationRange[0]} секунд.`
+        : `Выберите фрагмент длительностью от ${durationRange[0]} до ${durationRange[1]} секунд.`);
+      return;
+    }
+    if (cuttingMode === "uniform" && count === "8" && rangeSeconds !== null
+      && Math.floor(rangeSeconds / durationRange[0]) < 8) {
+      setLaunchError("В выбранном диапазоне не помещаются 8 клипов такой длительности. Увеличьте диапазон или выберите рекомендуемое количество.");
+      return;
+    }
     try {
       const response = await createProject({
         title: sourceName,
@@ -489,13 +508,13 @@ export function NewProjectWizard({
           mode: (cuttingMode === "smart" ? intent : cuttingMode) as
             "best" | "opinions" | "tips" | "stories" | "qa" | "product" | "custom" | "uniform" | "manual",
           query: cuttingMode === "smart" && intent === "custom" ? customPrompt : undefined,
-          count: count === "recommended" ? "recommended" : Number(count),
+          count: cuttingMode === "manual" ? 1 : count === "recommended" ? "recommended" : Number(count),
           durationMinSeconds: durationRange[0],
           durationMaxSeconds: durationRange[1],
           diversity,
           selectionStrictness: strictness,
           allowThoughtCompletion,
-          sourceRange: isTrimmed && sourceDurationSeconds !== null
+          sourceRange: (isTrimmed || cuttingMode === "manual") && sourceDurationSeconds !== null
             ? { startSeconds: trimStartSeconds, endSeconds: effectiveEndSeconds }
             : undefined,
           excludedTopics: [],
@@ -695,7 +714,7 @@ export function NewProjectWizard({
                     )
                   ) : (
                     <p className={typographyVariants({ role: "muted" })}>
-                      Медиатека появится после подключения рабочего API. Мы не показываем демонстрационные исходники вместо ваших видео.
+                      Импортированные видео появятся здесь.
                     </p>
                   )}
                   </DialogContent>
@@ -803,18 +822,14 @@ export function NewProjectWizard({
               </Button>
               {otherModesOpen ? (
                 <div className="grid gap-2 sm:grid-cols-2">
-                  {/* "uniform" and "manual" aren't real modes yet: find_moments always
-                      runs the same AI search+rerank regardless of mode (confirmed —
-                      neither string appears in the worker's pipeline logic), so picking
-                      either one would silently produce AI-found moments while claiming
-                      even segments or a single exact fragment. Locked until the worker
-                      gets real mode-specific handling. */}
                   {cuttingModes.filter((mode) => mode.id !== "smart").map((mode) => (
-                    <LockedField
+                    <WizardOption
                       key={mode.id}
                       icon={<AppIcon icon={mode.icon} size="sm" />}
-                      label={mode.title}
-                      reason="Скоро — пока используется умная нарезка"
+                      title={mode.title}
+                      description={mode.description}
+                      selected={cuttingMode === mode.id}
+                      onSelect={() => setCuttingMode(mode.id)}
                     />
                   ))}
                 </div>
@@ -852,13 +867,15 @@ export function NewProjectWizard({
             </div>
 
             <div className="wizard-result-settings">
-              <fieldset>
-                <legend>Количество</legend>
-                <ToggleGroup aria-label="Количество клипов" className="w-full" value={[count]} onValueChange={(next) => { if (next[0]) setCount(next[0] as typeof count); }} variant="outline" spacing={0}>
-                  <ToggleGroupItem className="flex-1" value="recommended">Рекомендуемое</ToggleGroupItem>
-                  <ToggleGroupItem className="flex-1" value="8">Ровно 8</ToggleGroupItem>
-                </ToggleGroup>
-              </fieldset>
+              {cuttingMode !== "manual" ? (
+                <fieldset>
+                  <legend>Количество</legend>
+                  <ToggleGroup aria-label="Количество клипов" className="w-full" value={[count]} onValueChange={(next) => { if (next[0]) setCount(next[0] as typeof count); }} variant="outline" spacing={0}>
+                    <ToggleGroupItem className="flex-1" value="recommended">Рекомендуемое</ToggleGroupItem>
+                    <ToggleGroupItem className="flex-1" value="8">Ровно 8</ToggleGroupItem>
+                  </ToggleGroup>
+                </fieldset>
+              ) : null}
               <fieldset>
                 <legend>Длительность</legend>
                 <ToggleGroup aria-label="Длительность клипов" className="w-full" value={[duration]} onValueChange={(next) => { if (next[0]) setDuration(next[0] as typeof duration); }} variant="outline" spacing={0}>
@@ -906,15 +923,20 @@ export function NewProjectWizard({
               {sourceDurationSeconds !== null ? (
                 <div className="wizard-trim">
                   <div className="wizard-trim__head">
-                    <span>Какую часть видео обрабатывать</span>
+                    <span>{cuttingMode === "manual" ? "Точный фрагмент для клипа" : "Какую часть видео обрабатывать"}</span>
                     <b>{formatDuration(trimStartSeconds)} — {formatDuration(effectiveEndSeconds)}</b>
                   </div>
+                  {cuttingMode === "manual" ? (
+                    <SectionDescription>
+                      Длительность: {formatDuration(rangeSeconds ?? 0)} · допустимо {durationRange[0]}–{durationRange[1]} сек.
+                    </SectionDescription>
+                  ) : null}
                   <RangeTimeline
                     min={0}
                     max={sourceDurationSeconds}
                     start={trimStartSeconds}
                     end={effectiveEndSeconds}
-                    minDuration={60}
+                    minDuration={cuttingMode === "manual" ? durationRange[0] : 60}
                     formatTime={formatDuration}
                     onChange={({ start, end }) => {
                       setTrimStartSeconds(Math.round(start));
@@ -1066,7 +1088,9 @@ export function NewProjectWizard({
                   <div>
                     <dt>Результат</dt>
                     <dd>
-                      {count === "recommended"
+                      {cuttingMode === "manual"
+                        ? "1 клип из выбранного фрагмента"
+                        : count === "recommended"
                         ? estimatedClips === null ? "Подберём сами" : `≈ ${estimatedClips}–${estimatedClips + 2} клипов`
                         : "8 клипов"}
                     </dd>

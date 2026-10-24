@@ -130,6 +130,7 @@ export const workspaces = pgTable("workspaces", {
   name: text("name").notNull(),
   slug: text("slug").notNull(),
   planCode: text("plan_code").notNull().default("free"),
+  clippingDefaults: jsonb("clipping_defaults").$type<Record<string, unknown>>(),
   ...timestamps,
 }, (table) => [
   uniqueIndex("workspaces_slug_unique").on(table.slug),
@@ -311,6 +312,10 @@ export const transcripts = pgTable("transcripts", {
   provider: text("provider").notNull(),
   language: text("language").notNull(),
   originalPayload: jsonb("original_payload").$type<Record<string, unknown>>().notNull(),
+  // Absolute source-time interval represented by originalPayload. Null legacy
+  // rows are intentionally treated as unknown and are never reused blindly.
+  coverageStartMs: bigint("coverage_start_ms", { mode: "number" }),
+  coverageEndMs: bigint("coverage_end_ms", { mode: "number" }),
   currentRevision: integer("current_revision").notNull().default(0),
   ...timestamps,
 }, (table) => [

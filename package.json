@@ -23,6 +23,7 @@
     "test:unit": "tsx --test tests/unit/**/*.test.ts",
     "test:integration:queue": "tsx --test tests/integration/queue-pg.test.ts",
     "test:integration:queue-load": "tsx --test tests/integration/queue-load-pg.test.ts",
+    "test:integration:project-render": "tsx --test tests/integration/project-auto-render-pg.test.ts",
     "test:worker": "python3 -m unittest discover -s services/media-worker/tests",
     "test:hve-evaluator": "PYTHONPATH=services/media-worker/src:services/hve-evaluator/src ${HVE_EVALUATOR_PYTHON:-python3} -m unittest discover -s services/hve-evaluator/tests",
     "typecheck": "tsc --noEmit && tsc -p services/control-api/tsconfig.json",

@@ -55,7 +55,7 @@
 .landing-logo img { display: block; }
 
 .landing-logo img,
-.landing-footer__logo { width: 128px; height: auto; filter: grayscale(1) brightness(0) invert(1); }
+.landing-footer__logo { width: 128px; height: auto; }
 
 .landing-nav,
 .landing-header__actions { display: flex; align-items: center; }

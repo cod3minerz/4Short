@@ -1,5 +1,5 @@
 ---
-name: Hashpix Dark System
+name: Narezai Dark System
 description: A precise dark interface for turning long conversations into publishable clips.
 colors:
   canvas: "#000000"
@@ -48,13 +48,13 @@ components:
     padding: "16px"
 ---
 
-# Design System: Hashpix Dark System
+# Design System: Narezai Dark System
 
 ## Overview
 
 **Creative North Star: "The editing bay after lights out"**
 
-Hashpix is a black, media-first workspace. The landing is a controlled stage: the eye moves from one decisive line of copy to a single source field and then into the visible transformation of a landscape video into clips. It borrows the discipline of an editing interface, not its dense chrome.
+Narezai is a black, media-first workspace. The landing is a controlled stage: the eye moves from one decisive line of copy to a single source field and then into the visible transformation of a landscape video into clips. It borrows the discipline of an editing interface, not its dense chrome.
 
 The dashboard inherits the same material language without becoming a marketing page: familiar sidebar and right-side working canvas remain intact, while Geist, tonal surfaces and restrained outlines make the tool calm to scan.
 

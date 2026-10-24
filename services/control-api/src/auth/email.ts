@@ -8,12 +8,12 @@ export async function sendOtpEmail(input: {
   type: AuthEmailKind;
 }) {
   const env = getEnv();
-  if (!env.RESEND_API_KEY) {
+  if (!env.RESEND_API_KEY || !env.RESEND_FROM_EMAIL) {
     if (env.NODE_ENV === "development") {
-      console.warn("[auth] Resend is not configured; transactional email delivery is disabled.");
+      console.warn("[auth] Resend or its sender address is not configured; transactional email delivery is disabled.");
       return;
     }
-    throw new Error("Email provider is not configured");
+    throw new Error("Transactional email provider and sender are not configured");
   }
 
   const message = buildAuthEmail(input.type, input.otp);
@@ -21,7 +21,7 @@ export async function sendOtpEmail(input: {
   const { error } = await resend.emails.send({
     from: `${env.RESEND_FROM_NAME} <${env.RESEND_FROM_EMAIL}>`,
     to: input.email,
-    replyTo: env.RESEND_REPLY_TO,
+    ...(env.RESEND_REPLY_TO ? { replyTo: env.RESEND_REPLY_TO } : {}),
     subject: message.subject,
     html: message.html,
     text: message.text,

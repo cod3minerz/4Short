@@ -297,7 +297,7 @@ export function AuthScreen({ initialMode }: { initialMode: AuthScreenMode }) {
   };
 
   const title = step === "sign-in"
-    ? "Вход в Hashpix"
+    ? "Вход в Narezai"
     : step === "sign-up"
       ? "Создайте аккаунт"
       : step === "verify-email"
@@ -322,7 +322,7 @@ export function AuthScreen({ initialMode }: { initialMode: AuthScreenMode }) {
     <main className="grid min-h-dvh place-items-center bg-background p-4 text-foreground sm:p-6">
       <Card className="w-full max-w-md" aria-labelledby="auth-title">
         <CardHeader className="gap-5">
-          <Link className="flex w-fit [&_img]:h-auto [&_img]:w-36" href="/" aria-label="Hashpix — на главную">
+          <Link className="flex w-fit [&_img]:h-auto [&_img]:w-36" href="/" aria-label="Narezai — на главную">
             <Logo priority tone="light" variant="identity" />
           </Link>
           {(step === "verify-email" || step === "reset-password") ? (

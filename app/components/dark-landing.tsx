@@ -45,7 +45,7 @@ const sourcePlatforms = [
 const featureCards = [
   {
     title: "Находит моменты, которые можно смотреть отдельно",
-    description: "Hashpix отделяет законченные мысли и сильные фрагменты от длинного разговора.",
+    description: "Narezai отделяет законченные мысли и сильные фрагменты от длинного разговора.",
     label: "AI-анализ",
     scene: "moments",
   },
@@ -139,8 +139,8 @@ export function DarkLanding() {
     <div className="dark-landing">
       <header className="landing-header">
         <div className="landing-container landing-header__inner">
-          <Link className="landing-logo" href="/" aria-label="Hashpix — на главную">
-            <Image src="/assets/logo-source.svg" alt="Hashpix" width={150} height={31} priority unoptimized />
+          <Link className="landing-logo" href="/" aria-label="Narezai — на главную">
+            <Image src="/assets/logo-narezai.svg" alt="Narezai" width={150} height={31} priority unoptimized />
           </Link>
 
           <nav className="landing-nav" aria-label="Основная навигация">
@@ -202,7 +202,7 @@ export function DarkLanding() {
               <p>Присоединяйтесь к <strong>13 000</strong> креаторов</p>
             </div>
             <h1><span>Одно видео.</span><span>До 10 коротких клипов.</span></h1>
-            <p className="landing-lead">Hashpix находит сильные моменты, собирает вертикальные ролики и оставляет вам финальную правку.</p>
+            <p className="landing-lead">Narezai находит сильные моменты, собирает вертикальные ролики и оставляет вам финальную правку.</p>
 
             <form className="hero-source-form" onSubmit={submit} noValidate>
               <div className={`hero-source-form__shell ${error ? "is-invalid" : ""}`}>
@@ -379,7 +379,7 @@ export function DarkLanding() {
           <div className="landing-container landing-final__panel">
             <div className="landing-final__light" aria-hidden="true" />
             <h2>Начните с видео, которое у вас уже есть.</h2>
-            <p>Вставьте ссылку или загрузите файл — дальше Hashpix проведёт по рабочему процессу.</p>
+            <p>Вставьте ссылку или загрузите файл — дальше Narezai проведёт по рабочему процессу.</p>
             <Link className="landing-button" href="/dashboard/new">Создать первый проект <ArrowRight size={17} /></Link>
           </div>
         </section>
@@ -387,10 +387,10 @@ export function DarkLanding() {
 
       <footer className="landing-footer">
         <div className="landing-container landing-footer__top">
-          <Image className="landing-footer__logo" src="/assets/logo-source.svg" alt="Hashpix" width={150} height={31} unoptimized />
+          <Image className="landing-footer__logo" src="/assets/logo-narezai.svg" alt="Narezai" width={150} height={31} unoptimized />
           <div><Link href="/dashboard">Войти</Link><a href="#features">Возможности</a><a href="#faq">FAQ</a></div>
         </div>
-        <div className="landing-container landing-footer__bottom"><span>© 2026 Hashpix</span><span>AI-инструменты для видео</span></div>
+        <div className="landing-container landing-footer__bottom"><span>© 2026 Narezai</span><span>AI-инструменты для видео</span></div>
       </footer>
     </div>
   );

@@ -132,14 +132,12 @@ export function clampExportForPlan<T extends { height: number; width: number; wa
 ): T {
   const plan = productPlans[planCode];
   const maxHeight = plan.exportHeight;
-  if (exportConfig.height <= maxHeight && (!plan.watermark || exportConfig.watermark)) {
+  if (exportConfig.height <= maxHeight && exportConfig.height % 2 === 0 && exportConfig.width % 2 === 0 && (!plan.watermark || exportConfig.watermark)) {
     return exportConfig;
   }
-  const height = Math.min(exportConfig.height, maxHeight);
-  // Portrait 9:16 export — width tracks height at that ratio, matching the
-  // 1080x1920 / 720x1280 pairs already used throughout the schema defaults.
-  const width = exportConfig.height === height
-    ? exportConfig.width
-    : Math.round(height * 9 / 16);
+  const height = Math.max(2, Math.floor(Math.min(exportConfig.height, maxHeight) / 2) * 2);
+  // Scale both dimensions, never change a square/landscape export to portrait.
+  // H.264/yuv420p requires even dimensions; rounding may differ by < 2px.
+  const width = Math.max(2, Math.round(exportConfig.width * height / exportConfig.height / 2) * 2);
   return { ...exportConfig, height, width, watermark: exportConfig.watermark || plan.watermark };
 }

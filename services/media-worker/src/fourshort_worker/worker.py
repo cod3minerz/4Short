@@ -16,6 +16,7 @@ from .control_api import ControlApi, LeaseLostError
 from .errors import JobError
 from .fonts import installed_font_pack
 from .model_assets import face_detector_readiness, stt_model_readiness
+from .process import redact_sensitive_text, redact_sensitive_value
 from .resources import ResourceGuard, StageResourceMetrics, cgroup_cpu_limit_cores, cgroup_memory_limit_bytes
 from .runtime_identity import RUNTIME_IDENTITY_SCHEMA_VERSION, runtime_fingerprint
 from .stages import StageRunner
@@ -396,25 +397,25 @@ class Worker:
             if error.code == "JOB_CANCELLED":
                 log.info("job stopped after cancellation or lease loss", extra={"job_id": job.id})
                 return
-            details = dict(error.details)
+            details = redact_sensitive_value(dict(error.details))
             if resources is not None:
                 details["resourceMetrics"] = resources.close()
             self.api.fail(
                 job.id,
                 retryable=error.retryable,
                 code=error.code,
-                message=str(error),
+                message=redact_sensitive_text(str(error)),
                 details=details,
             )
         except Exception as error:
-            details = {"trace": traceback.format_exc(limit=8)}
+            details = redact_sensitive_value({"trace": traceback.format_exc(limit=8)})
             if resources is not None:
                 details["resourceMetrics"] = resources.close()
             self.api.fail(
                 job.id,
                 retryable=True,
                 code="UNHANDLED_WORKER_ERROR",
-                message=str(error),
+                message=redact_sensitive_text(str(error)),
                 details=details,
             )
         finally:

@@ -58,4 +58,4 @@ export const primitiveGeometryExceptions = new Map([
 
 // This is intentionally a checksum, not a broad selector escape hatch. Any
 // dashboard geometry edit requires a deliberate allowlist/document review.
-export const dashboardGeometrySha256 = "8c61fbfd576bc9327d20177c38866172eed0da9cc16c90f70763be6b0ec072a1";
+export const dashboardGeometrySha256 = "f7dfa592ef63ec40f7a552cb61b503636c27f5d3cb5a4c863d51b8b5a17e4ba9";

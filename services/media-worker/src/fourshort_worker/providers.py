@@ -192,12 +192,25 @@ def faster_whisper_transcribe_options(settings: Settings, language: str) -> dict
     return options
 
 
-class FasterWhisperStt(SpeechToTextProvider):
-    name = "faster_whisper_large_v3_turbo"
+def bind_speech_profile_identity(response: dict, model_fingerprint: str, engine_version: str) -> dict:
+    """Attach verified runtime identity before the response crosses the worker boundary."""
+    if len(model_fingerprint) != 64 or any(character not in "0123456789abcdef" for character in model_fingerprint.lower()) or not engine_version:
+        raise JobError("STT_PROFILE_IDENTITY_INVALID", "The verified STT profile identity is incomplete", retryable=False)
+    response["modelFingerprint"] = model_fingerprint.lower()
+    response["engineVersion"] = engine_version
+    return response
 
+
+class FasterWhisperStt(SpeechToTextProvider):
     def __init__(self, settings: Settings):
         self.settings = settings
         self.client = httpx.Client(timeout=httpx.Timeout(4 * 60 * 60, connect=30))
+
+    @property
+    def name(self) -> str:
+        model = str(getattr(self.settings, "stt_model", "large-v3-turbo")).strip().lower()
+        normalized_model = model.replace("/", "_").replace("-", "_").replace(".", "_")
+        return f"faster_whisper_{normalized_model}"
 
     def transcribe(
         self,
@@ -234,6 +247,7 @@ class FasterWhisperStt(SpeechToTextProvider):
                 **faster_whisper_transcribe_options(self.settings, language),
             )
             response = _serialize_faster_whisper(segments, info, cancellation_event=cancellation_event)
+            bind_speech_profile_identity(response, verified_model.fingerprint, self.settings.hve_engine_version)
             if self.settings.stt_vad_filter:
                 response["speechIntervals"] = _speech_intervals(
                     audio_path,
@@ -278,7 +292,7 @@ class OpenRouterLlm(JsonLlmProvider):
                 headers={
                     "Authorization": f"Bearer {self.settings.openrouter_api_key}",
                     "HTTP-Referer": self.settings.control_api_url,
-        "X-Title": "Hashpix",
+        "X-Title": "Narezai",
                 },
                 json={
                     "model": model,

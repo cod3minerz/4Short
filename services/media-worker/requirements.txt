@@ -1,5 +1,8 @@
 boto3==1.40.61
 faster-whisper==1.2.1
+# faster-whisper 1.2.1 still passes metadata_errors to av.open(); PyAV 19
+# removed that keyword. Pin the E2E-verified PyAV 18.1.0 until upstream fixes it.
+av==18.1.0
 huggingface-hub==0.34.4
 httpx==0.28.1
 numpy==2.2.6

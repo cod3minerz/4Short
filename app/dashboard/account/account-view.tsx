@@ -127,7 +127,7 @@ export function AccountView() {
               </div>
             ) : (
               <p className={typographyVariants({ role: "muted" })}>
-                {connection === "loading" ? "Загружаем данные аккаунта…" : "Вход не подключён к этому окружению — данные аккаунта недоступны."}
+                {connection === "loading" ? "Загружаем данные аккаунта…" : "Не удалось загрузить данные аккаунта. Попробуйте обновить страницу."}
               </p>
             )}
           </CardContent>
@@ -148,7 +148,7 @@ export function AccountView() {
               ) : isControlApiConfigured() ? (
                 <div className="space-y-3" aria-label="Загрузка сессий"><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-4/5" /></div>
               ) : (
-                <p className={typographyVariants({ role: "muted" })}>Список сессий доступен только при подключённом API.</p>
+                <p className={typographyVariants({ role: "muted" })}>Активные сеансы появятся здесь.</p>
               )
             ) : (
               <>

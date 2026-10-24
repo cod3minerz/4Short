@@ -51,6 +51,7 @@ jobs:
           DATABASE_URL="$HVE_TEST_DATABASE_URL" npm run db:migrate
           npm run test:integration:queue
           npm run test:integration:queue-load
+          npm run test:integration:project-render
       - run: npm run build:vercel
 
   media-worker:

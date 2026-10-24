@@ -1,4 +1,4 @@
-# Hashpix product UI — HeroUI / Opus reference
+# Narezai product UI — HeroUI / Opus reference
 ## Authority
 The approved specification is `docs/ui/opus-rebuild.md`. The October 12 references govern composition, density, radii and colors. HeroUI v3 / React Aria owns controls/interaction; Onest owns application type; Hugeicons owns product icons. HVE/API/no-dead-ui remain functional invariants.
 Previous visual guidance is archived in `docs/archive/legacy-ui-instructions/vega-pre-opus/`. The rejected draft is recovery commit d8fc3f6 and cannot supply JSX/CSS.

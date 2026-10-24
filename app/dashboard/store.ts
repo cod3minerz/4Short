@@ -13,6 +13,8 @@ import {
   getSession,
   getWorkspaceId,
   isControlApiConfigured,
+  hasLocalDevelopmentIdentity,
+  isLoopbackHostname,
   listProjects,
   listStyles,
   setWorkspaceId,
@@ -53,7 +55,7 @@ const listeners = new Set<() => void>();
 
 function isLoopbackDevelopment() {
   if (process.env.NODE_ENV !== "development" || typeof window === "undefined") return false;
-  return ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
+  return isLoopbackHostname(window.location.hostname);
 }
 
 function emit() {
@@ -136,11 +138,17 @@ function projectFromApi(item: Awaited<ReturnType<typeof listProjects>>["items"][
     durationMinutes: item.sourceDurationMs ? Math.round(item.sourceDurationMs / 60_000) : 0,
     status: item.status as ProjectStatus,
     clipsFound: item.momentsFound,
+    clipsTotal: item.clipsTotal,
     clipsReady: item.clipsReady,
+    clipsAvailable: item.clipsAvailable,
+    clipsFailed: item.clipsFailed,
+    processing: item.processing,
     style: "",
     updatedAt: formatUpdatedAt(item.updatedAt),
     accent: accentRotation[hash % accentRotation.length],
     thumbnailUrl: item.sourceThumbnailUrl,
+    sourceAvailable: item.sourceAvailable,
+    sourceExpiresAt: item.sourceExpiresAt,
   };
 }
 
@@ -195,7 +203,8 @@ async function hydrate() {
   // a read-only local preview: skip workspace-scoped API calls and keep the
   // existing sample data. It is unavailable in production builds and on
   // non-loopback hosts; real API authorization remains unchanged.
-  if (!user && isLoopbackDevelopment()) {
+  const developmentIdentity = hasLocalDevelopmentIdentity();
+  if (!user && isLoopbackDevelopment() && !developmentIdentity) {
     activatePreview();
     return;
   }
@@ -206,7 +215,7 @@ async function hydrate() {
     // to learn which workspace the signed-in user belongs to. Ensuring one
     // exists (idempotent by user server-side) must happen before anything
     // that needs it, but only for a real, signed-in session.
-    if (session?.user && !getWorkspaceId()) {
+    if ((session?.user || developmentIdentity) && !getWorkspaceId()) {
       const provisioned = await ensureWorkspace();
       setWorkspaceId(provisioned.workspace.id);
     }
@@ -278,6 +287,17 @@ export async function refreshStorage() {
     replace({ ...state, storage });
   } catch {
     // A transient metrics error must not erase the last confirmed quota.
+  }
+}
+
+/** Refreshes the real project list after creation and while any project is processing. */
+export async function refreshProjects() {
+  if (state.connection !== "connected") return;
+  try {
+    const response = await listProjects();
+    replace({ ...state, projects: response.items.map(projectFromApi) });
+  } catch {
+    // Preserve the last confirmed project list if polling hits a transient error.
   }
 }
 

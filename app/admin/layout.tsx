@@ -3,7 +3,7 @@ import { AdminShell } from "./components/admin-shell";
 
 export const metadata: Metadata = {
   title: "Управление платформой",
-  description: "Закрытая панель управления Hashpix.",
+  description: "Закрытая панель управления Narezai.",
   robots: { index: false, follow: false, nocache: true },
 };
 

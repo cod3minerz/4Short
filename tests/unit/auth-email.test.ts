@@ -5,17 +5,17 @@ import { buildAuthEmail } from "../../services/control-api/src/auth/email-templa
 test("auth email is branded, short-lived and never interpolates arbitrary OTP markup", () => {
   const email = buildAuthEmail("email-verification", "<123456>");
 
-  assert.equal(email.subject, "Подтвердите email в Hashpix");
+  assert.equal(email.subject, "Подтвердите email в Narezai");
   assert.match(email.text, /123456/);
   assert.match(email.text, /10 минут/);
-  assert.match(email.html, /hashpix/);
+  assert.match(email.html, /narezai/);
   assert.doesNotMatch(email.html, /<123456>/);
-  assert.match(email.html, /#3153ff/);
+  assert.match(email.html, /#ff9326/);
 });
 
 test("reset emails communicate the correct transactional purpose", () => {
   const email = buildAuthEmail("forget-password", "012345");
 
-  assert.equal(email.subject, "Код для смены пароля в Hashpix");
+  assert.equal(email.subject, "Код для смены пароля в Narezai");
   assert.match(email.text, /новый пароль|смены пароля/i);
 });

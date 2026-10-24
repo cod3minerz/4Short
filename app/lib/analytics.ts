@@ -33,5 +33,5 @@ export function track(event: AnalyticsEvent, properties: Record<string, unknown>
   window.posthog?.capture(event, properties);
   const metrikaId = Number(process.env.NEXT_PUBLIC_YANDEX_METRIKA_ID);
   if (metrikaId && window.ym) window.ym(metrikaId, "reachGoal", event, properties);
-  if (process.env.NODE_ENV === "development") console.info("[Hashpix analytics]", event, properties);
+  if (process.env.NODE_ENV === "development") console.info("[Narezai analytics]", event, properties);
 }

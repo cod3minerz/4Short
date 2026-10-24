@@ -1,4 +1,5 @@
 import {
+  AbortMultipartUploadCommand,
   CompleteMultipartUploadCommand,
   CreateMultipartUploadCommand,
   DeleteObjectCommand,
@@ -91,6 +92,18 @@ export async function completeMultipartUpload(input: {
       Parts: input.parts.map((part) => ({ PartNumber: part.partNumber, ETag: part.etag })),
     },
   }));
+}
+
+export async function abortMultipartUpload(bucket: string, key: string, uploadId: string) {
+  try {
+    await s3.send(new AbortMultipartUploadCommand({ Bucket: bucket, Key: key, UploadId: uploadId }));
+  } catch (error) {
+    // Aborting an already completed/aborted multipart session is idempotent.
+    const code = error && typeof error === "object"
+      ? String((error as { name?: unknown; Code?: unknown }).name ?? (error as { Code?: unknown }).Code ?? "")
+      : "";
+    if (code !== "NoSuchUpload") throw error;
+  }
 }
 
 export async function signDownload(bucket: string, key: string, seconds = 900) {

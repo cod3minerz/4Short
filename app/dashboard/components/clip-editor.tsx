@@ -12,6 +12,7 @@ import {
   PanelRightCloseIcon,
   PanelRightOpenIcon,
   PauseIcon,
+  PencilEdit02Icon,
   PlayIcon,
   Redo02Icon,
   SaveIcon,
@@ -244,6 +245,7 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
   const [notice, setNotice] = useState("");
   const [playing, setPlaying] = useState(false);
   const [mobilePanel, setMobilePanel] = useState<EditorPanel | "preview">("preview");
+  const [isNarrowEditor, setIsNarrowEditor] = useState(false);
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
   const [inspectorSection, setInspectorSection] = useState<InspectorSection>("clip");
@@ -254,7 +256,9 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
   const [transcriptRevision, setTranscriptRevision] = useState<number | null>(null);
   const [draftStatus, setDraftStatus] = useState<"saved" | "saving" | "changed">("saved");
   const [hveDraft, setHveDraft] = useState<ApiEditorDraft | null>(null);
+  const [titleEditing, setTitleEditing] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
+  const mobileTabRefs = useRef<Partial<Record<EditorPanel, HTMLButtonElement | null>>>({});
   const videoRef = useRef<HTMLVideoElement>(null);
   const secondaryVideoRef = useRef<HTMLVideoElement>(null);
   const sequencePointRef = useRef<HveSequencePoint | null>(null);
@@ -265,6 +269,25 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
   const draftKey = `hashpix:clip-draft:${projectId}:${clipId}`;
   const hveClientId = useRef(`focus-editor-${crypto.randomUUID()}`);
   const hveClientSequence = useRef(0);
+
+  useEffect(() => {
+    if (!titleEditing) return;
+    titleRef.current?.focus();
+    titleRef.current?.select();
+  }, [titleEditing]);
+
+  const closeMobilePanel = useCallback((panel: EditorPanel) => {
+    setMobilePanel("preview");
+    requestAnimationFrame(() => mobileTabRefs.current[panel]?.focus());
+  }, []);
+
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 820px)");
+    const sync = () => setIsNarrowEditor(query.matches);
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
 
   // A final render always wins. Before one exists the editor may play only a
   // verified source/proxy for transcript and source-time review — never a
@@ -1085,8 +1108,30 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
           >
             <AppIcon icon={ArrowLeft01Icon} aria-hidden="true" />
           </Button>
-          <Input ref={titleRef} className="clip-editor__title" aria-label="Название клипа" value={state.title} onChange={(event) => commit({ title: event.target.value })} />
-          <small>
+          {titleEditing ? (
+            <Input
+              ref={titleRef}
+              className="clip-editor__title"
+              aria-label="Название клипа"
+              value={state.title}
+              onChange={(event) => commit({ title: event.target.value })}
+              onBlur={() => setTitleEditing(false)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === "Escape") {
+                  event.preventDefault();
+                  setTitleEditing(false);
+                }
+              }}
+            />
+          ) : (
+            <div className="clip-editor__title-display">
+              <span className="text-sm font-semibold tracking-tight leading-tight" title={state.title}>{state.title || "Без названия"}</span>
+              <IconButton variant="ghost" label="Изменить название клипа" tooltip="Изменить название" onClick={() => setTitleEditing(true)}>
+                <AppIcon icon={PencilEdit02Icon} size="sm" aria-hidden="true" />
+              </IconButton>
+            </div>
+          )}
+          <small className="clip-editor__draft-status" role="status" aria-live="polite">
             {draftStatus === "saving" ? "Сохраняем…" : draftStatus === "changed" ? "Есть изменения" : "Черновик сохранён"}
           </small>
         </div>
@@ -1118,9 +1163,9 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
         value={mobilePanel}
         onValueChange={(value) => setMobilePanel(value as typeof mobilePanel)}
       >
-        <TabsList>
+        <TabsList variant="line">
           {(["text", "tools", "properties"] as const).map((panel) => (
-            <TabsTrigger value={panel} key={panel}>
+            <TabsTrigger value={panel} key={panel} ref={(node) => { mobileTabRefs.current[panel] = node; }}>
               {panel === "text" ? "Текст" : panel === "tools" ? "Инструменты" : "Свойства"}
             </TabsTrigger>
           ))}
@@ -1131,7 +1176,10 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
         <aside className={`clip-transcript-panel ${leftOpen ? "" : "is-collapsed"}`}>
           <header>
             <FieldTitle className="clip-transcript-panel__title">Транскрипт</FieldTitle>
-            <IconButton variant="ghost" label={leftOpen ? "Свернуть левую панель" : "Развернуть левую панель"} tooltip={leftOpen ? "Свернуть панель" : "Развернуть панель"} onClick={() => setLeftOpen((value) => !value)}>
+            <IconButton variant="ghost" label={leftOpen ? "Свернуть левую панель" : "Развернуть левую панель"} tooltip={leftOpen ? "Свернуть панель" : "Развернуть панель"} onClick={() => {
+              if (isNarrowEditor) closeMobilePanel("text");
+              else setLeftOpen((value) => !value);
+            }}>
               <AppIcon icon={leftOpen ? PanelLeftCloseIcon : PanelLeftOpenIcon} size="sm" aria-hidden="true" />
             </IconButton>
           </header>
@@ -1205,6 +1253,12 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
         </aside>
 
         <aside className="clip-mobile-tools" aria-label="Инструменты клипа">
+          <header>
+            <FieldTitle>Инструменты</FieldTitle>
+            <IconButton variant="ghost" label="Закрыть инструменты" tooltip="Закрыть" onClick={() => closeMobilePanel("tools")}>
+              <AppIcon icon={Cancel01Icon} size="sm" aria-hidden="true" />
+            </IconButton>
+          </header>
           <div>
             <EditorSectionTools
               active={inspectorSection}
@@ -1217,7 +1271,7 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
           <p>Выберите часть клипа — её настройки откроются здесь же.</p>
         </aside>
 
-        <section className="clip-preview-stage">
+        <section className="clip-preview-stage" inert={isNarrowEditor && mobilePanel !== "preview"}>
           {!leftOpen ? (
             <IconButton variant="ghost" className="clip-panel-restore is-left" label="Развернуть левую панель" tooltip="Развернуть текст" onClick={() => setLeftOpen(true)}>
               <AppIcon icon={PanelLeftOpenIcon} size="sm" aria-hidden="true" />
@@ -1336,7 +1390,10 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
         <aside className={`clip-inspector ${rightOpen ? "" : "is-collapsed"}`}>
           <header>
             <FieldTitle>{editorSections.find(({ id }) => id === inspectorSection)?.label}</FieldTitle>
-            <IconButton variant="ghost" label="Свернуть свойства" tooltip="Свернуть панель" onClick={() => setRightOpen(false)}><AppIcon icon={PanelRightCloseIcon} size="sm" aria-hidden="true" /></IconButton>
+            <IconButton variant="ghost" label="Свернуть свойства" tooltip="Свернуть панель" onClick={() => {
+              if (isNarrowEditor) closeMobilePanel("properties");
+              else setRightOpen(false);
+            }}><AppIcon icon={PanelRightCloseIcon} size="sm" aria-hidden="true" /></IconButton>
           </header>
 
           <div className="clip-inspector__content">
@@ -1371,7 +1428,7 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
                 {layoutOptions.filter(({ rendersToday }) => rendersToday).map(({ id, label, hint, icon }) => (
                   <ToggleGroupItem key={id} value={id} title={hint}>
                     <AppIcon icon={icon} size="sm" aria-hidden="true" />
-                    {label}
+                    <span>{label}</span>
                   </ToggleGroupItem>
                 ))}
               </ToggleGroup>
@@ -1389,8 +1446,24 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
               {inspectorSection === "captions" ? (
                 <section className="clip-inspector__section" aria-label="Настройки субтитров">
               <Field className="clip-switch-row" orientation="horizontal"><FieldTitle>Показывать субтитры</FieldTitle><Switch checked={state.captionsEnabled} aria-label="Показывать субтитры" onCheckedChange={(value) => commit({ captionsEnabled: value })} /></Field>
+              <div className="clip-subtitle-live-preview" aria-label="Пример оформления субтитров">
+                {state.captionsEnabled ? (
+                  <SubtitlePreviewOverlay
+                    className="subtitle-overlay--sample"
+                    text="Слово за словом"
+                    preset={state.subtitlePreset}
+                    fontFamily={state.fontFamily}
+                    fontSize={state.fontSize}
+                    position="center"
+                    color={state.primaryColor}
+                    activeColor={state.activeColor}
+                    animate
+                  />
+                ) : <span>Включите субтитры для предпросмотра</span>}
+              </div>
               <SampleList
                 aria-label="Стиль субтитров"
+                className="clip-subtitle-samples"
                 value={state.subtitlePreset}
                 onChange={(id) => commit({ subtitlePreset: id as SubtitlePreset })}
                 items={subtitlePresets.map((preset) => ({
@@ -1400,11 +1473,12 @@ export function ClipEditor({ projectId, clipId }: { projectId: string; clipId: s
                   sample: (
                     <SubtitlePreviewOverlay
                       className="subtitle-overlay--sample"
-                      text="Abc"
+                      text="Сильный момент"
                       preset={preset.id}
                       animate={false}
+                      activeIndex={0}
                       color="var(--foreground)"
-                      activeColor={state.activeColor}
+                      activeColor="var(--primary)"
                     />
                   ),
                 }))}

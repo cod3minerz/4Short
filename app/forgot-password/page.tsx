@@ -4,7 +4,7 @@ import { AuthScreen } from "../sign-in/page";
 
 export const metadata: Metadata = {
   title: "Восстановить пароль",
-  description: "Безопасное восстановление доступа к Hashpix.",
+  description: "Безопасное восстановление доступа к Narezai.",
   robots: { index: false, follow: false },
 };
 

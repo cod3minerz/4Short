@@ -760,6 +760,26 @@ Gate: all production and market gates in `hve-verification.md` pass with signed 
 - The operator sequence, role separation and rollback criteria are recorded in
   `docs/operations/hve-sealed-release.md`; a deploy itself is not approval.
 
+### Iteration status — STT profile fenced through cache, queue and completion (implemented in source; fixtures **NOT RUN**)
+
+- Existing-source project creation reuses a stored transcript only if its
+  source-time coverage, model-pack fingerprint and engine version match the
+  active API profile. Legacy transcripts without the identity fail closed and
+  are reprocessed rather than silently reused.
+- The API includes model fingerprint and engine version in the STT payload,
+  idempotency key and `requiredModels.stt`; the existing scheduler compares
+  that requirement with the worker's startup-verified model capability.
+- The worker returns the verified model fingerprint and engine version with
+  the speech response. The API validates both before storing transcript rows
+  or committing the source's minute reservation.
+- Added unit fixtures for transcript-profile matching, queue rejection on a
+  model mismatch, and worker identity serialization. They are **NOT RUN**;
+  PostgreSQL/API-worker integration remains a server check. No timing or
+  transcription-quality claim follows from this cache/dispatch hardening.
+- No database migration is needed: identity is kept in the existing transcript
+  JSON payload and job payload. Deployments must configure matching API and
+  worker fingerprints and engine versions before STT jobs can run.
+
 ## First implementation batch for Terra
 
 Terra should start with HVE-0 and HVE-1, not computer vision. The first concrete batch is:

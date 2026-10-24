@@ -15,6 +15,7 @@ import {
 } from "./hve-scheduler.js";
 import { estimateHveJobDuration, type HveDurationObservation } from "./hve-eta.js";
 import { hasCompleteHveRuntimeIdentity, readHveRuntimeFingerprint } from "./hve-runtime-identity.js";
+import { markFailedClipRender } from "./project-render.js";
 
 type JobClass = "io" | "provider" | "cpu_light" | "cpu_medium" | "cpu_heavy";
 
@@ -430,7 +431,7 @@ export async function failJob(input: {
 }
 
 export async function requeueExpiredLeases(db: Database) {
-  return db.transaction(async (tx) => {
+  const updatedJobs = await db.transaction(async (tx) => {
     const expired = await tx.execute(sql`
       select id
       from jobs
@@ -500,4 +501,8 @@ export async function requeueExpiredLeases(db: Database) {
     }
     return updatedJobs;
   });
+  for (const job of updatedJobs) {
+    if (job.status === "failed" && job.clipId) await markFailedClipRender(db, job);
+  }
+  return updatedJobs;
 }

@@ -16,11 +16,15 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/services/control-api/dist ./services/control-api/dist
 COPY drizzle ./drizzle
 COPY infra/certs/timeweb-cloud-root.crt /tmp/timeweb-cloud-root.crt
+COPY infra/certs/timeweb-creodock-postgres.crt /tmp/narezai-managed-postgres.crt
 RUN install -d -o root -g root -m 0755 /etc/ssl/certs \
     && install -o root -g root -m 0444 \
       /tmp/timeweb-cloud-root.crt \
       /etc/ssl/certs/timeweb-cloud-root.crt \
-    && rm /tmp/timeweb-cloud-root.crt
+    && install -o root -g root -m 0444 \
+      /tmp/narezai-managed-postgres.crt \
+      /etc/ssl/certs/narezai-managed-postgres.crt \
+    && rm /tmp/timeweb-cloud-root.crt /tmp/narezai-managed-postgres.crt
 USER node
 EXPOSE 4100
 CMD ["node", "services/control-api/dist/services/control-api/src/server.js"]

@@ -15,7 +15,7 @@ from collections.abc import Callable
 from .config import Settings
 from .control_api import Job
 from .errors import JobError
-from .media import create_browser_proxy, create_source_thumbnail, extract_audio, probe_media, validate_render, verify_timed_brand_video
+from .media import create_browser_proxy, create_render_poster, create_source_thumbnail, extract_audio, probe_media, validate_render, verify_timed_brand_video
 from .moments import (
     chunk_transcript,
     compact_transcript,
@@ -830,6 +830,21 @@ class StageRunner:
         )
         if not validation["valid"]:
             raise JobError("RENDER_VALIDATION_FAILED", "Rendered clip failed validation", retryable=True, details=validation)
+        poster_path = job_dir / "clip-poster.jpg"
+        poster_artifact = None
+        try:
+            create_render_poster(
+                self.settings,
+                output,
+                poster_path,
+                cancellation_event=cancellation_event,
+            )
+        except JobError as error:
+            if error.code == "JOB_CANCELLED":
+                raise
+            # The validated MP4 remains usable if an optional poster cannot be
+            # extracted. The project API will show an honest no-poster state.
+            poster_artifact = None
         # Do not publish a render from a lease that was lost while FFmpeg was
         # validating the output. A cancellation racing *inside* a multipart
         # upload can still leave an unattached object for lifecycle cleanup,
@@ -845,6 +860,17 @@ class StageRunner:
             key,
             "video/mp4",
         )
+        if poster_path.is_file():
+            self._assert_not_cancelled(cancellation_event)
+            poster_artifact = self.storage.upload_file(
+                poster_path,
+                self.settings.effective_derived_bucket,
+                self.settings.object_key(
+                    "derived",
+                    f"{job.workspace_id}/{job.project_id}/{job.clip_id}/{job.id}/poster.jpg",
+                ),
+                "image/jpeg",
+            )
         # Captions are generated from the exact resolved output clock that
         # drove ASS. They are artifacts of this render version, not a new STT
         # request and not a browser-side reconstruction. Keep them separate
@@ -871,6 +897,7 @@ class StageRunner:
                 )
         return {
             "artifact": artifact,
+            **({"posterArtifact": poster_artifact} if poster_artifact else {}),
             "captionArtifacts": caption_artifacts,
             "validation": validation,
             "executionMetrics": render_metrics,

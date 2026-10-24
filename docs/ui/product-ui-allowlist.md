@@ -1,4 +1,4 @@
 # Product UI exceptions
 HeroUI controls, Hugeicons and Onest govern migrated product surfaces. Shared product.css recipes reproduce approved references.
-Native file/color/video and specialist HVE canvas/timeline are functional exceptions. Landing/blog and existing admin are separate boundaries.
+Native file/color/video and specialist HVE canvas/timeline are functional exceptions. The no-media canvas and editor stage use the semantic `background` role so unavailable source media is not shown as a bright white frame; the editor preview may use a restrained blurred backdrop, while the actual phone canvas and trim handles retain readable semantic surfaces; subtitle presets include a real animated sample; compact editor controls and the draft title truncate safely at narrow widths. Landing/blog and existing admin are separate boundaries.
 During migration the audit names remaining consumers. Scoped PASS is not full PASS. Remove dependencies only after consumers disappear.

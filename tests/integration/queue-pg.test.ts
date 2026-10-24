@@ -19,8 +19,8 @@ const capability = {
   plannerVersion: "planner-1",
   rendererVersion: "renderer-1",
   jobClasses: ["cpu_medium", "cpu_heavy"],
-  jobTypes: ["render_clip", "analyze_visual"],
-  models: {},
+  jobTypes: ["render_clip", "analyze_visual", "speech_to_text"],
+  models: { stt: "b".repeat(64) },
   memoryBytes: 12 * 1024 ** 3,
   scratchFreeBytes: 30 * 1024 ** 3,
   heavySlots: 1,
@@ -66,7 +66,7 @@ async function seedJob(input: {
   workspaceId: string;
   idempotencyKey: string;
   jobClass: "cpu_medium" | "cpu_heavy";
-  type: "render_clip" | "analyze_visual";
+  type: "render_clip" | "analyze_visual" | "speech_to_text";
   requirements: Record<string, unknown>;
   status?: "queued" | "leased" | "waiting_provider";
   leaseOwner?: string;
@@ -97,6 +97,46 @@ async function seedJob(input: {
   }
   return job!;
 }
+
+test("PostgreSQL claim path fences speech jobs to the advertised model fingerprint", { skip: !run }, async () => {
+  const db = createDb(databaseUrl);
+  const worker = `queue-stt-worker-${randomUUID()}`;
+  const workspace = await seedWorkspace(db, "Queue STT identity");
+  const expectedFingerprint = "a".repeat(64);
+  const engineVersion = capability.engineVersion;
+  try {
+    await seedWorker(db, worker);
+    const job = await seedJob({
+      db,
+      workspaceId: workspace.id,
+      idempotencyKey: `stt-model-${randomUUID()}`,
+      jobClass: "cpu_heavy",
+      type: "speech_to_text",
+      requirements: {
+        engineVersion,
+        requiredModels: { stt: expectedFingerprint },
+        minimumRamBytes: 1,
+        minimumScratchBytes: 1,
+        requiredClasses: ["cpu_heavy"],
+        requiredJobTypes: ["speech_to_text"],
+        workspaceConcurrencyLimit: 1,
+      },
+    });
+
+    assert.equal(await claimNextJob({ db, workerId: worker, classes: ["cpu_heavy"], leaseSeconds: 60 }), null);
+    const [stillQueued] = await db.select().from(jobs).where(eq(jobs.id, job.id));
+    assert.equal(stillQueued?.status, "queued");
+
+    await db.update(workerLeases).set({ capabilities: { ...capability, models: { stt: expectedFingerprint } } })
+      .where(eq(workerLeases.workerId, worker));
+    const claimed = await claimNextJob({ db, workerId: worker, classes: ["cpu_heavy"], leaseSeconds: 60 });
+    assert.equal(claimed?.id, job.id);
+  } finally {
+    await cleanup(db, [workspace.id]);
+    await db.delete(workerLeases).where(eq(workerLeases.workerId, worker));
+    await closeDb();
+  }
+});
 
 async function cleanup(db: ReturnType<typeof createDb>, workspaceIds: string[]) {
   if (!workspaceIds.length) return;

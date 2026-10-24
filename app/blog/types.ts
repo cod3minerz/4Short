@@ -17,7 +17,7 @@ export type BlogPostMeta = {
   publishedAt: string;
   modifiedAt?: string;
   readingTime: number;
-  author: "Редакция Hashpix";
+  author: "Редакция Narezai";
   featured: boolean;
   cover: string;
   ogImage: string;

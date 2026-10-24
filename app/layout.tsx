@@ -11,17 +11,17 @@ const geistMono = Geist_Mono({ subsets: ["latin", "cyrillic"], variable: "--font
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://hashpix.ru"),
-  title: { default: "Hashpix — AI-нарезка видео", template: "%s | Hashpix" },
+  title: { default: "Narezai — AI-нарезка видео", template: "%s | Narezai" },
   description: "Превращайте длинные видео в готовые Shorts, Reels, TikTok и VK Клипы.",
-  icons: { icon: "/assets/logo-source.svg", shortcut: "/assets/logo-source.svg" },
+  icons: { icon: "/assets/logo-narezai-mark.svg", shortcut: "/assets/logo-narezai-mark.svg" },
   openGraph: {
     type: "website",
     locale: "ru_RU",
-    siteName: "Hashpix",
+    siteName: "Narezai",
     title: "Одно видео. Контент на недели.",
-    description: "Hashpix превращает длинные видео в готовые вертикальные ролики.",
+    description: "Narezai превращает длинные видео в готовые вертикальные ролики.",
   },
-  twitter: { card: "summary_large_image", title: "Hashpix", description: "Одно видео. Контент на недели." },
+  twitter: { card: "summary_large_image", title: "Narezai", description: "Одно видео. Контент на недели." },
 };
 
 export const viewport: Viewport = {

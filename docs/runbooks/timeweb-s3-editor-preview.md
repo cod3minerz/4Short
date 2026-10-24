@@ -22,17 +22,19 @@ domain in production.
 ```json
 [
   {
-    "AllowedOrigins": ["https://4short.ru"],
-    "AllowedMethods": ["GET", "HEAD"],
-    "AllowedHeaders": ["Range"],
+    "AllowedOrigins": ["https://narezai.com"],
+    "AllowedMethods": ["GET", "HEAD", "PUT"],
+    "AllowedHeaders": ["Range", "Content-Type", "x-amz-date", "x-amz-content-sha256"],
     "ExposeHeaders": ["Accept-Ranges", "Content-Range", "Content-Length", "Content-Type", "ETag"],
     "MaxAgeSeconds": 3600
   }
 ]
 ```
 
-If the production dashboard is hosted at another exact origin, replace only
-`https://4short.ru`; do not add a wildcard as a convenience. Keep this document
+This is a prepared policy, not yet applied: first verify that Vercel actually serves the
+production dashboard at this origin. Browser multipart upload needs `PUT`; completed upload and
+abort are performed by the control API. If the production dashboard is hosted at another exact origin, replace only
+`https://narezai.com`; do not add a wildcard as a convenience. Keep this document
 and `WEB_ORIGIN` in the control API deployment aligned.
 
 ## Acceptance check
@@ -48,10 +50,10 @@ shell:
 
 ```text
 GET <signed-preview-url>
-Origin: https://4short.ru
+Origin: https://narezai.com
 Range: bytes=0-0
 
-Expected: 206; video/*; Access-Control-Allow-Origin: https://4short.ru;
+Expected: 206; video/*; Access-Control-Allow-Origin: https://narezai.com;
 Accept-Ranges: bytes; Content-Range: bytes 0-0/...
 ```
 

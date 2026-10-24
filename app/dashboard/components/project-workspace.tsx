@@ -338,7 +338,7 @@ export function ProjectWorkspace({ projectId = "podcast-24" }: { projectId?: str
 
   const downloadClip = async (clipId: string, title: string) => {
     if (!canUseApi) {
-      setNotice("Скачивание доступно после подключения API.");
+      setNotice("Не удалось подготовить файл для скачивания. Попробуйте позже.");
       return;
     }
     setDownloadingClipId(clipId);

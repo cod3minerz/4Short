@@ -5,6 +5,7 @@ import re
 import threading
 
 from .config import Settings
+from .errors import JobError
 from .process import run_command
 
 
@@ -116,6 +117,52 @@ def create_source_thumbnail(
         "-q:v", "4",
         str(output),
     ], timeout_seconds=90, cancellation_event=cancellation_event)
+
+
+def create_render_poster(
+    settings: Settings,
+    input_path: Path,
+    output: Path,
+    *,
+    process_metrics: dict[str, int | float] | None = None,
+    cancellation_event: threading.Event | None = None,
+) -> None:
+    """Extract a bounded JPEG poster from the validated rendered clip.
+
+    This is a derivative of the exact output, never a source-video thumbnail.
+    Poster failure is handled as an optional-artifact miss by the render stage;
+    it must not invalidate an otherwise verified MP4.
+    """
+    output.parent.mkdir(parents=True, exist_ok=True)
+    last_error: JobError | None = None
+    for seek_seconds in (0.5, 0):
+        output.unlink(missing_ok=True)
+        seek = ["-ss", str(seek_seconds)] if seek_seconds else []
+        try:
+            run_command([
+                settings.ffmpeg_path,
+                "-hide_banner", "-nostdin", "-y",
+                *ffmpeg_thread_args(settings),
+                *seek,
+                "-i", str(input_path),
+                "-map", "0:v:0",
+                "-frames:v", "1",
+                "-vf", "scale='min(640,iw)':'min(640,ih)':force_original_aspect_ratio=decrease",
+                "-c:v", "mjpeg",
+                "-q:v", "5",
+                str(output),
+            ], timeout_seconds=45, process_metrics=process_metrics, cancellation_event=cancellation_event)
+            with output.open("rb") as handle:
+                if handle.read(3) != b"\xff\xd8\xff":
+                    raise JobError("POSTER_INVALID", "Rendered poster is not a JPEG", retryable=False)
+            if output.stat().st_size > 1_000_000:
+                raise JobError("POSTER_TOO_LARGE", "Rendered poster exceeds its size limit", retryable=False)
+            return
+        except JobError as error:
+            if error.code == "JOB_CANCELLED":
+                raise
+            last_error = error
+    raise last_error or JobError("POSTER_UNAVAILABLE", "Rendered poster could not be extracted", retryable=False)
 
 
 def create_browser_proxy(

@@ -93,6 +93,34 @@ test("EDL rejects an inverted range and accepts a canonical vertical export", ()
   }).success, true);
 });
 
+test("EDL preserves explicit face-tracking fallback diagnostics and remains backward-compatible", () => {
+  const base = {
+    schemaVersion: 1,
+    sourceId: "663bb257-2fc8-4a25-aa2b-d31532daf365",
+    sourceHash: "a".repeat(64),
+    range: { startMs: 1_000, endMs: 60_000 },
+    cuts: [],
+    layout: defaultStyleConfig.layout,
+    subtitles: defaultStyleConfig.subtitles,
+    silence: defaultStyleConfig.silence,
+    export: defaultStyleConfig.export,
+    styleVersionId: "763bb257-2fc8-4a25-aa2b-d31532daf365",
+    rendererVersion: "0.1.0",
+  };
+  const oldVersion = clipEdlSchema.parse(base);
+  assert.equal(oldVersion.faceTracking, undefined);
+
+  const fallback = clipEdlSchema.parse({
+    ...base,
+    faceTracking: { mode: "static_crop", warnings: ["FACE_NOT_FOUND"] },
+  });
+  assert.deepEqual(fallback.faceTracking, { mode: "static_crop", warnings: ["FACE_NOT_FOUND"] });
+  assert.equal(clipEdlSchema.safeParse({
+    ...base,
+    faceTracking: { mode: "static_crop", warnings: ["UNKNOWN_WARNING"] },
+  }).success, false);
+});
+
 test("subtitle presets retain the selected active-word and word-pop identity", () => {
   const activeWord = subtitleConfigSchema.safeParse({ preset: "active_word", mode: "active_word" });
   const wordPop = subtitleConfigSchema.safeParse({ preset: "word_pop", mode: "word_by_word" });

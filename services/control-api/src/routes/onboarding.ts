@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { defaultStyleConfig, productPlans } from "../../../../packages/product-config/src/index.js";
 import {
@@ -12,8 +12,22 @@ import {
 import { getIdempotencyKey } from "../lib/http.js";
 import { runIdempotent } from "../services/idempotency.js";
 import { auth } from "../auth/index.js";
+import { clippingDefaultsSchema } from "../../../../packages/contracts/src/index.js";
 
 export async function onboardingRoutes(app: FastifyInstance) {
+  app.get("/v1/workspace/clipping-defaults", { preHandler: app.requireWorkspace }, async (request) => {
+    const [workspace] = await app.db.select({ defaults: workspaces.clippingDefaults }).from(workspaces).where(eq(workspaces.id, request.authContext!.workspaceId)).limit(1);
+    if (!workspace) throw app.httpErrors.notFound("Workspace not found");
+    return { defaults: workspace.defaults };
+  });
+  app.put("/v1/workspace/clipping-defaults", { preHandler: app.requireWorkspace }, async (request) => {
+    const defaults = clippingDefaultsSchema.parse(request.body);
+    const workspaceId = request.authContext!.workspaceId;
+    const [style] = await app.db.select({ id: styleVersions.id }).from(styleVersions).innerJoin(stylePresets, eq(stylePresets.id, styleVersions.stylePresetId)).where(and(eq(styleVersions.id, defaults.styleVersionId), eq(stylePresets.workspaceId, workspaceId))).limit(1);
+    if (!style) throw app.httpErrors.badRequest("Style does not belong to workspace");
+    await app.db.update(workspaces).set({ clippingDefaults: defaults, updatedAt: new Date() }).where(eq(workspaces.id, workspaceId));
+    return { defaults };
+  });
   /**
    * Idempotent by USER, not just by client-supplied idempotency key — a
    * returning user (new device, cleared storage) must land back on their
@@ -41,7 +55,7 @@ export async function onboardingRoutes(app: FastifyInstance) {
     }
 
     const body = request.body as { name?: string };
-    const name = body.name?.trim() || "Мой Hashpix";
+      const name = body.name?.trim() || "Мой Narezai";
     const key = getIdempotencyKey(request);
     const provisionalWorkspaceId = crypto.randomUUID();
     const result = await runIdempotent({

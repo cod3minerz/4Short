@@ -50,6 +50,10 @@ export async function buildApp() {
       callback(null, !origin || trustedOrigins.includes(origin));
     },
     credentials: true,
+    // Authenticated product settings/render actions use these verbs. Keep
+    // origins credential-allowlisted; the default GET/HEAD/POST CORS list
+    // otherwise blocks PUT/PATCH/DELETE before workspace auth can run.
+    methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "Idempotency-Key", "X-Workspace-Id", "X-Development-User-Id"],
     exposedHeaders: ["Idempotency-Replayed"],
   });

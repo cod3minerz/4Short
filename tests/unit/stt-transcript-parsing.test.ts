@@ -1,6 +1,26 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseSttResponse, reduceTranscriptRevisionsToCaptionOverrides } from "../../services/control-api/src/services/transcript.js";
+import { parseSttResponse, reduceTranscriptRevisionsToCaptionOverrides, transcriptCoversRange, transcriptMatchesSpeechProfile } from "../../services/control-api/src/services/transcript.js";
+
+test("saved transcript reuse is fenced by the configured STT model and engine", () => {
+  const modelFingerprint = "a".repeat(64);
+  const payload = { modelFingerprint, engineVersion: "hve-cpu-1" };
+
+  assert.equal(transcriptMatchesSpeechProfile(payload, modelFingerprint, "hve-cpu-1"), true);
+  assert.equal(transcriptMatchesSpeechProfile(payload, "b".repeat(64), "hve-cpu-1"), false);
+  assert.equal(transcriptMatchesSpeechProfile(payload, modelFingerprint, "hve-cpu-2"), false);
+  assert.equal(transcriptMatchesSpeechProfile(payload, "", "hve-cpu-1"), false);
+  assert.equal(transcriptMatchesSpeechProfile({ engineVersion: "hve-cpu-1" }, modelFingerprint, "hve-cpu-1"), false);
+});
+
+test("reuses only transcripts whose known source-time coverage contains the requested range", () => {
+  const coverage = { coverageStartMs: 5_000, coverageEndMs: 20_000 };
+  assert.equal(transcriptCoversRange(coverage, { startMs: 5_000, endMs: 20_000 }), true);
+  assert.equal(transcriptCoversRange(coverage, { startMs: 8_000, endMs: 12_000 }), true);
+  assert.equal(transcriptCoversRange(coverage, { startMs: 0, endMs: 20_000 }), false);
+  assert.equal(transcriptCoversRange(coverage, { startMs: 5_000, endMs: 20_001 }), false);
+  assert.equal(transcriptCoversRange({ coverageStartMs: null, coverageEndMs: null }, { startMs: 0, endMs: 1 }), false);
+});
 
 test("parses the canonical Faster-Whisper response into ordered segments", () => {
   const segments = parseSttResponse({

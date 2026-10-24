@@ -77,14 +77,28 @@ def deterministic_candidates(segments: list[TranscriptSegment], settings: object
     if mode not in {"uniform", "manual"}:
         return None
     source_range = config.get("sourceRange") if isinstance(config.get("sourceRange"), dict) else {}
-    source_start = max(segments[0].start_ms, int(source_range.get("startSeconds", 0) or 0) * 1000)
-    source_end = min(
-        segments[-1].end_ms,
-        int(source_range.get("endSeconds", 0) or 0) * 1000 or segments[-1].end_ms,
-    )
-    if source_end <= source_start:
+    requested_start = max(0, int(source_range.get("startSeconds", 0) or 0) * 1000)
+    requested_end = int(source_range.get("endSeconds", 0) or 0) * 1000 or segments[-1].end_ms
+    speech_start = max(segments[0].start_ms, requested_start)
+    speech_end = min(segments[-1].end_ms, requested_end)
+    if speech_end <= speech_start:
         raise JobError("SOURCE_RANGE_INVALID", "Selected source range contains no speech", retryable=False)
     if mode == "manual":
+        # Manual means the exact user-selected media interval, including any
+        # intentional silence at its edges. The overlap check above only
+        # prevents selecting a range with no transcript coverage whatsoever.
+        source_start, source_end = requested_start, requested_end
+        minimum_seconds = max(1, int(config.get("durationMinSeconds", 10) or 10))
+        maximum_seconds = max(minimum_seconds, int(config.get("durationMaxSeconds", 90) or 90))
+        minimum = minimum_seconds * 1000
+        maximum = maximum_seconds * 1000
+        selected_duration = source_end - source_start
+        if selected_duration < minimum or selected_duration > maximum:
+            raise JobError(
+                "MANUAL_RANGE_DURATION_INVALID",
+                "Selected source range must match the requested clip duration",
+                retryable=False,
+            )
         return [{
             "startMs": source_start,
             "endMs": source_end,
@@ -95,20 +109,32 @@ def deterministic_candidates(segments: list[TranscriptSegment], settings: object
             "warnings": [],
         }]
 
-    minimum = int(config.get("durationMinSeconds", 30) or 30) * 1000
-    maximum = int(config.get("durationMaxSeconds", 60) or 60) * 1000
-    target = max(minimum, (minimum + maximum) // 2)
+    source_start, source_end = speech_start, speech_end
+    minimum_seconds = max(1, int(config.get("durationMinSeconds", 30) or 30))
+    maximum_seconds = max(minimum_seconds, int(config.get("durationMaxSeconds", 60) or 60))
+    minimum = minimum_seconds * 1000
+    maximum = maximum_seconds * 1000
+    target = (minimum + maximum) // 2
     requested = config.get("count")
-    count = int(requested) if isinstance(requested, int) else max(1, (source_end - source_start) // target)
-    count = max(1, min(count, 50))
-    step = max(1, (source_end - source_start) // count)
+    source_duration = source_end - source_start
+    maximum_count = source_duration // minimum
+    if maximum_count < 1:
+        raise JobError("SOURCE_RANGE_TOO_SHORT", "Selected source range is shorter than the minimum clip duration", retryable=False)
+    requested_count = int(requested) if isinstance(requested, int) else max(1, source_duration // target)
+    count = max(1, min(requested_count, maximum_count, 50))
+    clip_duration = min(maximum, source_duration // count)
+    latest_start = source_end - clip_duration
+    start_span = latest_start - source_start
+    starts = [
+        source_start + round(start_span * index / (count - 1))
+        if count > 1
+        else source_start + start_span // 2
+        for index in range(count)
+    ]
+    count_warning = ["REQUESTED_COUNT_REDUCED_TO_FIT_DURATION"] if count < requested_count else []
     output = []
-    for index in range(count):
-        start = source_start + index * step
-        end = source_end if index == count - 1 else min(source_end, start + min(maximum, step))
-        if end - start < minimum and output:
-            output[-1]["endMs"] = source_end
-            break
+    for index, start in enumerate(starts):
+        end = start + clip_duration
         output.append({
             "startMs": start,
             "endMs": end,
@@ -116,7 +142,7 @@ def deterministic_candidates(segments: list[TranscriptSegment], settings: object
             "topic": "Равномерная нарезка",
             "explanation": "Фрагмент распределён равномерно по выбранному диапазону",
             "score": None,
-            "warnings": [],
+            "warnings": count_warning.copy(),
         })
     return output
 

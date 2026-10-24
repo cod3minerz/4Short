@@ -1,12 +1,14 @@
 import { randomUUID } from "node:crypto";
-import { and, eq, gt, isNull, or, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, isNull, or, sql } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { completeUploadSchema, createUploadSchema } from "../../../../packages/contracts/src/index.js";
-import { mediaObjects, sources, uploads, workspaces } from "../../../../db/schema.js";
+import { jobs, mediaObjects, projects, sources, uploads, workspaces } from "../../../../db/schema.js";
 import { productPlans, type PlanCode } from "../../../../packages/product-config/src/index.js";
 import {
+  abortMultipartUpload,
   beginMultipartUpload,
   completeMultipartUpload,
+  deletePrivateObject,
   s3ObjectLocation,
   signUploadPart,
 } from "../lib/s3.js";
@@ -118,35 +120,77 @@ export async function uploadRoutes(app: FastifyInstance) {
     return { parts };
   });
 
+  app.delete("/v1/uploads/:uploadId", { preHandler: app.requireWorkspace }, async (request, reply) => {
+    const { uploadId } = request.params as { uploadId: string };
+    const { workspaceId } = request.authContext!;
+    const target = await app.db.transaction(async (tx) => {
+      const [row] = await tx.select({ upload: uploads, media: mediaObjects })
+        .from(uploads)
+        .innerJoin(mediaObjects, eq(mediaObjects.id, uploads.mediaObjectId))
+        .where(and(eq(uploads.id, uploadId), eq(uploads.workspaceId, workspaceId)))
+        .for("update")
+        .limit(1);
+      if (!row) return null;
+      if (row.upload.status !== "pending" && row.upload.status !== "completed" && row.upload.status !== "cancelled") {
+        throw app.httpErrors.conflict("Загрузка уже используется");
+      }
+      if (row.upload.sourceId) {
+        const [project] = await tx.select({ id: projects.id }).from(projects)
+          .where(and(eq(projects.workspaceId, workspaceId), eq(projects.sourceId, row.upload.sourceId)))
+          .limit(1);
+        if (project) throw app.httpErrors.conflict("Исходник уже используется проектом");
+        const [blockingPreview] = await tx.select({ id: jobs.id }).from(jobs)
+          .where(and(
+            eq(jobs.workspaceId, workspaceId),
+            eq(jobs.type, "source_preview"),
+            sql`${jobs.payload}->>'sourceId' = ${row.upload.sourceId}`,
+            inArray(jobs.status, ["queued", "leased", "waiting_provider", "succeeded"]),
+          ))
+          .limit(1);
+        if (blockingPreview) throw app.httpErrors.conflict("Проверка файла ещё выполняется или уже завершена");
+      }
+      if (row.upload.status !== "cancelled") {
+        const now = new Date();
+        await Promise.all([
+          tx.update(uploads).set({ status: "cancelled", updatedAt: now }).where(eq(uploads.id, uploadId)),
+          tx.update(mediaObjects).set({ deletedAt: now, updatedAt: now }).where(eq(mediaObjects.id, row.media.id)),
+        ]);
+      }
+      return { bucket: row.media.bucket, key: row.media.objectKey, providerUploadId: row.upload.providerUploadId };
+    });
+
+    if (target) {
+      try {
+        await abortMultipartUpload(target.bucket, target.key, target.providerUploadId);
+        await deletePrivateObject(target.bucket, target.key);
+      } catch (error) {
+        request.log.error({ err: error, uploadId }, "failed upload cleanup will remain retryable");
+        throw app.httpErrors.serviceUnavailable("Не удалось очистить неиспользуемую загрузку. Повторите попытку.");
+      }
+    }
+    return reply.code(204).send();
+  });
+
   app.post("/v1/uploads/:uploadId/complete", { preHandler: app.requireWorkspace }, async (request) => {
     const body = completeUploadSchema.parse(request.body);
     const { uploadId } = request.params as { uploadId: string };
-    const [row] = await app.db.select({
-      upload: uploads,
-      media: mediaObjects,
-    }).from(uploads)
-      .innerJoin(mediaObjects, eq(mediaObjects.id, uploads.mediaObjectId))
-      .where(and(
-        eq(uploads.id, uploadId),
-        eq(uploads.workspaceId, request.authContext!.workspaceId),
-      ))
-      .limit(1);
-    if (!row) throw app.httpErrors.notFound("Upload not found");
-    // Brand assets have a separate completion boundary which verifies their
-    // bytes and records their SHA-256 before HVE can consume them. Never let
-    // the generic source completion route bypass that invariant.
-    if (!row.upload.sourceId || row.media.kind === "brand_asset") {
-      throw app.httpErrors.conflict("Complete brand assets through /v1/brand-assets/uploads/:uploadId/complete");
-    }
-    if (row.upload.status === "completed") return { uploadId, sourceId: row.upload.sourceId, status: "completed" };
+    return app.db.transaction(async (tx) => {
+      const [row] = await tx.select({ upload: uploads, media: mediaObjects })
+        .from(uploads)
+        .innerJoin(mediaObjects, eq(mediaObjects.id, uploads.mediaObjectId))
+        .where(and(eq(uploads.id, uploadId), eq(uploads.workspaceId, request.authContext!.workspaceId)))
+        .for("update")
+        .limit(1);
+      if (!row) throw app.httpErrors.notFound("Upload not found");
+      // Brand assets have a separate completion boundary which verifies their
+      // bytes and records SHA-256 before HVE can consume them.
+      if (!row.upload.sourceId || row.media.kind === "brand_asset") {
+        throw app.httpErrors.conflict("Complete brand assets through /v1/brand-assets/uploads/:uploadId/complete");
+      }
+      if (row.upload.status === "completed") return { uploadId, sourceId: row.upload.sourceId, status: "completed" };
+      if (row.upload.status !== "pending") throw app.httpErrors.conflict("Upload is no longer pending");
 
-    await completeMultipartUpload({
-      bucket: row.media.bucket,
-      key: row.media.objectKey,
-      uploadId: row.upload.providerUploadId,
-      parts: body.parts,
-    });
-    await app.db.transaction(async (tx) => {
+      await completeMultipartUpload({ bucket: row.media.bucket, key: row.media.objectKey, uploadId: row.upload.providerUploadId, parts: body.parts });
       const [workspace] = await tx.select({ planCode: workspaces.planCode })
         .from(workspaces)
         .where(eq(workspaces.id, request.authContext!.workspaceId))
@@ -163,7 +207,7 @@ export async function uploadRoutes(app: FastifyInstance) {
         tx.update(mediaObjects).set({ expiresAt: sourceExpiresAt })
           .where(eq(mediaObjects.id, row.media.id)),
       ]);
+      return { uploadId, sourceId: row.upload.sourceId, status: "completed" };
     });
-    return { uploadId, sourceId: row.upload.sourceId, status: "completed" };
   });
 }

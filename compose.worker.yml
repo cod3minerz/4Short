@@ -4,6 +4,9 @@ services:
   media-worker:
     env_file:
       - /etc/4short/media-worker.env
+      # Same bucket/prefix-scoped identity as the control API; the GPU worker
+      # needs object reads/writes but never database credentials.
+      - /etc/4short/s3.env
       # Atomically replaced by the privileged deployer before a release. It
       # must survive Docker/host restarts after GitHub removes its /tmp upload.
       - /etc/4short/worker-api-token.env
@@ -12,11 +15,9 @@ services:
       # diagnostic at runtime and makes hardware benchmark evidence reject a
       # report from an unknown/mutable image.
       FOURSHORT_WORKER_IMAGE_DIGEST: ${FOURSHORT_WORKER_IMAGE_DIGEST:-}
-    # Both Timeweb hosts are attached to the same private network. Keep the
-    # public hostname for TLS/SNI, but send service-to-service traffic directly
-    # to the control plane instead of hairpinning through the public Internet.
-    extra_hosts:
-      - "api.hashpix.ru:192.168.0.4"
+    # Workers may run on a different provider. CONTROL_API_URL in the
+    # server-only env file must use the public HTTPS API origin so TLS/SNI and
+    # authenticated callbacks remain valid; do not pin a provider IP here.
     build:
       context: .
       dockerfile: services/media-worker/Dockerfile

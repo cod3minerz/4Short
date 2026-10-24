@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 from fourshort_worker.providers import (
     _load_faster_whisper_model,
     _serialize_faster_whisper,
+    bind_speech_profile_identity,
     FasterWhisperStt,
     faster_whisper_transcribe_options,
 )
@@ -18,6 +19,25 @@ from fourshort_worker.errors import JobError
 
 
 class FasterWhisperSerializationTests(unittest.TestCase):
+    def test_worker_response_includes_verified_model_and_engine_identity(self):
+        response = bind_speech_profile_identity({}, "A" * 64, "hve-test-1")
+        self.assertEqual(response, {"modelFingerprint": "a" * 64, "engineVersion": "hve-test-1"})
+
+    def test_worker_refuses_incomplete_speech_profile_identity(self):
+        with self.assertRaises(JobError) as context:
+            bind_speech_profile_identity({}, "", "hve-test-1")
+        self.assertEqual(context.exception.code, "STT_PROFILE_IDENTITY_INVALID")
+
+    def test_provider_name_matches_the_configured_local_model(self):
+        self.assertEqual(
+            FasterWhisperStt(SimpleNamespace(stt_model="tiny")).name,
+            "faster_whisper_tiny",
+        )
+        self.assertEqual(
+            FasterWhisperStt(SimpleNamespace(stt_model="large-v3-turbo")).name,
+            "faster_whisper_large_v3_turbo",
+        )
+
     def test_cancelled_transcription_does_not_begin_audio_download(self):
         cancelled = threading.Event()
         cancelled.set()

@@ -20,12 +20,23 @@ export type Project = {
   durationMinutes: number;
   status: ProjectStatus;
   clipsFound: number;
+  clipsTotal?: number;
   clipsReady: number;
+  clipsAvailable?: number;
+  clipsFailed?: number;
+  processing?: {
+    type: string;
+    status: string;
+    progress: { completed: number; total: number; unit: "bytes" | "milliseconds" | "frames" | "steps" } | null;
+    progressUpdatedAt: string | null;
+  } | null;
   style: string;
   updatedAt: string;
   accent: "sky" | "ink" | "soft";
   /** Signed source still when it exists. Never a generated brand placeholder. */
   thumbnailUrl?: string | null;
+  sourceAvailable?: boolean;
+  sourceExpiresAt?: string | null;
 };
 
 export type MomentCandidate = {

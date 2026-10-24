@@ -22,6 +22,21 @@ export const faceTrackSchema = z.object({
   keyframes: z.array(cropKeyframeSchema).min(1).max(10_000),
 });
 
+/** Explicit outcome of the first-pass face tracker. Optional on ClipEDL for
+ * compatibility with versions created before this diagnostic was persisted. */
+export const faceTrackingResultSchema = z.object({
+  mode: z.enum(["tracked", "static_crop"]),
+  warnings: z.array(z.enum([
+    "FACE_TRACKING_DISABLED",
+    "FACE_MODEL_UNAVAILABLE",
+    "FACE_MODEL_INVALID",
+    "FACE_MODEL_FINGERPRINT_MISSING",
+    "FACE_MODEL_TAMPERED",
+    "FACE_NOT_FOUND",
+    "ACTIVE_SPEAKER_MODEL_PENDING",
+  ])).max(8).default([]),
+});
+
 export const layoutConfigSchema = z.discriminatedUnion("mode", [
   z.object({ mode: z.literal("auto"), safeFallback: z.enum(["static_crop", "blur_background"]).default("static_crop") }),
   z.object({ mode: z.literal("active_speaker"), smoothing: z.number().min(0).max(1).default(0.82) }),
@@ -131,6 +146,7 @@ export const clipEdlSchema = z.object({
   layout: layoutConfigSchema,
   cropTrack: z.array(cropKeyframeSchema).optional(),
   faceTracks: z.array(faceTrackSchema).max(8).optional(),
+  faceTracking: faceTrackingResultSchema.optional(),
   subtitles: subtitleConfigSchema,
   silence: silenceConfigSchema,
   title: timedLayerSchema.optional(),

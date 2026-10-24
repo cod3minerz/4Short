@@ -19,6 +19,11 @@ const trustedOriginsSchema = z.string().default("").transform((value, context) =
   return [...new Set(normalized)];
 });
 
+const optionalEmailSchema = z.preprocess(
+  (value) => typeof value === "string" && value.trim() === "" ? undefined : value,
+  z.string().trim().email().optional(),
+);
+
 const environmentSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(4100),
@@ -42,9 +47,9 @@ const environmentSchema = z.object({
   // needed) — duration is simply omitted rather than faked.
   YOUTUBE_API_KEY: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
-  RESEND_FROM_EMAIL: z.string().email().default("hello@hashpix.ru"),
-  RESEND_FROM_NAME: z.string().min(1).max(80).default("Hashpix"),
-  RESEND_REPLY_TO: z.string().email().default("hello@hashpix.ru"),
+  RESEND_FROM_EMAIL: optionalEmailSchema,
+  RESEND_FROM_NAME: z.string().min(1).max(80).default("Narezai"),
+  RESEND_REPLY_TO: optionalEmailSchema,
   S3_ENDPOINT: z.string().url().default("https://s3.twcstorage.ru"),
   S3_REGION: z.string().default("ru-1"),
   S3_FORCE_PATH_STYLE: z.stringbool().default(true),
@@ -52,6 +57,8 @@ const environmentSchema = z.object({
   S3_ACCESS_KEY_ID: z.string().min(1),
   S3_SECRET_ACCESS_KEY: z.string().min(1),
   S3_BUCKET: z.string().min(1).optional(),
+  // Legacy per-kind buckets are kept for development/backward compatibility.
+  // Production must explicitly configure the single private bucket above.
   S3_RAW_BUCKET: z.string().default("4short-raw"),
   S3_PROXY_BUCKET: z.string().default("4short-proxy"),
   S3_DERIVED_BUCKET: z.string().default("4short-derived"),
@@ -61,6 +68,10 @@ const environmentSchema = z.object({
   S3_DERIVED_PREFIX: z.string().default("derived"),
   S3_ASSETS_PREFIX: z.string().default("assets"),
   WORKER_API_TOKEN: z.string().min(32),
+  HVE_ENGINE_VERSION: z.string().min(1).max(120).default("hve-0.1"),
+  // Must match the immutable model manifest fingerprint advertised by the
+  // media worker. An empty value intentionally disables STT dispatch/reuse.
+  HVE_STT_MODEL_FINGERPRINT: z.string().regex(/^(?:[a-f0-9]{64})?$/i).default("").transform((value) => value.toLowerCase()),
   // Roll HVE documents out only alongside the typed focus-editor client.
   // Defaulting to false protects existing v1 editor sessions from creating a
   // lossy follow-up version after the pipeline has made a v2 version.
@@ -78,14 +89,70 @@ const environmentSchema = z.object({
   RATE_LIMIT_MAX: z.coerce.number().int().min(30).max(10_000).default(240),
   RATE_LIMIT_WINDOW: z.string().default("1 minute"),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
+}).superRefine((env, context) => {
+  if (env.NODE_ENV !== "production") return;
+
+  const requireHttps = (value: string, field: string) => {
+    if (new URL(value).protocol !== "https:") {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [field],
+        message: `${field} must use HTTPS in production`,
+      });
+    }
+  };
+
+  if (env.DATABASE_SSL !== "verify-full") {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["DATABASE_SSL"],
+      message: "DATABASE_SSL must be verify-full in production",
+    });
+  }
+  if (!env.DATABASE_SSL_ROOT_CERT?.trim()) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["DATABASE_SSL_ROOT_CERT"],
+      message: "DATABASE_SSL_ROOT_CERT is required in production",
+    });
+  }
+  if (!env.S3_BUCKET?.trim()) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["S3_BUCKET"],
+      message: "S3_BUCKET must explicitly name the private production bucket",
+    });
+  }
+  if (!env.RESEND_API_KEY?.trim()) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["RESEND_API_KEY"],
+      message: "RESEND_API_KEY is required for production email sign-in",
+    });
+  }
+  if (!env.RESEND_FROM_EMAIL) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["RESEND_FROM_EMAIL"],
+      message: "RESEND_FROM_EMAIL must be a verified production sender",
+    });
+  }
+
+  requireHttps(env.API_PUBLIC_URL, "API_PUBLIC_URL");
+  requireHttps(env.WEB_ORIGIN, "WEB_ORIGIN");
+  requireHttps(env.S3_ENDPOINT, "S3_ENDPOINT");
 });
 
 export type ControlApiEnv = z.infer<typeof environmentSchema>;
 
+export function parseEnvironment(input: NodeJS.ProcessEnv = process.env): ControlApiEnv {
+  return environmentSchema.parse(input);
+}
+
 let cached: ControlApiEnv | undefined;
 
 export function getEnv(): ControlApiEnv {
-  cached ??= environmentSchema.parse(process.env);
+  cached ??= parseEnvironment();
   return cached;
 }
 

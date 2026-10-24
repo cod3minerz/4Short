@@ -102,6 +102,7 @@ test("capability admission rejects under-provisioned workers but keeps v1 jobs r
     requiredClasses: ["cpu_heavy"], requiredJobTypes: ["speech_to_text"], workspaceConcurrencyLimit: 2,
   });
   assert.equal(workerCanRunHveJob(capability, requirements), true);
+  assert.equal(workerCanRunHveJob({ ...capability, models: { stt: "different-model-pack" } }, requirements), false);
   assert.equal(workerCanRunHveJob(capability, { ...requirements, requiredClasses: ["cpu_medium"] }), false);
   assert.equal(workerCanRunHveJob(capability, { ...requirements, requiredJobTypes: ["analyze_visual"] }), false);
   assert.equal(workerHasCapacity(capability, 0, requirements), true);

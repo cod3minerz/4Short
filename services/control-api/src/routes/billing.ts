@@ -96,7 +96,7 @@ export async function billingRoutes(app: FastifyInstance) {
         const provider = await createTBankPayment({
           idempotencyKey,
           amountKopecks: item.priceKopecks,
-          description: `Hashpix: пакет ${item.seconds / 60} минут`,
+            description: `Narezai: пакет ${item.seconds / 60} минут`,
           workspaceId,
           packageCode: item.code,
         });

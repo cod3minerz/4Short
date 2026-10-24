@@ -10,10 +10,28 @@ import psutil
 sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 
 from fourshort_worker.errors import JobError
-from fourshort_worker.process import run_command
+from fourshort_worker.process import redact_sensitive_text, redact_sensitive_value, run_command
 
 
 class ProcessCancellationTests(unittest.TestCase):
+    def test_subprocess_failure_redacts_signed_source_urls(self):
+        signed = "https://storage.example/video.mp4?X-Amz-Signature=secret-value"
+        with self.assertRaises(JobError) as context:
+            run_command(
+                [sys.executable, "-c", f"import sys; print({(signed + ': Invalid data found').__repr__()}, file=sys.stderr); sys.exit(1)"],
+                timeout_seconds=5,
+            )
+        stderr = context.exception.details["stderr"]
+        self.assertNotIn("storage.example", stderr)
+        self.assertNotIn("secret-value", stderr)
+        self.assertIn("[redacted URL]", stderr)
+
+    def test_worker_error_scrubber_redacts_nested_payloads(self):
+        details = {"provider": ["failed for https://host.invalid/media?signature=abc"]}
+        scrubbed = redact_sensitive_value(details)
+        self.assertNotIn("signature=abc", str(scrubbed))
+        self.assertEqual(redact_sensitive_text("public host https://host.invalid/path"), "public host [redacted URL]")
+
     def test_cancellation_stops_a_running_process_group(self):
         cancelled = threading.Event()
         timer = threading.Timer(0.1, cancelled.set)

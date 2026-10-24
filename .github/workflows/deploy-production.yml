@@ -67,6 +67,9 @@ jobs:
             "/tmp/4short-${GITHUB_SHA}.tar.gz" "/tmp/4short-worker-api-token.env" \
             "deploy@${DEPLOY_HOST}:${DEPLOY_STAGING_DIR}/"
 
+          ssh -o BatchMode=yes "deploy@${DEPLOY_HOST}" \
+            "chmod 600 '${DEPLOY_STAGING_DIR}/4short-worker-api-token.env'"
+
       - name: Activate release
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}

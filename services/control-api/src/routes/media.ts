@@ -63,25 +63,54 @@ export async function mediaRoutes(app: FastifyInstance) {
     const normalizedUrl = remoteUrl ? new URL(remoteUrl).toString() : null;
     const preflightKey = createHash("sha256").update(normalizedUrl ?? sourceId ?? "").digest("hex");
 
-    let payload: Record<string, unknown>;
     if (sourceId) {
-      const [row] = await app.db.select({ source: sources, media: mediaObjects, upload: uploads })
-        .from(sources)
-        .innerJoin(mediaObjects, eq(mediaObjects.id, sources.originalMediaId))
-        .leftJoin(uploads, eq(uploads.sourceId, sources.id))
-        .where(and(eq(sources.id, sourceId), eq(sources.workspaceId, workspaceId)))
-        .limit(1);
-      if (!row || row.source.kind !== "upload" || row.media.deletedAt || row.upload?.status !== "completed") {
-        throw app.httpErrors.badRequest("Сначала завершите загрузку файла");
-      }
-      payload = {
-        sourceId,
-        source: { kind: "s3", bucket: row.media.bucket, key: row.media.objectKey, mimeType: row.media.mimeType },
-        title: typeof row.source.metadata.originalFileName === "string" ? row.source.metadata.originalFileName.slice(0, 180) : "Загруженное видео",
-      };
-    } else {
-      payload = { url: normalizedUrl! };
+      const result = await app.db.transaction(async (tx) => {
+        const [row] = await tx.select({ source: sources, media: mediaObjects, upload: uploads })
+          .from(uploads)
+          .innerJoin(sources, eq(sources.id, uploads.sourceId))
+          .innerJoin(mediaObjects, eq(mediaObjects.id, sources.originalMediaId))
+          .where(and(
+            eq(sources.id, sourceId),
+            eq(sources.workspaceId, workspaceId),
+            eq(uploads.workspaceId, workspaceId),
+          ))
+          .for("update")
+          .limit(1);
+        if (!row || row.source.kind !== "upload" || row.media.deletedAt || row.upload?.status !== "completed") {
+          throw app.httpErrors.badRequest("Сначала завершите загрузку файла");
+        }
+        const [recent] = await tx.select().from(jobs).where(and(
+          eq(jobs.workspaceId, workspaceId),
+          eq(jobs.type, "source_preview"),
+          eq(jobs.status, "succeeded"),
+          sql`${jobs.payload}->>'sourceId' = ${sourceId}`,
+          gt(jobs.completedAt, new Date(Date.now() - 15 * 60 * 1000)),
+        )).orderBy(desc(jobs.completedAt)).limit(1);
+        if (recent) return { recent };
+        const [job] = await tx.insert(jobs).values({
+          workspaceId,
+          type: "source_preview",
+          class: "io",
+          payload: {
+            sourceId,
+            source: { kind: "s3", bucket: row.media.bucket, key: row.media.objectKey, mimeType: row.media.mimeType },
+            title: typeof row.source.metadata.originalFileName === "string" ? row.source.metadata.originalFileName.slice(0, 180) : "Загруженное видео",
+          },
+          idempotencyKey: `source-preview:${preflightKey}:${randomUUID()}`,
+          estimatedCost: "0.1",
+          maxAttempts: 1,
+        }).returning();
+        return { job };
+      });
+      if (result.recent) return reply.send({
+        id: result.recent.id,
+        status: result.recent.status,
+        result: await presentPreviewResult(result.recent.result),
+      });
+      return reply.code(202).send({ id: result.job.id, status: result.job.status, result: null });
     }
+
+    const payload = { url: normalizedUrl! };
 
     // Keep a successful lookup for a short period. It makes repeated clicks
     // instant but does not treat remote metadata as durable project data.

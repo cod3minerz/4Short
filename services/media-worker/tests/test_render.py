@@ -1,5 +1,6 @@
 import sys
 from array import array
+import json
 import shutil
 import subprocess
 import tempfile
@@ -9,7 +10,7 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 
-from fourshort_worker.media import _black_segments_from_ffmpeg_log, probe_media, validate_render
+from fourshort_worker.media import _black_segments_from_ffmpeg_log, create_render_poster, probe_media, validate_render
 from fourshort_worker.render import _hve2_timeline_filter, _loudness_filter, build_hve2_keep_ranges, build_hve2_timeline, build_kept_ranges, compile_resolved_layout_filter, compile_video_filter, render_clip
 from fourshort_worker.subtitles import write_ass
 
@@ -30,6 +31,33 @@ def edl_with_layout(layout: dict) -> dict:
 
 
 class RenderFilterTests(unittest.TestCase):
+    @unittest.skipUnless(shutil.which("ffmpeg") and shutil.which("ffprobe"), "ffmpeg and ffprobe are required")
+    def test_render_poster_is_extracted_from_the_validated_clip(self):
+        ffmpeg = shutil.which("ffmpeg")
+        ffprobe = shutil.which("ffprobe")
+        assert ffmpeg and ffprobe
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            clip = root / "clip.mp4"
+            poster = root / "poster.jpg"
+            subprocess.run([
+                ffmpeg, "-hide_banner", "-nostdin", "-y",
+                "-f", "lavfi", "-i", "testsrc2=size=320x180:r=24:d=1.5",
+                "-c:v", "libx264", "-pix_fmt", "yuv420p", str(clip),
+            ], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+            create_render_poster(SimpleNamespace(ffmpeg_path=ffmpeg), clip, poster)
+
+            self.assertLessEqual(poster.stat().st_size, 1_000_000)
+            self.assertEqual(poster.read_bytes()[:3], b"\xff\xd8\xff")
+            details = subprocess.run([
+                ffprobe, "-v", "error", "-select_streams", "v:0",
+                "-show_entries", "stream=codec_name,width,height", "-of", "json", str(poster),
+            ], check=True, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stream = json.loads(details.stdout)["streams"][0]
+            self.assertEqual(stream["codec_name"], "mjpeg")
+            self.assertEqual((stream["width"], stream["height"]), (320, 180))
+
     def test_blackdetect_log_parser_returns_bounded_output_clock_segments(self):
         log = "[blackdetect] black_start:0.000000 black_end:0.833333 black_duration:0.833333\n"
         self.assertEqual(_black_segments_from_ffmpeg_log(log), [{

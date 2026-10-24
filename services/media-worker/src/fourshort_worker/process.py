@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import threading
 import time
@@ -11,6 +12,27 @@ from typing import Iterable
 import psutil
 
 from .errors import JobError
+
+
+_URL_PATTERN = re.compile(r"https?://[^\s\"'<>]+", re.IGNORECASE)
+
+
+def redact_sensitive_text(value: str) -> str:
+    """Remove source and presigned object URLs before error data is persisted."""
+    return _URL_PATTERN.sub("[redacted URL]", value)
+
+
+def redact_sensitive_value(value):
+    """Recursively scrub arbitrary subprocess/provider error payloads."""
+    if isinstance(value, str):
+        return redact_sensitive_text(value)
+    if isinstance(value, dict):
+        return {key: redact_sensitive_value(child) for key, child in value.items()}
+    if isinstance(value, list):
+        return [redact_sensitive_value(child) for child in value]
+    if isinstance(value, tuple):
+        return tuple(redact_sensitive_value(child) for child in value)
+    return value
 
 
 class _SubprocessMetrics:
@@ -163,7 +185,7 @@ def run_command(
             "PROCESS_FAILED",
             f"{Path(command[0]).name} failed",
             retryable=process.returncode in {137, 143, 255},
-            details={"returnCode": process.returncode, "stderr": stderr[-2000:]},
+            details={"returnCode": process.returncode, "stderr": redact_sensitive_text(stderr[-2000:])},
         )
     if capture_json:
         if capture_stderr:

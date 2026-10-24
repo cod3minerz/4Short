@@ -23,21 +23,21 @@ async function render(pathname = "/") {
   );
 }
 
-test("server-renders the Hashpix landing page and its primary action", async () => {
+test("server-renders the Narezai landing page and its primary action", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
   assert.match(html, /<html lang="ru"(?:\s|>)/);
-  assert.match(html, /<title>Hashpix — AI-клипы из длинных видео \| Hashpix<\/title>/);
+  assert.match(html, /<title>Narezai — AI-клипы из длинных видео \| Narezai<\/title>/);
   assert.match(html, /<span>Одно видео\.<\/span><span>До 10 коротких клипов\.<\/span>/);
   assert.match(html, /hero-source-form__shell/);
   assert.match(html, /Вставьте ссылку на/);
   assert.match(html, /Создать клипы/);
   assert.match(html, /AI понимает, где в видео начинается самостоятельная мысль\./);
   assert.match(html, /От исходника до клипа — в одном коротком маршруте\./);
-  assert.match(html, /\/assets\/logo-source\.svg/);
+  assert.match(html, /\/assets\/logo-narezai(?:-mark)?\.svg/);
   assert.match(html, /Выберите объём, который соответствует вашему ритму\./);
   assert.match(html, /Вопросы до старта\./);
 });
@@ -57,10 +57,10 @@ test("ships SEO metadata and the product story", async () => {
   assert.match(html, /class="dark-landing"/);
 });
 
-test("keeps the approved Hashpix visual assets and interaction rules in source", async () => {
+test("keeps the approved Narezai visual assets and interaction rules in source", async () => {
   const [css, logo] = await Promise.all([
     readFile(new URL("../app/landing.css", import.meta.url), "utf8"),
-    readFile(new URL("../public/assets/logo-source.svg", import.meta.url), "utf8"),
+    readFile(new URL("../public/assets/logo-narezai.svg", import.meta.url), "utf8"),
   ]);
 
   assert.match(css, /\.landing-hero__shader\s*\{[\s\S]*?position:\s*absolute/);
@@ -68,7 +68,7 @@ test("keeps the approved Hashpix visual assets and interaction rules in source",
   assert.match(css, /\.pricing-grid-dark/);
   assert.match(css, /@media \(max-width: 680px\)/);
   assert.match(css, /prefers-reduced-motion/);
-  assert.match(logo, /fill="#3153FF"/);
+  assert.match(logo, /fill="#FF9326"/);
 });
 
 test("serves robots and sitemap routes", async () => {
@@ -119,7 +119,7 @@ test("lists blog routes in sitemap and serves RSS", async () => {
   assert.equal(rss.status, 200);
   assert.match(await sitemap.text(), /https:\/\/hashpix\.ru\/blog\/ai-video-clipping/);
   assert.match(rss.headers.get("content-type") ?? "", /application\/rss\+xml/);
-  assert.match(await rss.text(), /<title>Блог Hashpix<\/title>/);
+  assert.match(await rss.text(), /<title>Блог Narezai<\/title>/);
 });
 
 test("server-renders the dashboard and its primary factory entry point", async () => {
@@ -127,10 +127,11 @@ test("server-renders the dashboard and its primary factory entry point", async (
   assert.equal(response.status, 200);
   const html = await response.text();
 
-  assert.match(html, /Создать нарезку/);
-  assert.match(html, /Добавьте видео/);
-  assert.match(html, /Загрузить[\s\S]*Ссылка[\s\S]*Мои видео/);
-  assert.match(html, /Загруженные ранее/);
+  assert.match(html, /Создать клипы из видео/);
+  assert.match(html, /Получить клипы/);
+  assert.match(html, /Вставьте ссылку на видео/);
+  assert.match(html, /Загрузить файл[\s\S]*Из источников/);
+  assert.match(html, /Недавние проекты/);
   assert.match(html, /robots\" content=\"noindex, nofollow/);
 });
 
@@ -146,7 +147,7 @@ test("server-renders canonical auth entry routes", async () => {
     assert.equal(response.status, 200);
   }
 
-  assert.match(await signIn.text(), /Вход в Hashpix/);
+  assert.match(await signIn.text(), /Вход в Narezai/);
   assert.match(await signUp.text(), /Создайте аккаунт/);
   assert.match(await forgotPassword.text(), /Восстановление пароля/);
   assert.match(authSource, /@\/components\/ui\/card/);
@@ -155,7 +156,7 @@ test("server-renders canonical auth entry routes", async () => {
   assert.doesNotMatch(authSource, /lucide-react|sign-in\.css/);
 });
 
-test("server-renders retained cabinet surfaces and does not expose the removed styles route", async () => {
+test("server-renders retained cabinet surfaces and keeps the source-first entry on the new route", async () => {
   const [projects, wizard, styles, billing, project] = await Promise.all([
     render("/dashboard/projects"),
     render("/dashboard/new"),
@@ -168,12 +169,12 @@ test("server-renders retained cabinet surfaces and does not expose the removed s
     assert.equal(response.status, 200);
   }
   assert.equal(styles.status, 404);
-  assert.equal(wizard.status, 307);
-  assert.equal(new URL(wizard.headers.get("location") ?? "", "http://localhost").pathname, "/dashboard");
+  assert.equal(wizard.status, 200);
 
-  assert.match(await projects.text(), /Исходники, найденные моменты/);
+  assert.match(await projects.text(), /Мои проекты/);
   assert.match(await billing.text(), /(Кредиты|Минуты) списываются один раз/);
-  assert.match(await project.text(), /Выберите, что превратить в клипы/);
+  assert.match(await wizard.text(), /Получить клипы/);
+  assert.match(await project.text(), /Загружаем клипы/);
 });
 
 test("ships the persistent closed admin shell without mock platform data", async () => {

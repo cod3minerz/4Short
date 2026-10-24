@@ -69,7 +69,7 @@ export function ProcessingCard({
           ? "Мы нашли самостоятельные фрагменты. Выберите те, из которых нужно создать клипы."
           : failed
             ? "Откройте проект: там указан этап ошибки и доступное действие."
-            : `${stage?.description ?? "Hashpix продолжает работу в фоне."} Страницу можно закрыть — состояние сохранится.`}
+            : `${stage?.description ?? "Narezai продолжает работу в фоне."} Страницу можно закрыть — состояние сохранится.`}
         </SectionDescription>
 
       <div className="flex w-full items-center gap-3 rounded-md bg-muted p-3 text-left">

@@ -52,7 +52,7 @@ export function Header() {
   return (
     <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
       <div className="site-header__island">
-        <Link className="site-header__brand" href="/" aria-label="Hashpix — на главную">
+        <Link className="site-header__brand" href="/" aria-label="Narezai — на главную">
           <Logo priority />
         </Link>
 
@@ -79,7 +79,7 @@ export function Header() {
 
       <Drawer.Backdrop isOpen={open} onOpenChange={setOpen} variant="opaque">
         <Drawer.Content className="mobile-drawer" placement="right">
-          <Drawer.Dialog aria-label="Навигация Hashpix">
+          <Drawer.Dialog aria-label="Навигация Narezai">
             <Drawer.Header>
               <Logo />
               <Drawer.Heading>Меню</Drawer.Heading>

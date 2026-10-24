@@ -14,6 +14,29 @@ test("Opus foundation scopes neutral tokens and one portal destination", async (
   assert.match(css, /grid-template-columns: 224px minmax\(0, 1fr\)/);
   assert.match(css, /grid-template-columns: 64px minmax\(0, 1fr\)/);
 });
+
+test("Narezai logo uses the supplied orange lockup and an unclipped sidebar mark", async () => {
+  const [logo, mark, lockup, product] = await Promise.all([
+    read("app/components/logo.tsx"),
+    read("public/assets/logo-narezai-mark.svg"),
+    read("public/assets/logo-narezai.svg"),
+    read("app/product/product.css"),
+  ]);
+  assert.match(logo, /src=\{markOnly \? "\/assets\/logo-narezai-mark\.svg" : "\/assets\/logo-narezai\.svg"\}/);
+  assert.match(mark, /fill="#FF9326"/);
+  assert.match(lockup, /fill="#FF9326"/);
+  assert.match(product, /\.hp-sidebar__logo \.brand-logo--mark img \{ width: 22px; height: 40px; object-fit: contain; \}/);
+  assert.doesNotMatch(product, /\.hp-sidebar__logo img[^}]*filter:/);
+});
+
+test("product pickers use Hugeicons and API CORS permits authenticated settings verbs", async () => {
+  const [controls, api] = await Promise.all([read("app/product/controls.tsx"), read("services/control-api/src/app.ts")]);
+  assert.match(controls, /@hugeicons\/core-free-icons/);
+  assert.match(controls, /Select\.Indicator><AppIcon/);
+  assert.doesNotMatch(controls, /lucide|react-icons|gravity-ui/);
+  assert.match(api, /methods: \["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"\]/);
+  assert.match(api, /trustedOrigins\.includes\(origin\)/);
+});
 test("new Home does not reuse wizard or present preview fixtures as live projects", async () => {
   const home = await read("app/product/home.tsx");
   assert.doesNotMatch(home, /NewProjectWizard|Stepper|previewProjects/);

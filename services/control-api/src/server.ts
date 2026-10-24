@@ -1,14 +1,8 @@
 import { closeDb } from "../../../db/index.js";
 import { buildApp } from "./app.js";
 import { getEnv } from "./env.js";
-import { and, asc, eq } from "drizzle-orm";
-import { jobs } from "../../../db/schema.js";
-import { advancePipeline } from "./services/pipeline.js";
-import {
-  markAdvancePending,
-  markJobAdvanced,
-  requeueExpiredLeases,
-} from "./services/queue.js";
+import { reconcilePendingPipelineAdvances } from "./services/pipeline-reconciliation.js";
+import { requeueExpiredLeases } from "./services/queue.js";
 
 const env = getEnv();
 const app = await buildApp();
@@ -18,20 +12,10 @@ const leaseSweep = setInterval(() => {
 }, 30_000);
 leaseSweep.unref();
 
-const pipelineSweep = setInterval(async () => {
-  const pending = await app.db.select().from(jobs)
-    .where(and(eq(jobs.status, "succeeded"), eq(jobs.checkpoint, "worker_complete")))
-    .orderBy(asc(jobs.completedAt))
-    .limit(20);
-  for (const job of pending) {
-    try {
-      await advancePipeline(app.db, job);
-      await markJobAdvanced(app.db, job.id);
-    } catch (error) {
-      await markAdvancePending(app.db, job.id, error);
-      app.log.error({ err: error, jobId: job.id }, "pipeline reconciliation failed");
-    }
-  }
+const pipelineSweep = setInterval(() => {
+  void reconcilePendingPipelineAdvances(app.db, {
+    onError: (jobId, error) => app.log.error({ err: error, jobId }, "pipeline reconciliation failed"),
+  }).catch((error) => app.log.error({ err: error }, "pipeline sweep failed"));
 }, 15_000);
 pipelineSweep.unref();
 

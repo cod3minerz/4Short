@@ -4,7 +4,7 @@ import { AuthScreen } from "../sign-in/page";
 
 export const metadata: Metadata = {
   title: "Создать аккаунт",
-  description: "Создайте защищённый аккаунт Hashpix.",
+  description: "Создайте защищённый аккаунт Narezai.",
   robots: { index: false, follow: false },
 };
 

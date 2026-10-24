@@ -14,6 +14,8 @@ The running worker accepts a pack only when all conditions hold:
 3. the manifest is content-addressed;
 4. `STT_MODEL_FINGERPRINT` in `/etc/4short/media-worker.env` equals that
    content address.
+5. `HVE_STT_MODEL_FINGERPRINT` in the control API environment equals the same
+   content address, and API/worker `HVE_ENGINE_VERSION` values match.
 
 If one condition fails, the worker advertises STT as unavailable and an STT
 job fails before audio is sent to a model. Rendering and other safe jobs can
@@ -43,7 +45,17 @@ Copy that value into `/etc/4short/media-worker.env` together with:
 STT_MODEL=large-v3-turbo
 STT_MODEL_PATH=/var/lib/4short/models/large-v3-turbo
 STT_MODEL_FINGERPRINT=<printed-sha256>
+HVE_ENGINE_VERSION=hve-0.1
 ```
+
+Set the same `HVE_STT_MODEL_FINGERPRINT` and `HVE_ENGINE_VERSION` in the
+control API environment. The API pins both values on each speech job, requires
+the worker's registered `models.stt` capability to match the fingerprint, and
+rejects transcript responses that report a different fingerprint or engine.
+Previously saved speech transcripts without this identity are deliberately not
+reused; projects must transcribe them under the configured profile before they
+can be reused. An empty API fingerprint leaves STT disabled rather than
+dispatching a job that cannot be verified.
 
 Then make the pack immutable to the non-root worker and deploy the release:
 

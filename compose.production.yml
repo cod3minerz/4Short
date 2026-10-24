@@ -2,7 +2,11 @@ name: 4short
 
 x-control-environment: &control-environment
     env_file:
+      - /etc/4short/database.env
       - /etc/4short/control-api.env
+      # Scoped object-store credentials stay separate from app configuration
+      # and are installed root-owned with mode 0600 on the host.
+      - /etc/4short/s3.env
       # Deployment-owned override. It is staged with mode 0600 for each release
       # so the control API and remote media workers always share one token.
       - /home/deploy/.shortpix-worker-staging/4short-worker-api-token.env
@@ -43,7 +47,10 @@ services:
     ports:
       - 127.0.0.1:4100:4100
     networks:
-      - backend
+      backend: {}
+      edge:
+        aliases:
+          - narezai-control-api
     restart: unless-stopped
     init: true
     read_only: true
@@ -70,3 +77,8 @@ services:
 networks:
   backend:
     driver: bridge
+  # Isolated edge network shared only with the existing Caddy service.
+  # Do not attach Narezai to creodock_edge, which contains other applications.
+  edge:
+    name: ${NAREZAI_EDGE_NETWORK:-narezai_edge}
+    external: true

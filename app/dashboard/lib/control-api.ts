@@ -2,6 +2,8 @@
 
 import type { StyleConfig } from "@/packages/contracts/src/media";
 import type { ClipDocumentV2, EditorCommand, ResolvedRenderPlan, TimeMapEntry } from "@/packages/contracts/src";
+import type { z } from "zod";
+import type { clippingDefaultsSchema } from "@/packages/contracts/src";
 
 const configuredApiUrl = process.env.NEXT_PUBLIC_CONTROL_API_URL?.replace(/\/$/, "");
 
@@ -22,6 +24,29 @@ function resolveControlApiUrl() {
 const apiUrl = resolveControlApiUrl();
 const developmentUserId = process.env.NEXT_PUBLIC_DEVELOPMENT_USER_ID;
 const workspaceStorageKey = "hashpix:workspace-id";
+const developmentWorkspaceStorageKey = "hashpix:development-workspace-id";
+
+export function localWorkspaceStorageKey(useDevelopmentIdentity: boolean) {
+  return useDevelopmentIdentity ? developmentWorkspaceStorageKey : workspaceStorageKey;
+}
+
+export function isLoopbackHostname(hostname: string) {
+  return ["localhost", "127.0.0.1", "::1"].includes(hostname);
+}
+
+/** The API's development identity is usable only from a local development page. */
+export function isLocalDevelopmentIdentityEnabled(
+  hostname: string,
+  nodeEnv: string | undefined,
+  userId: string | undefined,
+) {
+  return nodeEnv === "development" && Boolean(userId) && isLoopbackHostname(hostname);
+}
+
+export function hasLocalDevelopmentIdentity() {
+  return typeof window !== "undefined"
+    && isLocalDevelopmentIdentityEnabled(window.location.hostname, process.env.NODE_ENV, developmentUserId);
+}
 
 export class ControlApiError extends Error {
   constructor(
@@ -40,11 +65,11 @@ export function isControlApiConfigured() {
 
 export function getWorkspaceId() {
   if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(workspaceStorageKey);
+  return window.localStorage.getItem(localWorkspaceStorageKey(hasLocalDevelopmentIdentity()));
 }
 
 export function setWorkspaceId(workspaceId: string) {
-  window.localStorage.setItem(workspaceStorageKey, workspaceId);
+  window.localStorage.setItem(localWorkspaceStorageKey(hasLocalDevelopmentIdentity()), workspaceId);
 }
 
 function idempotencyKey(prefix: string) {
@@ -52,12 +77,14 @@ function idempotencyKey(prefix: string) {
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  if (!apiUrl) throw new ControlApiError("Российский API не подключён к этому окружению", 503, "API_NOT_CONFIGURED");
+  if (!apiUrl) throw new ControlApiError("Сервис сейчас недоступен. Попробуйте позже.", 503, "API_NOT_CONFIGURED");
   const workspaceId = getWorkspaceId();
   const headers = new Headers(init.headers);
   if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   if (workspaceId) headers.set("X-Workspace-Id", workspaceId);
-  if (developmentUserId) headers.set("X-Development-User-Id", developmentUserId);
+  if (developmentUserId && hasLocalDevelopmentIdentity()) {
+    headers.set("X-Development-User-Id", developmentUserId);
+  }
 
   const response = await fetch(`${apiUrl}${path}`, {
     ...init,
@@ -95,6 +122,8 @@ export type ApiSource = {
   analyzedAt: string | null;
   lastProcessedAt: string | null;
   createdAt: string;
+  mediaAvailable?: boolean;
+  expiresAt?: string | null;
 };
 
 export type ApiMoment = {
@@ -118,6 +147,10 @@ export type ApiClip = {
   socialDescription: string | null;
   status: string;
   currentVersion: number;
+  posterUrl?: string | null;
+  playbackAvailable?: boolean;
+  playbackExpiresAt?: string | null;
+  faceTrackingWarnings?: string[];
 };
 
 export type ApiLayoutRecommendation = {
@@ -242,26 +275,35 @@ export async function createMultipartUpload(file: File) {
     }),
   });
 
-  const completed: Array<{ partNumber: number; etag: string }> = [];
-  for (let offset = 0, partNumber = 1; offset < file.size; offset += session.partSize, partNumber += 1) {
-    const signed = await request<{ parts: Array<{ partNumber: number; url: string }> }>(
-      `/v1/uploads/${session.uploadId}/parts`,
-      { method: "POST", body: JSON.stringify({ partNumbers: [partNumber] }) },
-    );
-    const part = file.slice(offset, Math.min(offset + session.partSize, file.size));
-    const uploadResponse = await fetch(signed.parts[0].url, { method: "PUT", body: part });
-    if (!uploadResponse.ok) throw new ControlApiError("Не удалось загрузить часть файла", uploadResponse.status, "UPLOAD_PART_FAILED");
-    const etag = uploadResponse.headers.get("ETag");
-    if (!etag) throw new ControlApiError("S3 не вернул ETag. Проверьте CORS бакета.", 502, "UPLOAD_ETAG_MISSING");
-    completed.push({ partNumber, etag });
-  }
+  try {
+    const completed: Array<{ partNumber: number; etag: string }> = [];
+    for (let offset = 0, partNumber = 1; offset < file.size; offset += session.partSize, partNumber += 1) {
+      const signed = await request<{ parts: Array<{ partNumber: number; url: string }> }>(
+        `/v1/uploads/${session.uploadId}/parts`,
+        { method: "POST", body: JSON.stringify({ partNumbers: [partNumber] }) },
+      );
+      const part = file.slice(offset, Math.min(offset + session.partSize, file.size));
+      const uploadResponse = await fetch(signed.parts[0].url, { method: "PUT", body: part });
+      if (!uploadResponse.ok) throw new ControlApiError("Не удалось загрузить часть файла", uploadResponse.status, "UPLOAD_PART_FAILED");
+      const etag = uploadResponse.headers.get("ETag");
+      if (!etag) throw new ControlApiError("S3 не вернул ETag. Проверьте CORS бакета.", 502, "UPLOAD_ETAG_MISSING");
+      completed.push({ partNumber, etag });
+    }
 
-  await request(`/v1/uploads/${session.uploadId}/complete`, {
-    method: "POST",
-    headers: { "Idempotency-Key": idempotencyKey("upload-complete") },
-    body: JSON.stringify({ parts: completed }),
-  });
-  return session;
+    await request(`/v1/uploads/${session.uploadId}/complete`, {
+      method: "POST",
+      headers: { "Idempotency-Key": idempotencyKey("upload-complete") },
+      body: JSON.stringify({ parts: completed }),
+    });
+    return session;
+  } catch (error) {
+    await cancelUpload(session.uploadId).catch(() => undefined);
+    throw error;
+  }
+}
+
+export async function cancelUpload(uploadId: string) {
+  await request(`/v1/uploads/${uploadId}`, { method: "DELETE" });
 }
 
 export async function listProjects() {
@@ -273,9 +315,19 @@ export async function listProjects() {
       sourceKind: "upload" | "youtube" | null;
       sourceDurationMs: number | null;
       sourceThumbnailUrl: string | null;
+      sourceAvailable: boolean;
+      sourceExpiresAt: string | null;
       clipsTotal: number;
       clipsReady: number;
+      clipsAvailable: number;
+      clipsFailed: number;
       momentsFound: number;
+      processing: {
+        type: string;
+        status: string;
+        progress: { completed: number; total: number; unit: "bytes" | "milliseconds" | "frames" | "steps" } | null;
+        progressUpdatedAt: string | null;
+      } | null;
       updatedAt: string;
     }>;
   }>("/v1/projects");
@@ -301,6 +353,8 @@ export async function deleteProject(projectId: string) {
 
 export async function createProject(input: {
   title: string;
+  processingMode?: "review" | "auto_render";
+  speechLanguage?: "auto" | "ru" | "en";
   source:
     | { kind: "youtube"; url: string; preflightJobId: string }
     | { kind: "upload"; uploadId: string; originalFileName: string; preflightJobId: string }
@@ -319,10 +373,10 @@ export async function createProject(input: {
   };
   styleVersionId: string;
   projectOverrides?: Partial<StyleConfig>;
-}) {
+}, requestKey?: string) {
   return request<{ project: { id: string; status: string }; job: { id: string } }>("/v1/projects", {
     method: "POST",
-    headers: { "Idempotency-Key": idempotencyKey("project-create") },
+    headers: { "Idempotency-Key": requestKey ?? idempotencyKey("project-create") },
     body: JSON.stringify(input),
   });
 }
@@ -371,6 +425,20 @@ export async function getProject(projectId: string) {
   }>(`/v1/projects/${projectId}`);
 }
 
+export type ProjectExecutionEstimate = {
+  status: "estimated" | "insufficient_evidence";
+  executionP10Seconds: number | null;
+  executionP50Seconds: number | null;
+  executionP90Seconds: number | null;
+  queueP50Seconds: null;
+  queueP90Seconds: null;
+  queueReason: "HVE_ETA_FAIR_QUEUE_NOT_CALIBRATED";
+};
+
+export async function getProjectExecutionEstimate(projectId: string) {
+  return request<ProjectExecutionEstimate>(`/v1/projects/${projectId}/eta`);
+}
+
 export async function updateProject(projectId: string, input: {
   title?: string;
   settings?: Record<string, unknown>;
@@ -383,6 +451,14 @@ export async function updateProject(projectId: string, input: {
 
 export async function listSources() {
   return request<{ items: ApiSource[] }>("/v1/sources");
+}
+
+export type ClippingDefaults = z.infer<typeof clippingDefaultsSchema>;
+export async function getClippingDefaults() {
+  return request<{ defaults: ClippingDefaults | null }>("/v1/workspace/clipping-defaults");
+}
+export async function saveClippingDefaults(defaults: ClippingDefaults) {
+  return request<{ defaults: ClippingDefaults }>("/v1/workspace/clipping-defaults", { method: "PUT", body: JSON.stringify(defaults) });
 }
 
 export async function updateMoment(projectId: string, momentId: string, input: {
@@ -727,6 +803,20 @@ export async function getClipArtifact(projectId: string, clipId: string, kind: "
   return request<{ url: string; mimeType: string; expiresIn: number; kind: string }>(
     `/v1/projects/${projectId}/clips/${clipId}/artifacts/${kind}`,
   );
+}
+
+export async function createProjectPackage(projectId: string) {
+  return request<{ package: { id: string; status: string }; reused: boolean }>(`/v1/projects/${projectId}/packages`, {
+    method: "POST",
+    headers: { "Idempotency-Key": idempotencyKey("project-package") },
+  });
+}
+
+export async function getProjectPackage(projectId: string, packageId: string) {
+  return request<{
+    package: { id: string; status: string; error?: { message?: string } | null };
+    download?: { url: string; mimeType: string; expiresIn: number };
+  }>(`/v1/projects/${projectId}/packages/${packageId}`);
 }
 
 export async function rerenderClip(projectId: string, clipId: string) {

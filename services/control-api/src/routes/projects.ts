@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, inArray, isNull, max, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, max, ne, or, sql } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import {
@@ -39,10 +39,12 @@ import {
 } from "../../../../db/schema.js";
 import { getIdempotencyKey } from "../lib/http.js";
 import { signDownload } from "../lib/s3.js";
+import { getEnv } from "../env.js";
 import { runIdempotent } from "../services/idempotency.js";
 import { getMinuteBalance } from "../services/minutes.js";
+import { scheduleProjectRenders } from "../services/project-render.js";
 import { buildSubtitleCues } from "../services/subtitles.js";
-import { readTimingTranscriptWords } from "../services/transcript.js";
+import { readTimingTranscriptWords, transcriptCoversRange, transcriptMatchesSpeechProfile } from "../services/transcript.js";
 import {
   Hve2PlanNotExecutableError,
   Hve3PlanNotExecutableError,
@@ -92,6 +94,14 @@ function presentationFromEdl(edl: ReturnType<typeof clipEdlSchema.parse>) {
   };
 }
 
+function faceTrackingWarningsFromEdl(edl: unknown): string[] {
+  if (!edl || typeof edl !== "object" || Array.isArray(edl)) return [];
+  const faceTracking = (edl as { faceTracking?: unknown }).faceTracking;
+  if (!faceTracking || typeof faceTracking !== "object" || Array.isArray(faceTracking)) return [];
+  const warnings = (faceTracking as { warnings?: unknown }).warnings;
+  return Array.isArray(warnings) ? warnings.filter((warning): warning is string => typeof warning === "string") : [];
+}
+
 function applyPresentation(
   target: ReturnType<typeof clipEdlSchema.parse>,
   source: ReturnType<typeof clipEdlSchema.parse>,
@@ -112,7 +122,12 @@ export async function projectRoutes(app: FastifyInstance) {
       lastProcessedAt: sources.lastProcessedAt,
       createdAt: sources.createdAt,
     }).from(sources)
-      .where(eq(sources.workspaceId, workspaceId))
+      .innerJoin(mediaObjects, eq(mediaObjects.id, sources.originalMediaId))
+      .where(and(
+        eq(sources.workspaceId, workspaceId),
+        isNull(mediaObjects.deletedAt),
+        or(isNull(mediaObjects.expiresAt), gt(mediaObjects.expiresAt, new Date())),
+      ))
       .orderBy(desc(sources.lastProcessedAt), desc(sources.createdAt))
       .limit(24);
     const items = await Promise.all(rows.map(async (row) => {
@@ -148,17 +163,34 @@ export async function projectRoutes(app: FastifyInstance) {
       sourceKind: sources.kind,
       sourceDurationMs: sources.durationMs,
       sourceMetadata: sources.metadata,
+      sourceMediaId: sources.originalMediaId,
       clipsTotal: sql<number>`coalesce(clip_stats.total, 0)::int`,
       clipsReady: sql<number>`coalesce(clip_stats.ready, 0)::int`,
+      clipsAvailable: sql<number>`coalesce(clip_stats.available, 0)::int`,
+      clipsFailed: sql<number>`coalesce(clip_stats.failed, 0)::int`,
       momentsFound: sql<number>`coalesce(moment_stats.total, 0)::int`,
     })
       .from(projects)
-      .leftJoin(sources, eq(sources.id, projects.sourceId))
+      .leftJoin(sources, and(
+        eq(sources.id, projects.sourceId),
+        eq(sources.workspaceId, request.authContext!.workspaceId),
+      ))
       .leftJoin(
         sql`(
-          select project_id, count(*) as total, count(*) filter (where status = 'ready') as ready
-          from clips
-          group by project_id
+          select c.project_id, count(*) as total,
+            count(*) filter (where c.status = 'ready') as ready,
+            count(*) filter (where c.status = 'ready' and exists (
+              select 1 from clip_versions cv
+              join render_artifacts ra on ra.clip_version_id = cv.id and ra.kind = 'mp4'
+              join media_objects mo on mo.id = ra.media_object_id
+              where cv.clip_id = c.id and cv.version = c.current_version
+                and mo.workspace_id = c_workspace.workspace_id
+                and mo.deleted_at is null and (mo.expires_at is null or mo.expires_at > now())
+            )) as available,
+            count(*) filter (where c.status = 'failed') as failed
+          from clips c
+          join projects c_workspace on c_workspace.id = c.project_id
+          group by c.project_id
         ) clip_stats`,
         sql`clip_stats.project_id = ${projects.id}`,
       )
@@ -175,6 +207,68 @@ export async function projectRoutes(app: FastifyInstance) {
       .where(and(...clauses))
       .orderBy(desc(projects.updatedAt))
       .limit(100);
+    const sourceMediaIds = [...new Set(rows.map((row) => row.sourceMediaId).filter((id): id is string => Boolean(id)))];
+    const sourceMediaRows = sourceMediaIds.length ? await app.db.select({
+      id: mediaObjects.id,
+      expiresAt: mediaObjects.expiresAt,
+      deletedAt: mediaObjects.deletedAt,
+    }).from(mediaObjects).where(and(
+      inArray(mediaObjects.id, sourceMediaIds),
+      eq(mediaObjects.workspaceId, request.authContext!.workspaceId),
+    )) : [];
+    const sourceMediaById = new Map(sourceMediaRows.map((media) => [media.id, media]));
+    const now = new Date();
+    const jobRows = rows.length ? await app.db.select({
+      id: jobs.id,
+      projectId: jobs.projectId,
+      type: jobs.type,
+      status: jobs.status,
+      updatedAt: jobs.updatedAt,
+    }).from(jobs)
+      .where(and(
+        inArray(jobs.projectId, rows.map((row) => row.project.id)),
+        inArray(jobs.status, ["queued", "leased", "waiting_provider"]),
+      ))
+      .orderBy(desc(jobs.updatedAt)) : [];
+    const jobIds = [...new Set(jobRows.map((job) => job.id))];
+    const progressEvents = jobIds.length ? await app.db.select({
+      jobId: jobEvents.jobId,
+      payload: jobEvents.payload,
+      createdAt: jobEvents.createdAt,
+    }).from(jobEvents)
+      .where(and(inArray(jobEvents.jobId, jobIds), eq(jobEvents.type, "job.progress")))
+      .orderBy(desc(jobEvents.id)) : [];
+    const latestProgress = new Map<string, typeof progressEvents[number]>();
+    for (const event of progressEvents) {
+      if (!latestProgress.has(event.jobId)) latestProgress.set(event.jobId, event);
+    }
+    const processingByProject = new Map<string, {
+      type: string;
+      status: string;
+      progress: { completed: number; total: number; unit: "bytes" | "milliseconds" | "frames" | "steps" } | null;
+      progressUpdatedAt: Date | null;
+    }>();
+    for (const job of jobRows) {
+      if (!job.projectId || processingByProject.has(job.projectId)) continue;
+      const event = latestProgress.get(job.id);
+      const payload = event?.payload && typeof event.payload === "object" && !Array.isArray(event.payload)
+        ? event.payload as Record<string, unknown>
+        : null;
+      const completed = payload?.completed;
+      const total = payload?.total;
+      const unit = payload?.unit;
+      const progress = typeof completed === "number" && Number.isFinite(completed)
+        && typeof total === "number" && Number.isFinite(total) && total > 0
+        && ["bytes", "milliseconds", "frames", "steps"].includes(String(unit))
+        ? { completed: Math.min(total, Math.max(0, completed)), total, unit: unit as "bytes" | "milliseconds" | "frames" | "steps" }
+        : null;
+      processingByProject.set(job.projectId, {
+        type: job.type,
+        status: job.status,
+        progress,
+        progressUpdatedAt: event?.createdAt ?? null,
+      });
+    }
     const items = await Promise.all(rows.map(async (row) => {
       const metadata = { ...(row.sourceMetadata ?? {}) } as Record<string, unknown>;
       const thumbnail = metadata.thumbnail;
@@ -194,9 +288,16 @@ export async function projectRoutes(app: FastifyInstance) {
         sourceKind: row.sourceKind,
         sourceDurationMs: row.sourceDurationMs,
         sourceThumbnailUrl,
+        sourceAvailable: Boolean(row.sourceMediaId && sourceMediaById.get(row.sourceMediaId)
+          && !sourceMediaById.get(row.sourceMediaId)!.deletedAt
+          && (!sourceMediaById.get(row.sourceMediaId)!.expiresAt || sourceMediaById.get(row.sourceMediaId)!.expiresAt! > now)),
+        sourceExpiresAt: row.sourceMediaId ? sourceMediaById.get(row.sourceMediaId)?.expiresAt ?? null : null,
         clipsTotal: row.clipsTotal,
         clipsReady: row.clipsReady,
+        clipsAvailable: row.clipsAvailable,
+        clipsFailed: row.clipsFailed,
         momentsFound: row.momentsFound,
+        processing: processingByProject.get(row.project.id) ?? null,
       };
     }));
     return { items };
@@ -221,9 +322,53 @@ export async function projectRoutes(app: FastifyInstance) {
     const candidates = searches[0]
       ? await app.db.select().from(momentCandidates).where(eq(momentCandidates.searchId, searches[0].id))
       : [];
-    const projectClips = await app.db.select().from(clips).where(eq(clips.projectId, project.id));
+    const projectClips = await app.db.select({
+      clip: clips,
+      edl: clipVersions.edl,
+    }).from(clips)
+      .leftJoin(clipVersions, and(eq(clipVersions.clipId, clips.id), eq(clipVersions.version, clips.currentVersion)))
+      .where(eq(clips.projectId, project.id));
+    const posterRows = projectClips.length ? await app.db.select({ clipId: clips.id, media: mediaObjects })
+      .from(clips)
+      .innerJoin(clipVersions, and(eq(clipVersions.clipId, clips.id), eq(clipVersions.version, clips.currentVersion)))
+      .innerJoin(renderArtifacts, and(eq(renderArtifacts.clipVersionId, clipVersions.id), eq(renderArtifacts.kind, "poster")))
+      .innerJoin(mediaObjects, eq(mediaObjects.id, renderArtifacts.mediaObjectId))
+      .where(and(
+        eq(clips.projectId, project.id),
+        eq(mediaObjects.workspaceId, request.authContext!.workspaceId),
+        isNull(mediaObjects.deletedAt),
+        or(isNull(mediaObjects.expiresAt), gt(mediaObjects.expiresAt, new Date())),
+      ))
+      : [];
+    const videoRows = projectClips.length ? await app.db.select({ clipId: clips.id, media: mediaObjects })
+      .from(clips)
+      .innerJoin(clipVersions, and(eq(clipVersions.clipId, clips.id), eq(clipVersions.version, clips.currentVersion)))
+      .innerJoin(renderArtifacts, and(eq(renderArtifacts.clipVersionId, clipVersions.id), eq(renderArtifacts.kind, "mp4")))
+      .innerJoin(mediaObjects, eq(mediaObjects.id, renderArtifacts.mediaObjectId))
+      .where(and(
+        eq(clips.projectId, project.id),
+        eq(mediaObjects.workspaceId, request.authContext!.workspaceId),
+        isNull(mediaObjects.deletedAt),
+        or(isNull(mediaObjects.expiresAt), gt(mediaObjects.expiresAt, new Date())),
+      ))
+      : [];
+    const posterUrls = await Promise.all(posterRows.map(async (row) => [
+      row.clipId,
+      await signDownload(row.media.bucket, row.media.objectKey, 15 * 60),
+    ] as const));
+    const posterUrlByClip = new Map(posterUrls);
+    const videoMediaByClip = new Map(videoRows.map((row) => [row.clipId, row.media]));
     const [source] = project.sourceId
-      ? await app.db.select().from(sources).where(eq(sources.id, project.sourceId)).limit(1)
+      ? await app.db.select().from(sources).where(and(
+        eq(sources.id, project.sourceId),
+        eq(sources.workspaceId, request.authContext!.workspaceId),
+      )).limit(1)
+      : [];
+    const [sourceMedia] = source?.originalMediaId
+      ? await app.db.select({ expiresAt: mediaObjects.expiresAt, deletedAt: mediaObjects.deletedAt })
+        .from(mediaObjects)
+        .where(and(eq(mediaObjects.id, source.originalMediaId), eq(mediaObjects.workspaceId, request.authContext!.workspaceId)))
+        .limit(1)
       : [];
     const [version] = await app.db.select().from(projectVersions)
       .where(and(eq(projectVersions.projectId, project.id), eq(projectVersions.version, project.currentVersion)))
@@ -268,7 +413,11 @@ export async function projectRoutes(app: FastifyInstance) {
     }
     return {
       project,
-      source: responseSource,
+      source: responseSource ? {
+        ...responseSource,
+        mediaAvailable: Boolean(sourceMedia && !sourceMedia.deletedAt && (!sourceMedia.expiresAt || sourceMedia.expiresAt > new Date())),
+        expiresAt: sourceMedia?.expiresAt ?? null,
+      } : null,
       currentVersion: version ?? null,
       transcript: transcript ? { id: transcript.id, revision: transcript.currentRevision, language: transcript.language } : null,
       processing: activeJob ? {
@@ -280,7 +429,16 @@ export async function projectRoutes(app: FastifyInstance) {
         progressUpdatedAt: progressEvent?.createdAt ?? null,
       } : null,
       moments: candidates,
-      clips: projectClips,
+      clips: projectClips.map(({ clip, edl }) => {
+        const video = videoMediaByClip.get(clip.id);
+        return {
+          ...clip,
+          faceTrackingWarnings: faceTrackingWarningsFromEdl(edl),
+          posterUrl: posterUrlByClip.get(clip.id) ?? null,
+          playbackAvailable: Boolean(video),
+          playbackExpiresAt: video?.expiresAt ?? null,
+        };
+      }),
     };
   });
 
@@ -403,6 +561,9 @@ export async function projectRoutes(app: FastifyInstance) {
 
   app.post("/v1/projects", { preHandler: app.requireWorkspace }, async (request, reply) => {
     const body = createProjectSchema.parse(request.body);
+    if (!/^[a-f0-9]{64}$/.test(getEnv().HVE_STT_MODEL_FINGERPRINT)) {
+      throw app.httpErrors.serviceUnavailable("Профиль модели распознавания речи не настроен; обработка видео временно недоступна.");
+    }
     const key = getIdempotencyKey(request);
     const { workspaceId, userId } = request.authContext!;
     const result = await runIdempotent({
@@ -436,6 +597,7 @@ export async function projectRoutes(app: FastifyInstance) {
               eq(uploads.workspaceId, workspaceId),
               eq(uploads.status, "completed"),
             ))
+            .for("update")
             .limit(1);
           if (!upload?.sourceId) throw app.httpErrors.badRequest("Upload is not completed");
           sourceId = upload.sourceId;
@@ -488,7 +650,24 @@ export async function projectRoutes(app: FastifyInstance) {
           const [transcript] = await tx.select().from(transcripts)
             .where(eq(transcripts.sourceId, source.id))
             .limit(1);
-          reusableTranscript = transcript ?? null;
+          if (!media || media.workspaceId !== workspaceId || media.deletedAt || (media.expiresAt && media.expiresAt <= new Date())) throw app.httpErrors.conflict("Исходное видео больше недоступно. Загрузите его заново.");
+          if (!knownDurationMs || (body.momentSettings.sourceRange && body.momentSettings.sourceRange.endSeconds > Math.ceil(knownDurationMs / 1000))) throw app.httpErrors.badRequest("Диапазон выходит за длительность источника");
+          const requestedCoverage = body.momentSettings.sourceRange
+            ? {
+                startMs: Math.round(body.momentSettings.sourceRange.startSeconds * 1000),
+                endMs: Math.round(body.momentSettings.sourceRange.endSeconds * 1000),
+              }
+            : { startMs: 0, endMs: knownDurationMs };
+          const sttModelFingerprint = getEnv().HVE_STT_MODEL_FINGERPRINT;
+          reusableTranscript = transcript
+            && transcriptCoversRange(transcript, requestedCoverage)
+            && transcriptMatchesSpeechProfile(transcript.originalPayload, sttModelFingerprint, getEnv().HVE_ENGINE_VERSION)
+            ? transcript
+            : null;
+          if (!reusableTranscript) {
+            const seconds = body.momentSettings.sourceRange ? body.momentSettings.sourceRange.endSeconds - body.momentSettings.sourceRange.startSeconds : Math.ceil(knownDurationMs / 1000);
+            if ((await getMinuteBalance(tx, workspaceId)).availableSeconds < seconds) throw app.httpErrors.conflict("Минут недостаточно для обработки источника");
+          }
         } else {
           const normalizedUrl = new URL(body.source.url).toString();
           const [preflight] = await tx.select().from(jobs).where(and(
@@ -548,15 +727,17 @@ export async function projectRoutes(app: FastifyInstance) {
           styleVersionId: body.styleVersionId,
           idempotencyKey: key,
         }).returning();
-        await tx.insert(projectVersions).values({
+        const [processingVersion] = await tx.insert(projectVersions).values({
           projectId: project.id,
           version: 1,
           settings: {
             momentSettings: body.momentSettings,
             projectOverrides: body.projectOverrides ?? {},
+            processingMode: body.processingMode,
+            speechLanguage: body.speechLanguage,
           },
           createdBy: userId,
-        });
+        }).returning();
         const [job] = await tx.insert(jobs).values({
           workspaceId,
           projectId: project.id,
@@ -570,8 +751,9 @@ export async function projectRoutes(app: FastifyInstance) {
                 transcriptRevision: reusableTranscript.currentRevision,
                 transcript: reusableTranscript.originalPayload,
                 settings: body.momentSettings,
+                projectVersionId: processingVersion.id,
               }
-            : { sourceId, source: sourcePayload },
+            : { sourceId, source: sourcePayload, projectVersionId: processingVersion.id },
           idempotencyKey: reusableTranscript
             ? `project:${project.id}:moments:v1`
             : `project:${project.id}:probe:v1`,
@@ -810,7 +992,6 @@ export async function projectRoutes(app: FastifyInstance) {
       .where(and(eq(sources.id, project.sourceId), eq(sources.workspaceId, workspaceId)))
       .limit(1);
     if (!renderSource) throw app.httpErrors.conflict("Source media or style is not ready");
-    const renderStyle = styleConfigSchema.parse(renderSource.style.config);
     const candidates = await app.db.select({ candidate: momentCandidates })
       .from(momentCandidates)
       .innerJoin(momentSearches, eq(momentSearches.id, momentCandidates.searchId))
@@ -820,43 +1001,12 @@ export async function projectRoutes(app: FastifyInstance) {
       ));
     if (candidates.length !== body.momentIds.length) throw app.httpErrors.badRequest("Unknown moment");
 
-    const created = await app.db.transaction(async (tx) => {
-      const output = [];
-      for (const { candidate } of candidates) {
-        const [clip] = await tx.insert(clips).values({
-          projectId,
-          momentCandidateId: candidate.id,
-          title: candidate.title,
-          status: "queued",
-        }).returning();
-        const [job] = await tx.insert(jobs).values({
-          workspaceId,
-          projectId,
-          clipId: clip.id,
-          type: "face_track",
-          class: "cpu_light",
-          payload: {
-            clipId: clip.id,
-            momentId: candidate.id,
-            requestedBy: userId,
-            source: {
-              kind: "s3",
-              bucket: renderSource.media.bucket,
-              key: renderSource.media.objectKey,
-            },
-            range: { startMs: candidate.startMs, endMs: candidate.endMs },
-            export: renderStyle.export,
-            layout: renderStyle.layout,
-          },
-          idempotencyKey: `${key}:clip:${clip.id}:face-track`,
-          estimatedCost: String(Math.max((candidate.endMs - candidate.startMs) / 1000, 1)),
-        }).returning();
-        output.push({ clip, job });
-      }
-      await tx.update(projects).set({ status: "rendering", updatedAt: new Date() }).where(eq(projects.id, projectId));
-      return output;
+    const scheduled = await runIdempotent({
+      db: app.db, workspaceId, key, body, statusCode: 202,
+      execute: async (tx) => ({ items: await scheduleProjectRenders(tx, { workspaceId, projectId, momentIds: body.momentIds!, requestedBy: userId }) }),
     });
-    return reply.code(202).send({ items: created });
+    reply.header("Idempotency-Replayed", String(scheduled.replayed));
+    return reply.code(202).send(scheduled.value);
   });
 
   app.get("/v1/projects/:projectId/clips/:clipId", { preHandler: app.requireWorkspace }, async (request) => {
@@ -1308,6 +1458,9 @@ export async function projectRoutes(app: FastifyInstance) {
       .where(and(eq(clips.id, clipId), eq(projects.id, projectId), eq(projects.workspaceId, workspaceId)))
       .limit(1);
     if (!row) throw app.httpErrors.notFound("Clip version is not ready for rerender");
+    if (row.media.deletedAt || (row.media.expiresAt && row.media.expiresAt <= new Date())) {
+      throw app.httpErrors.conflict("Исходное видео больше недоступно. Загрузите его заново.");
+    }
     let renderEdl = clipEdlSchema.parse(row.version.edl);
     const edlRange = renderEdl.range;
     let subtitleCues = await buildSubtitleCues(

@@ -8,14 +8,162 @@ archive_path="${2:-}"
 release_root="/opt/4short/releases"
 current_link="/opt/4short/current"
 
+if [[ "$(id -u)" -ne 0 ]]; then
+  echo "Deployment must run as root (normally through sudo)." >&2
+  exit 2
+fi
+
 if [[ ! "${release_sha}" =~ ^[0-9a-f]{40}$ ]]; then
   echo "Expected a full 40-character Git commit SHA." >&2
   exit 2
 fi
 
-if [[ ! -f "${archive_path}" ]]; then
-  echo "Release archive does not exist." >&2
+expected_archive="/home/deploy/.shortpix-worker-staging/4short-${release_sha}.tar.gz"
+if [[ "${archive_path}" != "${expected_archive}" || ! -f "${archive_path}" || -L "${archive_path}" ]]; then
+  echo "Release archive path is invalid or does not exist." >&2
   exit 2
+fi
+
+# Freeze the deploy-writable archive before validating or extracting it. Root
+# must never extract directly from a file that the SSH deployment user owns.
+trusted_archive="$(mktemp --suffix=.tar.gz /run/4short-release.XXXXXX)"
+chmod 0600 "${trusted_archive}"
+cp -- "${archive_path}" "${trusted_archive}"
+cleanup_trusted_archive() {
+  rm -f -- "${trusted_archive}"
+}
+trap cleanup_trusted_archive EXIT
+
+if ! archive_commit="$(
+  set +o pipefail
+  gzip --decompress --stdout -- "${trusted_archive}" | git get-tar-commit-id
+)" || [[ "${archive_commit}" != "${release_sha}" ]]; then
+  echo "Release archive provenance does not match the requested commit." >&2
+  exit 2
+fi
+
+if ! tar --list --gzip --file "${trusted_archive}" --quoting-style=escape \
+  | while IFS= read -r member; do
+      case "${member}" in
+        /*|..|../*|*/../*|*/..)
+          echo "Release archive contains an unsafe path." >&2
+          exit 1
+          ;;
+      esac
+    done; then
+  echo "Release archive contains an unsafe path or could not be inspected." >&2
+  exit 2
+fi
+
+if ! tar --list --verbose --gzip --file "${trusted_archive}" --quoting-style=escape \
+  | while IFS= read -r entry; do
+      case "${entry:0:1}" in
+        l|h)
+          echo "Release archive must not contain symbolic or hard links." >&2
+          exit 1
+          ;;
+      esac
+    done; then
+  echo "Release archive contains a link or could not be inspected." >&2
+  exit 2
+fi
+
+control_env="/etc/4short/control-api.env"
+worker_token_env="/home/deploy/.shortpix-worker-staging/4short-worker-api-token.env"
+database_env="/etc/4short/database.env"
+s3_env="/etc/4short/s3.env"
+postgres_cert="/etc/4short/timeweb-creodock-postgres.crt"
+
+assert_secret_file() {
+  local path="$1"
+  if [[ ! -f "${path}" || -L "${path}" || "$(stat -c '%a:%u' "${path}")" != "600:0" ]]; then
+    echo "${path} must exist, be a regular root-owned file, and have mode 0600." >&2
+    exit 1
+  fi
+}
+
+for path in "${control_env}" "${database_env}" "${s3_env}"; do
+  assert_secret_file "${path}"
+done
+
+if [[ ! -f "${postgres_cert}" || -L "${postgres_cert}" || "$(stat -c '%a:%u' "${postgres_cert}")" != "644:0" ]]; then
+  echo "Pinned PostgreSQL certificate is missing or has unexpected ownership/mode." >&2
+  exit 1
+fi
+if [[ ! -f "${worker_token_env}" || "$(stat -c '%a' "${worker_token_env}")" != "600" ]]; then
+  echo "The staged worker token must exist with mode 0600 before deployment." >&2
+  exit 1
+fi
+
+require_env_value() {
+  local path="$1"
+  local key="$2"
+  local expected="$3"
+  if ! awk -v key="${key}" -v expected="${expected}" '
+    index($0, "=") > 0 && substr($0, 1, index($0, "=") - 1) == key {
+      count++
+      value = substr($0, index($0, "=") + 1)
+    }
+    END { exit !(count == 1 && value == expected) }
+  ' "${path}"; then
+    echo "Required production setting is missing or incorrect: ${key} in ${path}" >&2
+    exit 1
+  fi
+}
+
+require_env_key() {
+  local path="$1"
+  local key="$2"
+  if ! awk -v key="${key}" '
+    index($0, "=") > 0 && substr($0, 1, index($0, "=") - 1) == key {
+      count++
+      value = substr($0, index($0, "=") + 1)
+    }
+    END { exit !(count == 1 && length(value) > 0) }
+  ' "${path}"; then
+    echo "Required non-empty production setting is missing: ${key} in ${path}" >&2
+    exit 1
+  fi
+}
+
+require_env_min_length() {
+  local path="$1"
+  local key="$2"
+  local minimum="$3"
+  if ! awk -v key="${key}" -v minimum="${minimum}" '
+    index($0, "=") > 0 && substr($0, 1, index($0, "=") - 1) == key {
+      count++
+      value = substr($0, index($0, "=") + 1)
+    }
+    END { exit !(count == 1 && length(value) >= minimum) }
+  ' "${path}"; then
+    echo "Required production secret is missing or too short: ${key} in ${path}" >&2
+    exit 1
+  fi
+}
+
+require_env_value "${control_env}" NODE_ENV production
+require_env_value "${control_env}" API_PUBLIC_URL https://api.narezai.com
+require_env_key "${control_env}" WEB_ORIGIN
+require_env_min_length "${control_env}" BETTER_AUTH_SECRET 32
+require_env_key "${control_env}" RESEND_API_KEY
+require_env_key "${control_env}" RESEND_FROM_EMAIL
+require_env_key "${database_env}" DATABASE_URL
+require_env_value "${database_env}" DATABASE_SSL verify-full
+require_env_value "${database_env}" DATABASE_SSL_ROOT_CERT "${postgres_cert}"
+require_env_value "${s3_env}" S3_ENDPOINT https://s3.twcstorage.ru
+require_env_value "${s3_env}" S3_BUCKET narezai-s3
+require_env_key "${s3_env}" S3_ACCESS_KEY_ID
+require_env_key "${s3_env}" S3_SECRET_ACCESS_KEY
+require_env_min_length "${worker_token_env}" WORKER_API_TOKEN 32
+
+# Fail before extraction and image building if the dedicated ingress network
+# is not ready. This server is shared with unrelated production apps.
+edge_network="${NAREZAI_EDGE_NETWORK:-narezai_edge}"
+if ! docker network inspect "${edge_network}" >/dev/null 2>&1; then
+  echo "Required isolated edge network '${edge_network}' does not exist." >&2
+  echo "Prepare the Narezai/Caddy network before deploying this release." >&2
+  exit 1
 fi
 
 release_dir="${release_root}/${release_sha}"
@@ -59,7 +207,7 @@ trap rollback ERR
 install -d -m 0750 -o deploy -g deploy "${release_root}" "${release_dir}"
 tar --extract \
   --gzip \
-  --file "${archive_path}" \
+  --file "${trusted_archive}" \
   --directory "${release_dir}" \
   --no-same-owner
 chown -R deploy:deploy "${release_dir}"
@@ -95,7 +243,7 @@ if ! curl --fail --silent --show-error http://127.0.0.1:4100/health/ready >/dev/
 fi
 
 ln -sfn "${release_dir}" "${current_link}"
-rm -f "${archive_path}"
+rm -f -- "${expected_archive}"
 trap - ERR
 
 echo "Release ${release_sha} is healthy."

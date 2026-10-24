@@ -1,17 +1,7 @@
-import { redirect } from "next/navigation";
+import { ProductHome } from "../../product/home";
+import { SourceConfiguration } from "../../product/source-configuration";
 
-export default async function NewProjectPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
+export default async function NewProjectPage({ searchParams }: { searchParams: Promise<{ preflight?: string; sourceId?: string; source?: string }> }) {
   const params = await searchParams;
-  const query = new URLSearchParams();
-
-  for (const [key, value] of Object.entries(params)) {
-    if (Array.isArray(value)) value.forEach((item) => query.append(key, item));
-    else if (value !== undefined) query.set(key, value);
-  }
-
-  redirect(`/dashboard${query.size ? `?${query.toString()}` : ""}`);
+  return params.preflight || params.sourceId ? <SourceConfiguration preflightId={params.preflight} sourceId={params.sourceId} /> : <ProductHome initialSource={params.source} />;
 }

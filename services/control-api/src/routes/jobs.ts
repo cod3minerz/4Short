@@ -21,6 +21,7 @@ import {
   markJobAdvanced,
 } from "../services/queue.js";
 import { advancePipeline, markBrandAssetVerificationFailed } from "../services/pipeline.js";
+import { markFailedClipRender } from "../services/project-render.js";
 
 async function requireWorker(request: FastifyRequest) {
   const token = request.headers["x-worker-token"];
@@ -160,10 +161,11 @@ export async function jobRoutes(app: FastifyInstance) {
         code: body.code,
         message: body.message,
       });
+      await markFailedClipRender(app.db, job);
     } catch (error) {
       // The worker result is already terminal. Keep the failed job visible
-      // even if the cosmetic asset-status projection must be retried by ops.
-      request.log.error({ err: error, jobId: job.id }, "brand asset failure projection deferred");
+      // even if its status projection must be retried by ops.
+      request.log.error({ err: error, jobId: job.id }, "terminal job failure projection deferred");
     }
     return job;
   });

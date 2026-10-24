@@ -1,8 +1,15 @@
 # Approved Opus reference rebuild
+## Brand update — 2026-10-12
+The product name and supplied logo are now Narezai. This is a visible-brand change only: preserve existing routes, API hosts, account identifiers, and local-storage namespaces until an explicit domain/migration plan exists.
+
 Approved 2026-10-12. Branch codex/opus-product-rebuild; baseline 7b4eedf. Recovery codex/recovery-pre-opus-20261012 / d8fc3f6. Main store patch/Memory preserved in /Users/kirill/.codex/hashpix-main-recovery-20261012-Ek2sd1.
 
 ## Decisions
 HeroUI v3/React Aria, Hugeicons, Onest; Opus dark neutral palette/white primary actions. No Bounded. New core compositions. Landing/blog unchanged; admin UX/competitor extensions excluded.
+
+Follow-up 2026-10-13: do not show an account/avatar dropdown in the sidebar (desktop or drawer). Account settings stay in the lower navigation. Add `Пресеты` and `Уникализация` as visibly disabled `Скоро` navigation stubs until their routes and real capabilities exist; do not imply they are actionable.
+
+Follow-up 2026-10-13: the Home route alone carries a React Bits Aurora WebGL ambience behind the utilities/header and source field. Keep it out of layout flow, use subdued Narezai orange/gray stops, reduced render resolution, no pointer interception, pause when offscreen, and honor reduced motion. The source surface is transparent Liquid Glass with readable blur; its primary action remains white.
 
 ## Reference map
 | Screenshot time | Screen |
@@ -19,7 +26,7 @@ HeroUI v3/React Aria, Hugeicons, Onest; Opus dark neutral palette/white primary 
 02.49.30 is duplicated. Originals differ in scale/crop; normalize measurements.
 
 ## Screen/behavior contract
-224px sidebar, 64px collapsed, toggle inside. White logo, actual account/plan, Home/Projects, lower Help/account. Top-right real balance/purchase. Drawer below 768px. Continuous canvas, no outer page card/fake bell/team/upgrade.
+224px sidebar, 64px collapsed, toggle inside. White logo; Home/Projects plus disabled `Пресеты`/`Уникализация` stubs; lower Help/account settings. No account/avatar dropdown. Top-right real balance/purchase. Drawer below 768px. Continuous canvas, no outer page card/fake bell/team/upgrade.
 Home source preflight does not charge. Config uses /dashboard/new and recoverable preflight identity/session draft. Defaults: best/recommended/auto language/whole source/9:16/default style; auto length 10–180 seconds. Supported query/range/length/language/template/aspect controls only. Server saves workspace defaults.
 Submit sends auto_render and immutable settings/version snapshot, opens Projects highlighting new card. Old clients default review. Shared idempotent render scheduling runs without browser, preserves fairness/resource budgets and independent clip failures.
 Project cards show actual stage/progress/retention, not ETA or plan-derived expiry. Gallery/list share clip entities, URL search/filter/?clip=, local view preference, lazy posters and one active video. Old review_required projects retain manual generation. Modal has video/transcript/actions, next/previous, Back/focus/scroll return. Mobile is full screen.

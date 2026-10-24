@@ -14,26 +14,26 @@ const COPY: Record<AuthEmailKind, { eyebrow: string; title: string; body: string
   "sign-in": {
     eyebrow: "Вход в аккаунт",
     title: "Подтвердите вход",
-    body: "Введите этот код в Hashpix, чтобы продолжить работу.",
-    subject: "Код для входа в Hashpix",
+    body: "Введите этот код в Narezai, чтобы продолжить работу.",
+    subject: "Код для входа в Narezai",
   },
   "email-verification": {
     eyebrow: "Новый аккаунт",
     title: "Подтвердите email",
-    body: "Введите этот код в Hashpix, чтобы активировать аккаунт.",
-    subject: "Подтвердите email в Hashpix",
+    body: "Введите этот код в Narezai, чтобы активировать аккаунт.",
+    subject: "Подтвердите email в Narezai",
   },
   "forget-password": {
     eyebrow: "Сброс пароля",
     title: "Подтвердите смену пароля",
-    body: "Введите этот код в Hashpix, чтобы задать новый пароль.",
-    subject: "Код для смены пароля в Hashpix",
+    body: "Введите этот код в Narezai, чтобы задать новый пароль.",
+    subject: "Код для смены пароля в Narezai",
   },
   "change-email": {
     eyebrow: "Изменение email",
     title: "Подтвердите новый email",
-    body: "Введите этот код в Hashpix, чтобы завершить изменение email.",
-    subject: "Подтвердите новый email в Hashpix",
+    body: "Введите этот код в Narezai, чтобы завершить изменение email.",
+    subject: "Подтвердите новый email в Narezai",
   },
 };
 
@@ -59,8 +59,8 @@ export function buildAuthEmail(kind: AuthEmailKind, otp: string): AuthEmail {
       <tr><td align="center">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:560px;background:#101218;border:1px solid #2a2e39;border-radius:20px;overflow:hidden;">
           <tr><td style="padding:36px 36px 12px;">
-            <div style="font-size:24px;line-height:28px;font-weight:800;letter-spacing:-0.7px;color:#ffffff;">hashpix</div>
-            <div style="width:28px;height:3px;margin-top:15px;background:#3153ff;border-radius:4px;"></div>
+              <div style="font-size:24px;line-height:28px;font-weight:800;letter-spacing:-0.7px;color:#ffffff;">narezai</div>
+              <div style="width:28px;height:3px;margin-top:15px;background:#ff9326;border-radius:4px;"></div>
           </td></tr>
           <tr><td style="padding:18px 36px 8px;">
             <p style="margin:0 0 10px;color:#98a2b8;font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;">${copy.eyebrow}</p>
@@ -74,7 +74,7 @@ export function buildAuthEmail(kind: AuthEmailKind, otp: string): AuthEmail {
             <p style="margin:0;color:#8590a3;font-size:13px;line-height:20px;">Код действует 10 минут и подходит только для одного действия. Если это были не вы, просто проигнорируйте письмо.</p>
           </td></tr>
         </table>
-        <p style="margin:18px 0 0;color:#626b7c;font-size:12px;line-height:18px;">© Hashpix · Создавайте короткие видео из длинных</p>
+          <p style="margin:18px 0 0;color:#626b7c;font-size:12px;line-height:18px;">© Narezai · Создавайте короткие видео из длинных</p>
       </td></tr>
     </table>
   </body>

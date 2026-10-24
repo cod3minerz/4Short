@@ -24,6 +24,36 @@ export type HveCaptionOverride = {
   cutFromMedia: boolean;
 };
 
+/** A transcript is reusable only when its known source-time coverage contains
+ * the complete requested interval. Unknown legacy coverage fails closed. */
+export function transcriptCoversRange(
+  coverage: { coverageStartMs: number | null; coverageEndMs: number | null },
+  requested: { startMs: number; endMs: number },
+): boolean {
+  return Number.isSafeInteger(coverage.coverageStartMs)
+    && Number.isSafeInteger(coverage.coverageEndMs)
+    && Number.isSafeInteger(requested.startMs)
+    && Number.isSafeInteger(requested.endMs)
+    && requested.startMs >= 0
+    && requested.endMs > requested.startMs
+    && coverage.coverageStartMs! <= requested.startMs
+    && coverage.coverageEndMs! >= requested.endMs;
+}
+
+/** Cache identity for a saved transcript must match the active STT deployment. */
+export function transcriptMatchesSpeechProfile(
+  originalPayload: unknown,
+  modelFingerprint: string,
+  engineVersion: string,
+): boolean {
+  if (!/^[a-f0-9]{64}$/i.test(modelFingerprint) || !engineVersion) return false;
+  if (!originalPayload || typeof originalPayload !== "object" || Array.isArray(originalPayload)) return false;
+  const payload = originalPayload as Record<string, unknown>;
+  return typeof payload.modelFingerprint === "string"
+    && payload.modelFingerprint.toLowerCase() === modelFingerprint.toLowerCase()
+    && payload.engineVersion === engineVersion;
+}
+
 function finiteNumber(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Вход в Hashpix",
-  description: "Безопасный вход в Hashpix с подтверждением email.",
+  title: "Вход в Narezai",
+  description: "Безопасный вход в Narezai с подтверждением email.",
   robots: { index: false, follow: false },
 };
 

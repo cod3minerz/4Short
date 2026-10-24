@@ -38,6 +38,8 @@ export const youtubeUrlSchema = z.string().url().refine((value) => {
 
 export const createProjectSchema = z.object({
   title: z.string().trim().min(1).max(180),
+  processingMode: z.enum(["review", "auto_render"]).default("review"),
+  speechLanguage: z.enum(["auto", "ru", "en"]).default("auto"),
   source: z.discriminatedUnion("kind", [
     z.object({
       kind: z.literal("youtube"),
@@ -88,6 +90,13 @@ export const createProjectSchema = z.object({
 export const updateProjectSchema = z.object({
   title: z.string().trim().min(1).max(180).optional(),
   settings: z.record(z.string(), z.unknown()).optional(),
+});
+
+/** Workspace defaults cannot retain a range belonging to a different source. */
+export const clippingDefaultsSchema = createProjectSchema.pick({
+  momentSettings: true, speechLanguage: true, styleVersionId: true, projectOverrides: true,
+}).strict().refine(value => !value.momentSettings.sourceRange, {
+  message: "Диапазон задаётся для каждого источника отдельно",
 });
 
 export const updateMomentSchema = z.object({

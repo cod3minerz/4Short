@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, gt, isNull, ne, or, sql } from "drizzle-orm";
 import type { Database } from "../../../../db/index.js";
 import {
   clipVersions,
@@ -27,18 +27,20 @@ import {
 import {
   clipEdlSchema,
   hashHve,
+  resolveHveFontPlan,
   sourceAnalysisManifestSchema,
   styleConfigSchema,
   type JobRequirements,
 } from "../../../../packages/contracts/src/index.js";
 import { clampExportForPlan, productPlans, type PlanCode } from "../../../../packages/product-config/src/index.js";
-import { commitReservation, reserveMinutes } from "./minutes.js";
+import { commitReservation, releaseReservation, reserveMinutes } from "./minutes.js";
 import { isAdmissibleRenderCacheCandidate } from "./render-cache.js";
 import { buildSubtitleCues } from "./subtitles.js";
 import { parseSttResponse, readHveTranscriptSnapshot, writeTranscriptSegments } from "./transcript.js";
 import { buildInitialHveDocument } from "./hve/initial-document.js";
 import { resolveHve3ExecutionPlan } from "./hve/render-plan.js";
 import { getEnv } from "../env.js";
+import { scheduleProjectRenders, updateProjectRenderStatus } from "./project-render.js";
 
 function canonicalJson(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
@@ -119,6 +121,27 @@ async function projectSource(db: Database, projectId: string) {
     .where(eq(projects.id, projectId))
     .limit(1);
   return row;
+}
+
+async function failSpeechProjectForProfile(db: Database, job: typeof jobs.$inferSelect, code: string, message: string) {
+  const reservationId = job.payload.reservationId;
+  if (typeof reservationId === "string") {
+    await releaseReservation({
+      db,
+      workspaceId: job.workspaceId,
+      reservationId,
+      idempotencyKey: `project:${job.projectId ?? job.id}:speech-profile-failure:${code}`,
+      reason: code.toLowerCase(),
+    });
+  }
+  if (job.projectId) {
+    await db.update(projects).set({
+      status: "failed",
+      errorCode: code,
+      errorMessage: message,
+      updatedAt: new Date(),
+    }).where(eq(projects.id, job.projectId));
+  }
 }
 
 async function enqueue(
@@ -310,8 +333,15 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
     return;
   }
 
-  const sourceRow = await projectSource(db, completedJob.projectId);
+  let sourceRow = await projectSource(db, completedJob.projectId);
   if (!sourceRow) return;
+  if (sourceRow.project.archivedAt) return;
+  const processingVersionId = typeof completedJob.payload.projectVersionId === "string" ? completedJob.payload.projectVersionId : null;
+  const [processingVersion] = await db.select().from(projectVersions).where(and(
+    eq(projectVersions.projectId, completedJob.projectId),
+    processingVersionId ? eq(projectVersions.id, processingVersionId) : eq(projectVersions.version, sourceRow.project.currentVersion),
+  )).limit(1);
+  if (processingVersionId && !processingVersion) throw new Error("PROJECT_VERSION_MISSING");
 
   if (completedJob.type === "generate_proxy") {
     const sourceId = typeof result.sourceId === "string" ? result.sourceId : "";
@@ -381,25 +411,64 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
         .set({ expiresAt: await mediaExpiry(db, completedJob.workspaceId, "source") })
         .where(eq(mediaObjects.id, originalMediaId));
     }
-    const thumbnail = await persistSourceThumbnail(db, completedJob.workspaceId, result.thumbnail);
-    await db.update(sources).set({
-      originalMediaId,
-      fingerprint,
-      durationMs,
-      metadata: {
-        ...sourceRow.source.metadata,
-        probe: result,
-        ...(thumbnail ? { thumbnail } : {}),
-      },
-      updatedAt: new Date(),
-    }).where(eq(sources.id, sourceRow.source.id));
 
-    const [projectVersion] = await db.select().from(projectVersions)
+    // Uploads don't know their content fingerprint until the worker probes
+    // the completed object. If the same bytes already exist in this workspace,
+    // converge the new project and its upload onto the canonical source rather
+    // than retrying a unique-index violation forever. Repoint both relations
+    // before removing the temporary source so FK cascades cannot delete the
+    // completed upload or its project.
+    const [duplicate] = await db.select({ source: sources, media: mediaObjects })
+      .from(sources)
+      .innerJoin(mediaObjects, eq(mediaObjects.id, sources.originalMediaId))
       .where(and(
-        eq(projectVersions.projectId, completedJob.projectId),
-        eq(projectVersions.version, sourceRow.project.currentVersion),
+        eq(sources.workspaceId, completedJob.workspaceId),
+        eq(sources.fingerprint, fingerprint),
+        ne(sources.id, sourceRow.source.id),
+        isNull(mediaObjects.deletedAt),
+        or(isNull(mediaObjects.expiresAt), gt(mediaObjects.expiresAt, new Date())),
       ))
       .limit(1);
+    if (duplicate) {
+      await db.transaction(async (tx) => {
+        const [canonical] = await tx.select({ id: sources.id })
+          .from(sources)
+          .where(and(
+            eq(sources.id, duplicate.source.id),
+            eq(sources.workspaceId, completedJob.workspaceId),
+            eq(sources.fingerprint, fingerprint),
+          ))
+          .for("update")
+          .limit(1);
+        if (!canonical) throw new Error("DUPLICATE_SOURCE_CHANGED_DURING_MERGE");
+        await tx.update(projects).set({ sourceId: canonical.id, updatedAt: new Date() })
+          .where(and(eq(projects.workspaceId, completedJob.workspaceId), eq(projects.sourceId, sourceRow!.source.id)));
+        await tx.update(uploads).set({ sourceId: canonical.id, updatedAt: new Date() })
+          .where(and(eq(uploads.workspaceId, completedJob.workspaceId), eq(uploads.sourceId, sourceRow!.source.id)));
+        await tx.delete(sources).where(and(
+          eq(sources.id, sourceRow!.source.id),
+          eq(sources.workspaceId, completedJob.workspaceId),
+        ));
+      });
+      sourceRow = await projectSource(db, completedJob.projectId);
+      if (!sourceRow) throw new Error("CANONICAL_SOURCE_MISSING_AFTER_MERGE");
+      originalMediaId = sourceRow.source.originalMediaId;
+    } else {
+      const thumbnail = await persistSourceThumbnail(db, completedJob.workspaceId, result.thumbnail);
+      await db.update(sources).set({
+        originalMediaId,
+        fingerprint,
+        durationMs,
+        metadata: {
+          ...sourceRow.source.metadata,
+          probe: result,
+          ...(thumbnail ? { thumbnail } : {}),
+        },
+        updatedAt: new Date(),
+      }).where(eq(sources.id, sourceRow.source.id));
+    }
+
+    const projectVersion = processingVersion;
     const configuredRange = projectVersion?.settings
       && typeof projectVersion.settings === "object"
       && !Array.isArray(projectVersion.settings)
@@ -435,6 +504,7 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
       class: "cpu_light",
       payload: {
         sourceId: sourceRow.source.id,
+        projectVersionId: projectVersion?.id,
         source: { kind: "s3", bucket: media[0].bucket, key: media[0].objectKey },
         reservationId: reservation.reservationId,
         // Extract only the user-selected range. It is both the exact charged
@@ -479,6 +549,17 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
   }
 
   if (completedJob.type === "extract_audio") {
+    const env = getEnv();
+    const sttModelFingerprint = env.HVE_STT_MODEL_FINGERPRINT;
+    if (!/^[a-f0-9]{64}$/.test(sttModelFingerprint)) {
+      await failSpeechProjectForProfile(
+        db,
+        completedJob,
+        "HVE_STT_PROFILE_UNCONFIGURED",
+        "Обработка остановлена: профиль модели распознавания речи не настроен на сервере.",
+      );
+      return;
+    }
     await enqueue(db, {
       workspaceId: completedJob.workspaceId,
       projectId: completedJob.projectId,
@@ -486,16 +567,20 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
       class: "cpu_heavy",
       payload: {
         audio: result.audio,
-        language: "auto",
+        language: processingVersion?.settings.speechLanguage ?? "auto",
+        projectVersionId: processingVersion?.id,
         reservationId: completedJob.payload.reservationId,
         sourceOffsetMs: Number(completedJob.result?.sourceOffsetMs ?? 0),
+        sourceRange: completedJob.payload.sourceRange,
+        modelFingerprint: sttModelFingerprint,
+        engineVersion: env.HVE_ENGINE_VERSION,
       },
-      idempotencyKey: `project:${completedJob.projectId}:stt:v1`,
+      idempotencyKey: `project:${completedJob.projectId}:stt:${sttModelFingerprint}:${env.HVE_ENGINE_VERSION}`,
       estimatedCost: completedJob.estimatedCost,
       queueWeight: completedJob.queueWeight,
       requirements: {
-        engineVersion: "hve-0.1",
-        requiredModels: {},
+        engineVersion: env.HVE_ENGINE_VERSION,
+        requiredModels: { stt: sttModelFingerprint },
         minimumRamBytes: 4 * 1024 ** 3,
         minimumScratchBytes: 512 * 1024 ** 2,
         requiredClasses: ["cpu_heavy"],
@@ -508,17 +593,43 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
 
   if (completedJob.type === "speech_to_text") {
     const sttResponse = result.response as Record<string, unknown>;
+    if (!sttResponse || typeof sttResponse !== "object" || Array.isArray(sttResponse)) {
+      throw new Error("HVE_STT_RESPONSE_INVALID");
+    }
+    const expectedModelFingerprint = completedJob.payload.modelFingerprint;
+    const expectedEngineVersion = completedJob.payload.engineVersion;
+    if (typeof expectedModelFingerprint !== "string" || typeof expectedEngineVersion !== "string"
+      || sttResponse.modelFingerprint !== expectedModelFingerprint
+      || sttResponse.engineVersion !== expectedEngineVersion) {
+      await failSpeechProjectForProfile(
+        db,
+        completedJob,
+        "HVE_STT_PROFILE_MISMATCH",
+        "Результат распознавания создан другой моделью или версией движка. Средства возвращены; запустите обработку повторно после проверки конфигурации.",
+      );
+      return;
+    }
+    const rawSourceRange = completedJob.payload.sourceRange;
+    const sourceRange = rawSourceRange && typeof rawSourceRange === "object" && !Array.isArray(rawSourceRange)
+      ? rawSourceRange as Record<string, unknown>
+      : {};
+    const coverageStartMs = Number.isSafeInteger(Number(sourceRange.startMs)) ? Number(sourceRange.startMs) : null;
+    const coverageEndMs = Number.isSafeInteger(Number(sourceRange.endMs)) ? Number(sourceRange.endMs) : null;
     const [transcript] = await db.insert(transcripts).values({
       sourceId: sourceRow.source.id,
       provider: String(result.provider ?? "unknown"),
       language: String(sttResponse.language ?? result.language ?? "auto"),
       originalPayload: sttResponse,
+      coverageStartMs,
+      coverageEndMs,
     }).onConflictDoUpdate({
       target: transcripts.sourceId,
       set: {
         provider: String(result.provider ?? "unknown"),
         language: String(sttResponse.language ?? result.language ?? "auto"),
         originalPayload: sttResponse,
+        coverageStartMs,
+        coverageEndMs,
         updatedAt: new Date(),
       },
     }).returning();
@@ -531,9 +642,7 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
       lastProcessedAt: new Date(),
       updatedAt: new Date(),
     }).where(eq(sources.id, sourceRow.source.id));
-    const [version] = await db.select().from(projectVersions)
-      .where(and(eq(projectVersions.projectId, completedJob.projectId), eq(projectVersions.version, sourceRow.project.currentVersion)))
-      .limit(1);
+    const version = processingVersion;
     await db.update(projects).set({ status: "finding_moments", updatedAt: new Date() })
       .where(eq(projects.id, completedJob.projectId));
     await enqueue(db, {
@@ -545,6 +654,7 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
         transcriptId: transcript.id,
         transcript: result.response,
         settings: version?.settings ?? {},
+        projectVersionId: version?.id,
       },
       idempotencyKey: `project:${completedJob.projectId}:moments:v1`,
       estimatedCost: completedJob.estimatedCost,
@@ -558,8 +668,8 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
     const [search] = await db.insert(momentSearches).values({
       jobId: completedJob.id,
       projectId: completedJob.projectId,
-      transcriptRevision: 0,
-      mode: "best",
+      transcriptRevision: Number(completedJob.payload.transcriptRevision ?? 0),
+      mode: String((completedJob.payload.settings as { momentSettings?: { mode?: string }; mode?: string })?.momentSettings?.mode ?? (completedJob.payload.settings as { mode?: string })?.mode ?? "best"),
       settings: completedJob.payload.settings as Record<string, unknown>,
       status: "succeeded",
     }).onConflictDoUpdate({
@@ -570,9 +680,10 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
       count: sql<number>`count(*)::int`,
     }).from(momentCandidates).where(eq(momentCandidates.searchId, search.id));
     if (candidates.length && Number(candidateCount?.count ?? 0) === 0) {
-      await db.insert(momentCandidates).values(candidates.slice(0, 50).map((candidate) => {
+      await db.insert(momentCandidates).values(candidates.slice(0, 50).map((candidate, index) => {
         const item = candidate as Record<string, unknown>;
         return {
+          id: stableUuid(`moment-search:${search.id}:candidate:${index}`),
           searchId: search.id,
           startMs: Number(item.startMs),
           endMs: Number(item.endMs),
@@ -582,10 +693,18 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
           score: item.score == null ? null : String(item.score),
           warnings: Array.isArray(item.warnings) ? item.warnings.map(String) : [],
         };
-      }));
+      })).onConflictDoNothing();
     }
-    await db.update(projects).set({ status: "review_required", updatedAt: new Date() })
-      .where(eq(projects.id, completedJob.projectId));
+    if (processingVersion?.settings.processingMode === "auto_render") {
+      const moments = await db.select({ id: momentCandidates.id }).from(momentCandidates).where(eq(momentCandidates.searchId, search.id));
+      if (moments.length) {
+        await scheduleProjectRenders(db, { workspaceId: completedJob.workspaceId, projectId: completedJob.projectId, projectVersionId: processingVersion.id, momentIds: moments.map(moment => moment.id) });
+      } else {
+        await db.update(projects).set({ status: "failed", errorCode: "NO_MOMENTS", errorMessage: "Не удалось найти клипы по выбранным параметрам.", updatedAt: new Date() }).where(eq(projects.id, completedJob.projectId));
+      }
+    } else {
+      await db.update(projects).set({ status: "review_required", updatedAt: new Date() }).where(eq(projects.id, completedJob.projectId));
+    }
     // It is useful only once there are candidate clips. Delaying this task
     // until review is ready guarantees a single serial worker cannot make
     // source perception hold up transcription or moment finding.
@@ -762,20 +881,14 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
       .where(eq(clips.id, completedJob.clipId))
       .limit(1);
     if (!clip || !sourceRow.source.fingerprint || !sourceRow.media) throw new Error("CLIP_RENDER_INPUT_MISSING");
-    const [projectVersion] = await db.select({ settings: projectVersions.settings })
-      .from(projectVersions)
-      .where(and(
-        eq(projectVersions.projectId, sourceRow.project.id),
-        eq(projectVersions.version, sourceRow.project.currentVersion),
-      ))
-      .limit(1);
+    const projectVersion = processingVersion;
     // The wizard's per-project format pick (`projectOverrides`, e.g. layout)
     // is stored on the project version at creation time but only ever meant
     // for THIS project's clips — applied on top of the style, never
     // persisted back onto the shared style itself.
     const projectOverrides = (projectVersion?.settings as { projectOverrides?: Record<string, unknown> } | undefined)
       ?.projectOverrides ?? {};
-    const style = styleConfigSchema.parse({ ...styleConfigSchema.parse(clip.style.config), ...projectOverrides });
+    const style = styleConfigSchema.parse(completedJob.payload.renderStyle ?? { ...styleConfigSchema.parse(clip.style.config), ...projectOverrides });
     const [renderWorkspace] = await db.select({ planCode: workspaces.planCode })
       .from(workspaces).where(eq(workspaces.id, completedJob.workspaceId)).limit(1);
     const [renderTranscript] = await db.select({ currentRevision: transcripts.currentRevision })
@@ -786,18 +899,22 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
     const transcriptSnapshot = await readHveTranscriptSnapshot(
       db,
       sourceRow.source.id,
-      renderTranscript?.currentRevision,
+      typeof completedJob.payload.transcriptRevision === "number" ? completedJob.payload.transcriptRevision : renderTranscript?.currentRevision,
     );
     const edl = clipEdlSchema.parse({
       schemaVersion: 1,
       sourceId: sourceRow.source.id,
       sourceHash: sourceRow.source.fingerprint,
-      range: { startMs: clip.moment.startMs, endMs: clip.moment.endMs },
+      range: completedJob.payload.range ?? { startMs: clip.moment.startMs, endMs: clip.moment.endMs },
       cuts: [],
       transcriptRevision: transcriptSnapshot.revision,
       layout: style.layout,
       cropTrack: result.cropTrack,
       faceTracks: result.faceTracks,
+      faceTracking: {
+        mode: result.fallback === "static_crop" ? "static_crop" : "tracked",
+        warnings: Array.isArray(result.warnings) ? result.warnings.map(String) : [],
+      },
       subtitles: style.subtitles,
       silence: style.silence,
       title: style.title
@@ -833,13 +950,16 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
     const hveExecution = hveDocument
       ? await resolveHve3ExecutionPlan(hveDocument, transcriptWords)
       : null;
+    const resolvedPlan = hveExecution?.resolvedPlan ?? {
+      fontPlan: completedJob.payload.fontPlan ?? resolveHveFontPlan(style.subtitles),
+    };
     const hash = hveExecution
       ? await hashHve({
           documentHash: hveExecution.documentHash,
           resolvedPlan: hveExecution.resolvedPlan,
           rendererVersion: hveDocument!.rendererVersion,
         })
-      : renderHash(edl);
+      : renderHash({ edl, resolvedPlan });
     // A render hash alone is never cache evidence. Reuse is restricted to the
     // same workspace, requires a non-deleted retained media object and the
     // exact validation report produced before upload. Older/incomplete cache
@@ -923,6 +1043,7 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
         }).onConflictDoNothing();
       }
       await db.update(clips).set({ status: "ready", updatedAt: new Date() }).where(eq(clips.id, clip.clip.id));
+      await updateProjectRenderStatus(db, completedJob.projectId);
       return;
     }
     const [version] = await db.insert(clipVersions).values({
@@ -978,7 +1099,7 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
         source: { kind: "s3", bucket: sourceRow.media.bucket, key: sourceRow.media.objectKey },
         sourceHasAudio,
         subtitleCues,
-        ...(hveExecution ? { resolvedPlan: hveExecution.resolvedPlan } : {}),
+        resolvedPlan,
       },
       idempotencyKey: `clip:${clip.clip.id}:render:${hash}`,
       artifactHash: hash,
@@ -995,8 +1116,11 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
     const captionArtifacts = result.captionArtifacts && typeof result.captionArtifacts === "object"
       ? result.captionArtifacts as Record<string, unknown>
       : {};
-    const outputArtifacts: Array<{ kind: "mp4" | "srt" | "vtt"; artifact: Record<string, unknown>; mimeType: string }> = [
+    const outputArtifacts: Array<{ kind: "mp4" | "srt" | "vtt" | "poster"; artifact: Record<string, unknown>; mimeType: string }> = [
       { kind: "mp4", artifact, mimeType: "video/mp4" },
+      ...(result.posterArtifact && typeof result.posterArtifact === "object" && !Array.isArray(result.posterArtifact)
+        ? [{ kind: "poster" as const, artifact: result.posterArtifact as Record<string, unknown>, mimeType: "image/jpeg" }]
+        : []),
       ...(["srt", "vtt"] as const).flatMap((kind) => {
         const candidate = captionArtifacts[kind];
         return candidate && typeof candidate === "object" && !Array.isArray(candidate)
@@ -1022,7 +1146,7 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
         workspaceId: completedJob.workspaceId,
         bucket,
         objectKey,
-        kind: outputArtifact.kind === "mp4" ? "clip" : "caption",
+        kind: outputArtifact.kind === "mp4" ? "clip" : outputArtifact.kind === "poster" ? "poster" : "caption",
         mimeType: outputArtifact.mimeType,
         byteSize,
         sha256,
@@ -1042,19 +1166,16 @@ export async function advancePipeline(db: Database, completedJob: typeof jobs.$i
     }
     await db.update(clips).set({ status: "ready", updatedAt: new Date() }).where(eq(clips.id, completedJob.clipId));
 
-    const projectClips = await db.select({ status: clips.status }).from(clips)
-      .where(eq(clips.projectId, completedJob.projectId));
-    const terminal = projectClips.every((clip) => ["ready", "failed"].includes(clip.status));
-    if (terminal) {
-      const anyFailed = projectClips.some((clip) => clip.status === "failed");
-      await db.update(projects).set({
-        status: anyFailed ? "partially_ready" : "ready",
-        updatedAt: new Date(),
-      }).where(eq(projects.id, completedJob.projectId));
-    }
+    await updateProjectRenderStatus(db, completedJob.projectId);
   }
 }
 
+/**
+ * Project a terminal render failure only onto the clip version that still owns
+ * the clip. Older rerenders can finish after a newer version was queued; those
+ * failures must remain visible on their job without overwriting the current
+ * clip or its project status.
+ */
 /**
  * A terminal timed-brand-media verification failure must not leave an asset
  * looking usable in the editor. The object remains private and retains its
