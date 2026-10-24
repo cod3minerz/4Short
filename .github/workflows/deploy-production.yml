@@ -23,10 +23,10 @@ jobs:
 
       - name: Validate deployment configuration
         env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
-          DEPLOY_SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
-          WORKER_API_TOKEN: ${{ secrets.WORKER_API_TOKEN }}
+          DEPLOY_HOST: ${{ vars.NAREZAI_DEPLOY_HOST }}
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.NAREZAI_DEPLOY_SSH_PRIVATE_KEY }}
+          DEPLOY_SSH_KNOWN_HOSTS: ${{ secrets.NAREZAI_DEPLOY_SSH_KNOWN_HOSTS }}
+          WORKER_API_TOKEN: ${{ secrets.NAREZAI_WORKER_API_TOKEN }}
         run: |
           missing=0
           for name in DEPLOY_HOST DEPLOY_SSH_PRIVATE_KEY DEPLOY_SSH_KNOWN_HOSTS WORKER_API_TOKEN; do
@@ -42,9 +42,9 @@ jobs:
 
       - name: Configure SSH
         env:
-          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
-          DEPLOY_SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
-          WORKER_API_TOKEN: ${{ secrets.WORKER_API_TOKEN }}
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.NAREZAI_DEPLOY_SSH_PRIVATE_KEY }}
+          DEPLOY_SSH_KNOWN_HOSTS: ${{ secrets.NAREZAI_DEPLOY_SSH_KNOWN_HOSTS }}
+          WORKER_API_TOKEN: ${{ secrets.NAREZAI_WORKER_API_TOKEN }}
         run: |
           install -d -m 0700 ~/.ssh
           install -m 0600 /dev/null ~/.ssh/id_ed25519
@@ -55,7 +55,7 @@ jobs:
 
       - name: Upload release
         env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_HOST: ${{ vars.NAREZAI_DEPLOY_HOST }}
           DEPLOY_STAGING_DIR: /home/deploy/.shortpix-worker-staging
         run: |
           ssh -o BatchMode=yes \
@@ -72,7 +72,7 @@ jobs:
 
       - name: Activate release
         env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_HOST: ${{ vars.NAREZAI_DEPLOY_HOST }}
           DEPLOY_STAGING_DIR: /home/deploy/.shortpix-worker-staging
         run: |
           ssh -o BatchMode=yes "deploy@${DEPLOY_HOST}" \
@@ -81,7 +81,7 @@ jobs:
       - name: Remove staged secret
         if: always()
         env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_HOST: ${{ vars.NAREZAI_DEPLOY_HOST }}
           DEPLOY_STAGING_DIR: /home/deploy/.shortpix-worker-staging
         run: |
           ssh -o BatchMode=yes "deploy@${DEPLOY_HOST}" \
