@@ -35,6 +35,7 @@
     "build",
     "examples",
     "worker",
+    "apps/desktop",
     "services/control-api",
     "services/media-worker",
     "vite.config.ts"

@@ -1,0 +1,11 @@
+/* Product tokens, Tailwind v4 and the HeroUI product system come from the site itself. */
+@import "../../../app/globals.css";
+@source "../../../components";
+@source "../../../app/dashboard";
+@source "../../../app/components";
+@source "../../../app/product";
+
+:root {
+  --font-onest: "Onest Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-geist-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+}
