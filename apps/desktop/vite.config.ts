@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/postcss";
 
 // The desktop app mounts the REAL product dashboard (components/ui primitives,
 // components/hashpix compositions, app/dashboard views) so it cannot drift from
@@ -12,6 +13,8 @@ const shim = (name: string) => fileURLToPath(new URL(`./src/shims/${name}`, impo
 export default defineConfig({
   plugins: [react()],
   clearScreen: false,
+  // Explicit: Vite does not reliably pick up the site's postcss.config.mjs from apps/desktop.
+  css: { postcss: { plugins: [tailwindcss({ base: repo })] } },
   publicDir: `${repo}public`,
   resolve: {
     alias: [

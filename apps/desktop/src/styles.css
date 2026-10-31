@@ -9,3 +9,19 @@
   --font-onest: "Onest Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-geist-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
 }
+
+/* A desktop window is a fixed viewport: #root is the one scroll container (the site scrolls the document). */
+html, body { height: 100%; overflow: hidden; }
+#root { height: 100%; overflow-x: hidden; overflow-y: auto; }
+/* The site's aurora is taller than the viewport; inside a scroll container that would add dead scroll space. */
+.hp-home-aurora { height: 100% !important; max-height: 1200px; }
+body { overscroll-behavior: none; -webkit-user-select: none; user-select: none; }
+input, textarea, [contenteditable="true"] { -webkit-user-select: text; user-select: text; }
+
+/* On the site, product.css makes --muted/--accent light *text* colours while shadcn primitives use them as
+   *surfaces* (bg-muted, hover:bg-accent). Pin the Tailwind surface colours to the Narezai neutral surface. */
+@theme inline {
+  --color-muted: #27272a;
+  --color-accent: #27272a;
+  --color-accent-foreground: #fafafa;
+}
