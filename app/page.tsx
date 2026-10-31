@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import "./public-boundary.css";
-import { DarkLanding } from "./components/dark-landing";
-import { faqItems } from "./data/content";
+import { Landing } from "./landing/page-body";
+import { faq } from "./landing/data";
 
 export const metadata: Metadata = {
-  title: "Narezai — AI-клипы из длинных видео",
+  title: "Нарезай — приложение для нарезки длинных видео на клипы",
   description:
-    "Narezai находит сильные моменты в длинных видео и помогает подготовить вертикальные клипы для публикации.",
+    "Приложение для Mac и Windows: расшифровывает видео на вашем компьютере, находит законченные моменты и экспортирует вертикальные клипы 9:16 с субтитрами.",
   alternates: { canonical: "/" },
 };
 
@@ -14,25 +13,25 @@ export default function Home() {
   const softwareJsonLd = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "Narezai",
+    name: "Нарезай",
     applicationCategory: "MultimediaApplication",
-    operatingSystem: "Web",
-    description: "Сервис для подготовки вертикальных клипов из длинных видео.",
+    operatingSystem: "macOS, Windows",
+    description: "Приложение для нарезки длинных видео на вертикальные клипы.",
   };
 
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: faqItems.slice(0, 6).map((item) => ({
+    mainEntity: faq.map((item) => ({
       "@type": "Question",
-      name: item.question,
-      acceptedAnswer: { "@type": "Answer", text: item.answer },
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
     })),
   };
 
   return (
-    <div className="public-boundary">
-      <DarkLanding />
+    <>
+      <Landing />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }}
@@ -41,6 +40,6 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
-    </div>
+    </>
   );
 }

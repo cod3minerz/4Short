@@ -17,6 +17,7 @@ export type AnalyticsEvent =
   | "clip_render_failed" | "clip_rerender" | "clip_download"
   | "project_download_all" | "style_create" | "style_apply"
   | "minutes_insufficient" | "clip_editor_open" | "clip_version_save"
+  | "desktop_download_click" | "landing_moment_select"
   | "clip_scope_apply" | "source_reuse" | "generative_quote_view";
 
 declare global {

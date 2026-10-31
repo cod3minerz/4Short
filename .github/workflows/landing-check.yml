@@ -1,0 +1,34 @@
+name: landing-check
+
+# Anti-slop audit, lint, type-check and production build of the landing. Linux runner only.
+on:
+  workflow_dispatch:
+  push:
+    branches: [landing]
+    paths:
+      - "app/landing/**"
+      - "app/page.tsx"
+      - "lib/releases.ts"
+      - "scripts/audit-landing-slop.mjs"
+      - ".github/workflows/landing-check.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: node scripts/audit-landing-slop.mjs
+      - run: npx eslint app/landing app/page.tsx lib/releases.ts
+      - run: npx tsc --noEmit
+      - run: npx next build --webpack
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
