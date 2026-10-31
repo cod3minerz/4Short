@@ -68,6 +68,13 @@ const environmentSchema = z.object({
   S3_DERIVED_PREFIX: z.string().default("derived"),
   S3_ASSETS_PREFIX: z.string().default("assets"),
   WORKER_API_TOKEN: z.string().min(32),
+  // Desktop moment finding runs on the server so the key and the model policy never reach the client.
+  OPENROUTER_API_KEY: z.string().optional(),
+  OPENROUTER_BASE_URL: z.string().url().default("https://openrouter.ai/api/v1"),
+  LLM_CANDIDATE_MODEL: z.string().default("deepseek/deepseek-v4-flash"),
+  LLM_RERANK_MODEL: z.string().default("deepseek/deepseek-v4-pro"),
+  LLM_ALLOWED_MODELS: z.string().default("deepseek/deepseek-v4-flash,deepseek/deepseek-v4-pro"),
+  LLM_BLOCKED_MODEL_PREFIXES: z.string().default("openai/,anthropic/"),
   HVE_ENGINE_VERSION: z.string().min(1).max(120).default("hve-0.1"),
   // Must match the immutable model manifest fingerprint advertised by the
   // media worker. An empty value intentionally disables STT dispatch/reuse.

@@ -8,6 +8,7 @@ import { handleBetterAuth } from "./lib/http.js";
 import { databasePlugin } from "./plugins/database.js";
 import { contextPlugin } from "./plugins/context.js";
 import { billingRoutes } from "./routes/billing.js";
+import { desktopRoutes } from "./routes/desktop.js";
 import { editorRoutes } from "./routes/editor.js";
 import { engineRoutes } from "./routes/engine.js";
 import { adminRoutes } from "./routes/admin.js";
@@ -102,6 +103,7 @@ export async function buildApp() {
   await app.register(editorRoutes);
   await app.register(styleRoutes);
   await app.register(billingRoutes);
+  await app.register(desktopRoutes);
   await app.register(engineRoutes);
   await app.register(jobRoutes);
 

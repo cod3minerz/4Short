@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { emailOTP } from "better-auth/plugins";
+import { bearer, emailOTP } from "better-auth/plugins";
 import { genericOAuth, yandex } from "better-auth/plugins/generic-oauth";
 import { createDb } from "../../../../db/index.js";
 import * as schema from "../../../../db/schema.js";
@@ -47,6 +47,8 @@ export const auth = betterAuth({
     updateAge: 60 * 60 * 24,
   },
   plugins: [
+    // Desktop app: the session token travels as `Authorization: Bearer`, not a cookie.
+    bearer(),
     emailOTP({
       expiresIn: 600,
       otpLength: 6,

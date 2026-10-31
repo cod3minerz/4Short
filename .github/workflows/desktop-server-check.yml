@@ -1,0 +1,31 @@
+name: desktop-server-check
+
+# Type-checks the control API and runs the desktop-related unit tests. Kept separate from CI because
+# that workflow only runs for main and codex/** branches.
+on:
+  workflow_dispatch:
+  push:
+    branches: [desktop-app]
+    paths:
+      - "services/control-api/**"
+      - "db/**"
+      - "packages/**"
+      - "tests/unit/desktop-*.test.ts"
+      - ".github/workflows/desktop-server-check.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund --ignore-scripts
+      - run: npx tsc -p services/control-api/tsconfig.json --noEmit
+      - run: npx tsx --test tests/unit/desktop-*.test.ts

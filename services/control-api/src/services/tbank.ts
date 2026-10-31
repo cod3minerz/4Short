@@ -87,6 +87,8 @@ export async function createTBankPayment(input: {
   description: string;
   workspaceId: string;
   packageCode: string;
+  /** Subscription: ask the bank to keep the card (RebillId) for the next monthly charge. */
+  recurrent?: boolean;
 }) {
   const env = getEnv();
   return callTBank("Init", {
@@ -95,6 +97,7 @@ export async function createTBankPayment(input: {
     Description: input.description.slice(0, 140),
     PayType: "O",
     Language: "ru",
+    ...(input.recurrent ? { Recurrent: "Y", CustomerKey: input.workspaceId } : {}),
     NotificationURL: `${env.API_PUBLIC_URL}/v1/billing/tbank/webhook`,
     SuccessURL: env.PAYMENT_RETURN_URL,
     FailURL: env.PAYMENT_RETURN_URL,

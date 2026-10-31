@@ -15,6 +15,7 @@ import type { Database } from "../../../../db/index.js";
 import { getIdempotencyKey } from "../lib/http.js";
 import { runIdempotent } from "../services/idempotency.js";
 import { getMinuteBalance, reserveMinutes } from "../services/minutes.js";
+import { activateSubscription, isPaidPlan } from "../services/desktop/subscription.js";
 import {
   createTBankPayment,
   mapTBankStatus,
@@ -154,6 +155,15 @@ export async function billingRoutes(app: FastifyInstance) {
       }).where(eq(payments.id, payment.id));
 
       if (status === "succeeded") {
+        const subscriptionPlan = (payment.metadata as { subscriptionPlan?: string }).subscriptionPlan;
+        if (subscriptionPlan && isPaidPlan(subscriptionPlan)) {
+          await activateSubscription(tx as unknown as Database, {
+            workspaceId: payment.workspaceId,
+            planCode: subscriptionPlan,
+            paymentId: payment.id,
+            rebillId: typeof payload.RebillId === "string" ? payload.RebillId : null,
+          });
+        }
         const metadata = payment.metadata as { packageCode?: string; seconds?: number };
         const item = minutePackages.find((candidate) => candidate.code === metadata.packageCode);
         if (item) {

@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import fp from "fastify-plugin";
 import { users, workspaceMembers } from "../../../../db/schema.js";
@@ -97,6 +97,19 @@ export const contextPlugin = fp(async (app: FastifyInstance) => {
 
     if (!membership) throw app.httpErrors.forbidden("Workspace access denied");
     request.authContext = { userId, workspaceId, role: membership.role };
+  });
+
+  // The desktop client has no workspace picker: it works in the user's own (oldest owned) workspace.
+  app.decorate("requireDesktopUser", async function requireDesktopUser(request: FastifyRequest) {
+    const actor = await resolvePlatformActor(app, request);
+    const [membership] = await app.db
+      .select({ workspaceId: workspaceMembers.workspaceId, role: workspaceMembers.role })
+      .from(workspaceMembers)
+      .where(eq(workspaceMembers.userId, actor.userId))
+      .orderBy(asc(workspaceMembers.createdAt))
+      .limit(1);
+    if (!membership) throw app.httpErrors.forbidden("Workspace not provisioned");
+    request.authContext = { userId: actor.userId, workspaceId: membership.workspaceId, role: membership.role };
   });
 
   app.decorate("requirePlatformAdmin", async function requirePlatformAdmin(request: FastifyRequest) {
