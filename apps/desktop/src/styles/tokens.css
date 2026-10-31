@@ -1,0 +1,60 @@
+/* Narezai desktop design system: tokens.
+   Roles, not values, are what components use. Accent = action, signal = AI/online,
+   ok = local/finished. Never hardcode a colour in a component. */
+:root {
+  color-scheme: dark;
+
+  --font-sans: "Onest Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+
+  /* surfaces (ink, slightly blue so glow reads as depth rather than grey) */
+  --bg: #07080c;
+  --surface-1: #0d0f15;
+  --surface-2: #131620;
+  --surface-3: #1a1e2b;
+  --surface-hover: #1f2433;
+  --line: rgba(255, 255, 255, 0.07);
+  --line-strong: rgba(255, 255, 255, 0.14);
+
+  /* text */
+  --text: #f4f5f8;
+  --text-2: rgba(244, 245, 248, 0.64);
+  --text-3: rgba(244, 245, 248, 0.38);
+
+  /* roles */
+  --accent: #ff5b1f;
+  --accent-hover: #ff7340;
+  --accent-soft: rgba(255, 91, 31, 0.14);
+  --accent-ink: #1a0a03;
+  --signal: #35c8ff;
+  --signal-soft: rgba(53, 200, 255, 0.13);
+  --ok: #3ddc97;
+  --ok-soft: rgba(61, 220, 151, 0.13);
+  --warn: #ffc247;
+  --danger: #ff5d6c;
+
+  /* editor tracks (from the timeline reference) */
+  --track-video: #7c3aed;
+  --track-video-2: #a78bfa;
+  --track-audio: #4b5875;
+  --track-text: #1fb5c9;
+
+  /* radius / spacing / motion */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+  --r-pill: 999px;
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur: 160ms;
+
+  --shadow-pop: 0 24px 60px rgba(0, 0, 0, 0.55), 0 2px 0 rgba(255, 255, 255, 0.04) inset;
+  --focus: 0 0 0 2px var(--bg), 0 0 0 4px var(--signal);
+}

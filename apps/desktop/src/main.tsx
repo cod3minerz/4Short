@@ -1,0 +1,7 @@
+import "@fontsource-variable/onest";
+import "./styles/tokens.css";
+import "./styles/base.css";
+import { createRoot } from "react-dom/client";
+import { App } from "./App";
+
+createRoot(document.getElementById("root")!).render(<App />);

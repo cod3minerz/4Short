@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "NarezaiSpike",
+  "productName": "Narezai",
   "version": "0.0.1",
-  "identifier": "com.narezai.spike",
+  "identifier": "com.narezai.desktop",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
@@ -10,7 +10,7 @@
     "beforeBuildCommand": "npm run build"
   },
   "app": {
-    "windows": [{ "title": "Narezai Spike", "width": 1100, "height": 820 }],
+    "windows": [{ "title": "Нарезай", "width": 1280, "height": 820, "minWidth": 1040, "minHeight": 680 }],
     "security": {
       "csp": null,
       "assetProtocol": { "enable": true, "scope": ["**"] }
