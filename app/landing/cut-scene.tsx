@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { exampleMoments, formatClock, sourceExample } from "./data";
 
 const BARS = 220;
@@ -30,10 +30,11 @@ export function CaptionWords({ words, className = "", step = 0.8 }: { words: rea
   );
 }
 
+const HEIGHTS = envelope();
+
 export function CutScene() {
   const section = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
-  const heights = useMemo(envelope, []);
 
   const ranges = exampleMoments.map((moment, ri) => {
     const first = Math.floor((moment.startSeconds / sourceExample.durationSeconds) * BARS);
@@ -81,7 +82,7 @@ export function CutScene() {
               <span className="lp-sample">{sourceExample.meta} · пример</span>
             </div>
             <div className="lp-wave" aria-hidden="true">
-              {heights.map((h, i) => {
+              {HEIGHTS.map((h, i) => {
                 const range = ranges.find((r) => i >= r.first && i <= r.last);
                 return <span key={i} className="lp-bar" style={{ ["--h" as string]: h, ...(range ? { ["--ri" as string]: range.ri } : {}) }} />;
               })}

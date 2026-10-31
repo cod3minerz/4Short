@@ -1,20 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { track } from "../lib/analytics";
 import { megabytes, type Release, type ReleaseFile } from "@/lib/releases";
 
 type Os = "mac" | "windows" | "other";
 
+const subscribe = () => () => {};
+
+function detect(): Os {
+  const platform = ((navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform ?? navigator.platform ?? "").toLowerCase();
+  const ua = navigator.userAgent.toLowerCase();
+  if (platform.includes("mac") || ua.includes("macintosh")) return "mac";
+  if (platform.includes("win") || ua.includes("windows")) return "windows";
+  return "other";
+}
+
+/** Server and first client render say "other"; the real value is read after hydration without an effect. */
 export function useOs(): Os {
-  const [os, setOs] = useState<Os>("other");
-  useEffect(() => {
-    const platform = ((navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform ?? navigator.platform ?? "").toLowerCase();
-    const ua = navigator.userAgent.toLowerCase();
-    if (platform.includes("mac") || ua.includes("macintosh")) setOs("mac");
-    else if (platform.includes("win") || ua.includes("windows")) setOs("windows");
-  }, []);
-  return os;
+  return useSyncExternalStore(subscribe, detect, () => "other");
 }
 
 const labels = {
