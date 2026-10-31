@@ -29,6 +29,7 @@ jobs:
       - run: node scripts/audit-landing-slop.mjs
       - run: npx eslint app/landing app/page.tsx lib/releases.ts
       - run: npx tsc --noEmit
-      - run: npx next build --webpack
+      - run: npm run build:contracts
+      - run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
