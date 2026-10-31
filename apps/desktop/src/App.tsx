@@ -12,6 +12,7 @@ import HelpPage from "../../../app/dashboard/help/page";
 import { ProductHome } from "../../../app/product/home";
 import { SourceConfiguration } from "../../../app/product/source-configuration";
 import { navigate, useLocation } from "./shims/router";
+import { EnginePage } from "./engine/EnginePage";
 
 /** Same boundary as app/product/theme-boundary.tsx, with hash-aware link hrefs. */
 function Boundary({ children }: { children: React.ReactNode }) {
@@ -38,6 +39,7 @@ function Route() {
   const project = path.match(/^\/dashboard\/projects\/([^/]+)$/);
   if (project) return <ProjectWorkspace projectId={project[1]} />;
   if (path === "/dashboard/projects") return <ProjectsView />;
+  if (path === "/desktop/engine") return <EnginePage />;
   if (path === "/dashboard/billing") return <BillingView />;
   if (path === "/dashboard/account") return <AccountView />;
   if (path === "/dashboard/help") return <HelpPage />;
@@ -54,6 +56,9 @@ export function App() {
         <DashboardShell>
           <Route />
         </DashboardShell>
+        <a href="#/desktop/engine" style={{ position: "fixed", right: 12, bottom: 10, zIndex: 50, fontSize: 12, color: "#a1a1aa" }}>
+          Движок
+        </a>
       </Boundary>
     </TooltipProvider>
   );

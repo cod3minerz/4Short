@@ -42,6 +42,8 @@ jobs:
         run: npm ci --no-audit --no-fund --ignore-scripts
       - name: Install desktop dependencies
         run: npm install --no-audit --no-fund
+      - name: Prepare engine sidecars (ffmpeg, ffprobe, yt-dlp, whisper.cpp)
+        run: python scripts/fetch-sidecars.py
       - name: Generate placeholder app icon
         shell: python
         run: |
@@ -58,6 +60,6 @@ jobs:
       - run: npx tauri build
       - uses: actions/upload-artifact@v4
         with:
-          name: narezai-spike-${{ matrix.name }}
+          name: narezai-desktop-${{ matrix.name }}
           path: apps/desktop/src-tauri/target/release/bundle/**
           retention-days: 3
