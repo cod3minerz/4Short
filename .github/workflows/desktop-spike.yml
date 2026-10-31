@@ -1,0 +1,60 @@
+name: desktop-spike
+
+# Manual spike build: produces unsigned Tauri installers for macOS (arm64) and
+# Windows (x64) so the webview/sidecar behaviour can be checked on real machines.
+# Nothing is published or deployed.
+on:
+  workflow_dispatch:
+  push:
+    branches: [desktop-spike]
+    paths:
+      - "apps/desktop/**"
+      - ".github/workflows/desktop-spike.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            name: macos-arm64
+          - os: windows-latest
+            name: windows-x64
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: apps/desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Generate placeholder app icon
+        shell: python
+        run: |
+          import struct, zlib
+          size = 1024
+          row = b"\x00" + bytes([30, 120, 255, 255]) * size
+          raw = row * size
+          def chunk(t, d):
+              c = struct.pack(">I", len(d)) + t + d
+              return c + struct.pack(">I", zlib.crc32(t + d) & 0xFFFFFFFF)
+          png = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", size, size, 8, 6, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b"")
+          open("icon-source.png", "wb").write(png)
+      - run: npx tauri icon icon-source.png
+      - run: npx tauri build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: narezai-spike-${{ matrix.name }}
+          path: apps/desktop/src-tauri/target/release/bundle/**
+          retention-days: 3
